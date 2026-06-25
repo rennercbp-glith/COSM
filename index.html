@@ -305,6 +305,14 @@
   </div>
   <input id="file-input" type="file" style="display:none" onchange="registrarArquivo(this)"/>
   <div id="notif"></div>
+  <!-- Menu do arquivo 3D -->
+  <div id="menu-arquivo" style="display:none;position:fixed;pointer-events:all;
+    background:#0e0e14;border:1px solid rgba(255,255,255,0.18);border-radius:10px;
+    padding:6px;flex-direction:column;gap:2px;z-index:200;min-width:140px;">
+    <button class="mesf-btn" onclick="entrarOrbitaArquivo()">🔭 Orbitar</button>
+    <button id="btn-mover-arquivo" class="mesf-btn" onclick="toggleDragArquivo()">✦ Mover</button>
+    <button class="mesf-btn" onclick="abrirArquivoDoMenu()">📂 Abrir</button>
+  </div>
   <!-- Menu da esfera -->
   <div id="menu-esfera" style="display:none;position:absolute;pointer-events:all;
     background:#0e0e14;border:1px solid rgba(255,255,255,0.18);border-radius:10px;
@@ -345,6 +353,11 @@
       <div class="sidebar-label">Ações</div>
       <div class="sbtn" onclick="document.getElementById('file-input').click()">
         <span class="sbtn-icone">⬆</span> Enviar arquivo
+      </div>
+      <div class="sidebar-sep"></div>
+      <div class="sidebar-label">Visualização</div>
+      <div id="sbtn-modo" class="sbtn" onclick="setModo(!modoEspacial)">
+        <span class="sbtn-icone">🌐</span> Espacial
       </div>
       <div class="sidebar-sep"></div>
       <div class="sidebar-label">Compartilhar</div>
@@ -542,6 +555,12 @@ const ficheiros3D=[]; // THREE.Group por arquivo
 let orbitMode=false;
 const orbitTarget=new THREE.Vector3();
 let orbitDist=400, orbitTheta=0, orbitPhi=Math.PI/2;
+
+let menuArquivoGroup=null;
+let fileDragAtivo=false, fileDragGroup=null;
+const fileDragPlane=new THREE.Plane();
+const fileDragRay=new THREE.Raycaster();
+let modoEspacial=JSON.parse(localStorage.getItem('cosmModoEsp')||'true');
 let db=null;
 
 // ── Posicionamento espacial por IP ──────────────────────
@@ -605,7 +624,11 @@ function initDB(){
 function carregarDB(){
   if(!db) return;
   const req=db.transaction('arquivos','readonly').objectStore('arquivos').getAll();
-  req.onsuccess=()=>{ arquivos=req.result||[]; criarMeshesTodosArquivos(); };
+  req.onsuccess=()=>{
+    arquivos=req.result||[];
+    criarMeshesTodosArquivos();
+    setModo(modoEspacial);
+  };
 }
 
 function salvarDB(arquivo){
@@ -722,6 +745,78 @@ function removerMesh3D(arquivo){
   });
 }
 
+function abrirMenuArquivo(sx,sy,group){
+  menuArquivoGroup=group;
+  document.getElementById('btn-mover-arquivo').textContent='✦ Mover';
+  const m=document.getElementById('menu-arquivo');
+  m.style.display='flex';
+  m.style.left=Math.min(sx-70,innerWidth-160)+'px';
+  m.style.top=Math.max(sy-100,10)+'px';
+}
+
+function fecharMenuArquivo(){
+  document.getElementById('menu-arquivo').style.display='none';
+  menuArquivoGroup=null;
+}
+
+function entrarOrbitaArquivo(){
+  if(!menuArquivoGroup) return;
+  entrarOrbita(menuArquivoGroup.position,400);
+  fecharMenuArquivo();
+}
+
+function abrirArquivoDoMenu(){
+  if(!menuArquivoGroup) return;
+  abrirArquivo(menuArquivoGroup.userData.arquivo);
+  fecharMenuArquivo();
+}
+
+function toggleDragArquivo(){
+  if(!fileDragAtivo){
+    fileDragGroup=menuArquivoGroup;
+    const fwd=new THREE.Vector3(); camera.getWorldDirection(fwd);
+    fileDragPlane.setFromNormalAndCoplanarPoint(fwd,fileDragGroup.position);
+    fileDragAtivo=true;
+    document.getElementById('btn-mover-arquivo').textContent='● FIXAR';
+    document.body.style.cursor='move';
+  } else {
+    const a=fileDragGroup.userData.arquivo;
+    a.pos={x:fileDragGroup.position.x,y:fileDragGroup.position.y,z:fileDragGroup.position.z};
+    atualizarDB(a);
+    fileDragAtivo=false; fileDragGroup=null;
+    document.getElementById('btn-mover-arquivo').textContent='✦ Mover';
+    document.body.style.cursor='';
+    fecharMenuArquivo();
+    notif('✓ Posição fixada');
+  }
+}
+
+function setModo(espacial){
+  modoEspacial=espacial;
+  localStorage.setItem('cosmModoEsp',JSON.stringify(espacial));
+  const btn=document.getElementById('sbtn-modo');
+  if(btn) btn.innerHTML=espacial?
+    '<span class="sbtn-icone">🌐</span> Espacial':
+    '<span class="sbtn-icone">📦</span> No cubo';
+  if(espacial){
+    ficheiros3D.forEach(g=>{
+      const a=g.userData.arquivo;
+      if(a.pos) g._targetPos=new THREE.Vector3(a.pos.x,a.pos.y,a.pos.z);
+    });
+  } else {
+    const base=portalMesh.position;
+    ficheiros3D.forEach((g,i)=>{
+      const col=i%4, row=Math.floor(i/4);
+      g._targetPos=new THREE.Vector3(
+        base.x-285+col*190,
+        base.y+80-row*200,
+        base.z+80
+      );
+      g.quaternion.copy(camera.quaternion);
+    });
+  }
+}
+
 function entrarOrbita(posAlvo, distInicial){
   orbitTarget.copy(posAlvo);
   const rel=camera.position.clone().sub(posAlvo);
@@ -737,6 +832,7 @@ function sairOrbita(){
   if(!orbitMode) return;
   orbitMode=false;
   notif('');
+  fecharMenuArquivo();
 }
 
 function criarDemoMarcoZero(){
@@ -789,7 +885,15 @@ canvas.addEventListener('mousedown',e=>{
 });
 
 canvas.addEventListener('mousemove',e=>{
-  // Drag da esfera tem prioridade
+  // Drag de arquivo tem prioridade máxima
+  if(fileDragAtivo && fileDragGroup){
+    const mx=(e.clientX/innerWidth)*2-1, my=-(e.clientY/innerHeight)*2+1;
+    fileDragRay.setFromCamera({x:mx,y:my},camera);
+    const hit=new THREE.Vector3();
+    if(fileDragRay.ray.intersectPlane(fileDragPlane,hit)) fileDragGroup.position.copy(hit);
+    return;
+  }
+  // Drag da esfera
   if(esfDragAtivo){
     const mx=(e.clientX/innerWidth)*2-1;
     const my=-(e.clientY/innerHeight)*2+1;
@@ -834,14 +938,17 @@ canvas.addEventListener('mouseup',e=>{
     const obj=hits[0].object;
     const fileGroup=ficheiros3D.find(g=>g._mesh===obj);
     if(fileGroup){
-      entrarOrbita(fileGroup.position, 400);
+      fecharMenuEsfera();
+      abrirMenuArquivo(e.clientX,e.clientY,fileGroup);
     } else if(obj===esfMesh||obj.parent===esfMesh){
+      fecharMenuArquivo();
       abrirMenuEsfera(e.clientX,e.clientY);
     } else {
-      fecharMenuEsfera();
+      fecharMenuEsfera(); fecharMenuArquivo();
       dispararAnimacaoCubo(()=>abrirJanela());
     }
   } else {
+    fecharMenuArquivo();
     if(orbitMode) sairOrbita();
     else { velCruz=0; fecharJanela(); fecharMenuEsfera(); }
   }
@@ -1467,6 +1574,14 @@ function loop(){
       camera.position.addScaledVector(dir,spd);
     }
   }
+
+  // Lerp de arquivos para posição alvo (modo cubo / modo espacial)
+  ficheiros3D.forEach(g=>{
+    if(g._targetPos){
+      g.position.lerp(g._targetPos,0.05);
+      if(g.position.distanceTo(g._targetPos)<2) g._targetPos=null;
+    }
+  });
 
   // Órbita — câmera circula o objeto selecionado
   if(orbitMode){
