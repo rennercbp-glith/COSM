@@ -1040,7 +1040,11 @@ canvas.addEventListener('mouseup',e=>{
     const fileGroup=ficheiros3D.find(g=>g._mesh===obj);
     if(fileGroup){
       fecharMenuEsfera();
-      abrirMenuArquivo(e.clientX,e.clientY,fileGroup);
+      if(fileGroup.userData.arquivo.tipo==='youtube'){
+        abrirYoutube(fileGroup.userData.arquivo.dataUrl);
+      } else {
+        abrirMenuArquivo(e.clientX,e.clientY,fileGroup);
+      }
     } else if(obj===esfMesh||obj.parent===esfMesh){
       fecharMenuArquivo();
       abrirMenuEsfera(e.clientX,e.clientY);
