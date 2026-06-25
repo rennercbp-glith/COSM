@@ -158,6 +158,47 @@
     box-shadow:0 0 40px rgba(0,80,255,0.15);
   }
   #modal-enviar.visivel{display:flex;}
+
+  /* ── Modal identidade ──────────────────────────────── */
+  #modal-id{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,8,0.94);display:none;align-items:center;
+    justify-content:center;z-index:300;pointer-events:all;
+  }
+  #modal-id.visivel{display:flex;}
+  #modal-id-box{
+    background:rgba(0,4,20,0.99);border:1px solid rgba(100,200,255,0.3);
+    border-radius:14px;padding:36px;max-width:460px;width:90%;
+    display:flex;flex-direction:column;gap:20px;
+    box-shadow:0 0 60px rgba(0,60,200,0.2);
+  }
+  #modal-id-titulo{font-size:10px;letter-spacing:4px;color:rgba(100,200,255,0.5);text-transform:uppercase;}
+  #modal-id-desc{font-size:12px;color:rgba(200,220,255,0.7);line-height:1.9;}
+  #modal-id-input{
+    background:rgba(0,8,28,0.9);border:1px solid rgba(100,200,255,0.3);
+    border-radius:8px;padding:12px 16px;color:#fff;font-family:'Courier New',monospace;
+    font-size:13px;outline:none;letter-spacing:1px;transition:border-color 0.2s;
+  }
+  #modal-id-input:focus{border-color:rgba(100,200,255,0.7);}
+  #modal-id-norm{font-size:10px;color:rgba(100,200,255,0.45);letter-spacing:1px;min-height:16px;}
+  #modal-id-coord{
+    font-size:12px;color:#aaddff;letter-spacing:1px;
+    background:rgba(0,20,60,0.5);border-radius:8px;padding:10px 14px;
+    min-height:36px;font-family:'Courier New',monospace;
+  }
+  #modal-id-aviso{
+    font-size:10px;color:rgba(255,200,80,0.7);letter-spacing:1px;line-height:1.7;
+    border-left:2px solid rgba(255,200,80,0.3);padding-left:12px;
+  }
+  #modal-id-btns{display:flex;gap:12px;justify-content:flex-end;}
+  .mid-btn{
+    background:transparent;border:1px solid rgba(100,200,255,0.3);
+    border-radius:8px;padding:10px 20px;color:#aaddff;font-family:'Courier New',monospace;
+    font-size:11px;letter-spacing:1px;cursor:pointer;transition:all 0.2s;
+  }
+  .mid-btn:hover{background:rgba(0,60,140,0.4);}
+  .mid-btn:disabled{opacity:0.3;cursor:default;}
+  #modal-id-confirmar{background:rgba(0,60,160,0.6);border-color:rgba(100,200,255,0.5);}
   #modal-titulo{font-size:9px;letter-spacing:3px;color:rgba(100,200,255,0.45);text-transform:uppercase;}
   #modal-desc{font-size:10px;color:rgba(100,200,255,0.4);line-height:1.6;}
   #modal-input{
@@ -291,6 +332,29 @@
   </div>
   <div id="preview-nome"></div>
   <div id="preview-fechar" onclick="fecharPreview()">✕ FECHAR ARQUIVO</div>
+</div>
+
+<!-- Modal: criação de identidade permanente -->
+<div id="modal-id">
+  <div id="modal-id-box">
+    <div id="modal-id-titulo">IDENTIDADE PERMANENTE</div>
+    <div id="modal-id-desc">
+      Você está prestes a registrar algo no universo.<br>
+      Escolha uma frase secreta — ela será a única chave do seu espaço.<br>
+      Não precisa de conta, email ou senha.
+    </div>
+    <input id="modal-id-input" type="text" placeholder="Digite sua frase secreta..." autocomplete="off" spellcheck="false" oninput="aoDigitarFrase()"/>
+    <div id="modal-id-norm"></div>
+    <div id="modal-id-coord">—</div>
+    <div id="modal-id-aviso">
+      Anote esta frase. Se a esquecer, perde acesso permanente ao seu espaço.<br>
+      Acentos são ignorados — "café" = "cafe".
+    </div>
+    <div id="modal-id-btns">
+      <button class="mid-btn" onclick="fecharModalIdentidade()">CANCELAR</button>
+      <button class="mid-btn" id="modal-id-confirmar" onclick="confirmarIdentidade()" disabled>CRIAR MEU ESPAÇO</button>
+    </div>
+  </div>
 </div>
 
 <div id="intro">
@@ -667,6 +731,77 @@ function renderGrid(){
 }
 
 // ═══════════════════════════════════════════════════════
+//  IDENTIDADE — FRASE SECRETA
+// ═══════════════════════════════════════════════════════
+function normalizarFrase(f){
+  return f.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+}
+
+async function fraseParaCoordenadas(frase){
+  const norm=normalizarFrase(frase);
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(norm));
+  const b=new Uint8Array(buf);
+  const E=1000000000;
+  const x=((b[0]<<24)|(b[1]<<16)|(b[2]<<8)|b[3]);
+  const y=((b[4]<<24)|(b[5]<<16)|(b[6]<<8)|b[7]);
+  const z=((b[8]<<24)|(b[9]<<16)|(b[10]<<8)|b[11]);
+  return {x:x*1.0,y:y*1.0,z:z*1.0};
+}
+
+let _idCallback=null;
+
+function verificarIdentidade(callback){
+  const salvo=localStorage.getItem('cosm_identidade');
+  if(salvo){
+    const {coord}=JSON.parse(salvo);
+    coordBase=coord;
+    callback();
+    return;
+  }
+  _idCallback=callback;
+  document.getElementById('modal-id-input').value='';
+  document.getElementById('modal-id-norm').textContent='';
+  document.getElementById('modal-id-coord').textContent='—';
+  document.getElementById('modal-id-confirmar').disabled=true;
+  document.getElementById('modal-id').classList.add('visivel');
+}
+
+function fecharModalIdentidade(){
+  document.getElementById('modal-id').classList.remove('visivel');
+  _idCallback=null;
+}
+
+async function aoDigitarFrase(){
+  const val=document.getElementById('modal-id-input').value;
+  const norm=normalizarFrase(val);
+  document.getElementById('modal-id-norm').textContent=norm?`Sua frase: ${norm}`:'';
+  const btn=document.getElementById('modal-id-confirmar');
+  if(norm.length>=6){
+    const c=await fraseParaCoordenadas(val);
+    document.getElementById('modal-id-coord').textContent=
+      `${formatCoord(c.x)} : ${formatCoord(c.y)} : ${formatCoord(c.z)}`;
+    btn.disabled=false;
+    btn._coord=c;
+  } else {
+    document.getElementById('modal-id-coord').textContent='—';
+    btn.disabled=true;
+    btn._coord=null;
+  }
+}
+
+async function confirmarIdentidade(){
+  const btn=document.getElementById('modal-id-confirmar');
+  if(!btn._coord) return;
+  const coord=btn._coord;
+  const frase=normalizarFrase(document.getElementById('modal-id-input').value);
+  localStorage.setItem('cosm_identidade',JSON.stringify({frase,coord}));
+  coordBase=coord;
+  fecharModalIdentidade();
+  notif('✓ Espaço permanente criado — coordenada registrada');
+  if(_idCallback){ _idCallback(); _idCallback=null; }
+}
+
+// ═══════════════════════════════════════════════════════
 //  UPLOAD
 // ═══════════════════════════════════════════════════════
 function notif(txt){
@@ -681,25 +816,27 @@ function registrarArquivo(input){
   if(!file) return;
   input.value='';
 
-  const ext=file.name.split('.').pop().toLowerCase();
-  const tipo=['jpg','jpeg','png','gif','webp'].includes(ext)?'imagem':
-             ['mp4','webm','mov'].includes(ext)?'video':'documento';
+  verificarIdentidade(()=>{
+    const ext=file.name.split('.').pop().toLowerCase();
+    const tipo=['jpg','jpeg','png','gif','webp'].includes(ext)?'imagem':
+               ['mp4','webm','mov'].includes(ext)?'video':'documento';
 
-  const finalizar=dataUrl=>{
-    const arquivo={nome:file.name,tipo,dataUrl,tamanho:file.size};
-    arquivos.push(arquivo);
-    salvarDB(arquivo);
-    renderGrid();
-    notif(`✓ ${file.name} adicionado`);
-  };
+    const finalizar=dataUrl=>{
+      const arquivo={nome:file.name,tipo,dataUrl,tamanho:file.size};
+      arquivos.push(arquivo);
+      salvarDB(arquivo);
+      renderGrid();
+      notif(`✓ ${file.name} adicionado`);
+    };
 
-  if(tipo==='imagem'){
-    const reader=new FileReader();
-    reader.onload=e=>finalizar(e.target.result);
-    reader.readAsDataURL(file);
-  } else {
-    finalizar(null);
-  }
+    if(tipo==='imagem'){
+      const reader=new FileReader();
+      reader.onload=e=>finalizar(e.target.result);
+      reader.readAsDataURL(file);
+    } else {
+      finalizar(null);
+    }
+  });
 }
 
 // ═══════════════════════════════════════════════════════
