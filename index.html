@@ -441,6 +441,46 @@ const portalLinhas=new THREE.LineSegments(
 portalMesh.add(portalLinhas);
 scene.add(portalMesh);
 
+// ── Destino do cubo (viaja ao confirmar identidade) ─────
+let portalDestino=new THREE.Vector3().copy(PORTAL_COORD);
+
+// ── Textos do Marco Zero ────────────────────────────────
+(function(){
+  const linhas=[
+    {txt:'COSM://500:80:0',  dy:110, size:22, cor:'rgba(100,180,255,0.9)'},
+    {txt:'MARCO ZERO',       dy: 88, size:13, cor:'rgba(100,180,255,0.5)'},
+    {txt:'Explore o universo. Crie sua frase para começar.', dy:62, size:14, cor:'rgba(180,210,255,0.65)'},
+    {txt:'Atualizações COSM · Jun 2026', dy:40, size:12, cor:'rgba(100,200,255,0.4)'},
+  ];
+  linhas.forEach(({txt,dy,size,cor})=>{
+    const cv=document.createElement('canvas');
+    cv.width=640; cv.height=48;
+    const cx=cv.getContext('2d');
+    cx.clearRect(0,0,640,48);
+    cx.font=`${size}px 'Courier New', monospace`;
+    cx.fillStyle=cor;
+    cx.textAlign='center';
+    cx.fillText(txt,320,32);
+    const mat=new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthWrite:false});
+    const spr=new THREE.Sprite(mat);
+    spr.scale.set(128,9.6,1);
+    spr.position.set(PORTAL_COORD.x, PORTAL_COORD.y+dy, PORTAL_COORD.z);
+    scene.add(spr);
+  });
+})();
+
+// ── Esfera de identidade ────────────────────────────────
+const esfMat=new THREE.MeshBasicMaterial({color:0x66bbff,transparent:true,opacity:0,wireframe:false});
+const esfMesh=new THREE.Mesh(new THREE.SphereGeometry(6,20,20),esfMat);
+const esfHalo=new THREE.Mesh(
+  new THREE.SphereGeometry(9,20,20),
+  new THREE.MeshBasicMaterial({color:0x4499ff,transparent:true,opacity:0,wireframe:true,depthWrite:false})
+);
+esfMesh.add(esfHalo);
+esfMesh.visible=false;
+scene.add(esfMesh);
+let homeCoord3D=null; // posição Three.js do espaço pessoal
+
 // ═══════════════════════════════════════════════════════
 //  ESTADOS
 // ═══════════════════════════════════════════════════════
@@ -797,8 +837,23 @@ async function confirmarIdentidade(){
   localStorage.setItem('cosm_identidade',JSON.stringify({frase,coord}));
   coordBase=coord;
   fecharModalIdentidade();
-  notif('✓ Espaço permanente criado — coordenada registrada');
+
+  // Cubo viaja até a posição atual da câmera (espaço pessoal)
+  homeCoord3D=camera.position.clone();
+  portalDestino=homeCoord3D.clone();
+
+  // Esfera aparece
+  esfMesh.visible=true;
+
+  notif('✓ Espaço criado — o cubo está a caminho das suas coordenadas');
   if(_idCallback){ _idCallback(); _idCallback=null; }
+}
+
+function ativarEsferaSeIdentidade(){
+  const salvo=localStorage.getItem('cosm_identidade');
+  if(!salvo) return;
+  homeCoord3D=camera.position.clone(); // home = onde a câmera está ao carregar (perto da origem)
+  esfMesh.visible=true;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -815,6 +870,11 @@ function registrarArquivo(input){
   const file=input.files[0];
   if(!file) return;
   input.value='';
+
+  if(camera.position.distanceTo(PORTAL_COORD)<220){
+    notif('Marco Zero é público — explore o universo e crie sua coordenada pessoal');
+    return;
+  }
 
   verificarIdentidade(()=>{
     const ext=file.name.split('.').pop().toLowerCase();
@@ -946,9 +1006,8 @@ function loop(){
     }
   }
 
-  // Portal — flutua em frente à câmera ao chegar, senão fica na coord fixa
-  const destPortal=displayAtivo && portalAlvo ? portalAlvo : PORTAL_COORD;
-  portalMesh.position.lerp(destPortal,0.06);
+  // Portal — lerp para destino (PORTAL_COORD ou espaço pessoal após identidade)
+  portalMesh.position.lerp(portalDestino,0.018);
   portalMesh.rotation.y+=0.008;
   portalMesh.rotation.x+=0.003;
 
@@ -956,6 +1015,22 @@ function loop(){
   const distPortal=camera.position.distanceTo(portalMesh.position);
   const fadePortal=1-Math.min(1,Math.max(0,(distPortal-800)/1700));
   portalLinhas.material.opacity=(0.6+Math.sin(t*1.8)*0.25)*fadePortal;
+
+  // Esfera — flutua próxima à câmera quando em casa
+  if(esfMesh.visible && homeCoord3D){
+    const distHome=camera.position.distanceTo(homeCoord3D);
+    const emCasa=distHome<400;
+    const alvOp=emCasa?0.85:0;
+    esfMat.opacity+=(alvOp-esfMat.opacity)*0.04;
+    esfHalo.material.opacity=esfMat.opacity*0.3;
+    // flutua levemente na frente e acima da câmera
+    const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+    const alvoEsf=camera.position.clone().addScaledVector(fwd,35).add(new THREE.Vector3(0,12,0));
+    esfMesh.position.lerp(alvoEsf,0.08);
+    esfMesh.rotation.y+=0.01;
+    const pulso=1+Math.sin(t*2.2)*0.08;
+    esfMesh.scale.setScalar(emCasa?pulso:1);
+  }
 
   // Estrelas seguem câmera
   const est=scene.getObjectByName('estrelas');
@@ -980,6 +1055,7 @@ function loop(){
 
 initDB().then(carregarDB);
 iniciarPosicaoPorIP();
+ativarEsferaSeIdentidade();
 loop();
 
 // ═══════════════════════════════════════════════════════
