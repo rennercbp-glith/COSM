@@ -825,14 +825,15 @@ function loop(){
   if(est) est.position.copy(camera.position);
 
   // HUD
+  // Coordenada de navegação: posição local da câmera em metros (1 unit = 100m)
   const p=camera.position;
   if(!coordDisplayTimer){
     coordDisplayTimer=setTimeout(()=>{
-      const dx=coordBase.x+p.x, dy=coordBase.y+p.y, dz=coordBase.z+p.z;
+      const E=100;
       document.getElementById('txt-pos').textContent=
-        `${formatCoord(dx)} : ${formatCoord(dy)} : ${formatCoord(dz)}`;
+        `${formatCoord(p.x*E)} : ${formatCoord(p.y*E)} : ${formatCoord(p.z*E)}`;
       coordDisplayTimer=null;
-    },100);
+    },80);
   }
   document.getElementById('txt-vel').textContent=
     Math.abs(Math.round(velCruz))+(velCruz<-1?' ◀':velCruz>1?' ▶':' —');
