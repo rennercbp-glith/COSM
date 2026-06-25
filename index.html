@@ -1113,11 +1113,17 @@ function loop(){
   const fadePortal=1-Math.min(1,Math.max(0,(distPortal-800)/1700));
   portalLinhas.material.opacity=(0.6+Math.sin(t*1.8)*0.25)*fadePortal;
 
-  // Esfera — flutua próxima à câmera quando em casa
+  // Esfera — segue a câmera como companheira, lerp suave
   if(esfMesh.visible){
-    // esfera fica acima do cubo (portalDestino)
-    const alvoEsf=portalDestino.clone().add(new THREE.Vector3(0,55,0));
-    esfMesh.position.lerp(alvoEsf,0.04);
+    const _fwd=new THREE.Vector3();
+    camera.getWorldDirection(_fwd);
+    const _right=new THREE.Vector3().crossVectors(_fwd,new THREE.Vector3(0,1,0)).normalize();
+    const _up=new THREE.Vector3(0,1,0);
+    const alvoEsf=camera.position.clone()
+      .addScaledVector(_fwd,260)
+      .addScaledVector(_right,140)
+      .addScaledVector(_up,30);
+    esfMesh.position.lerp(alvoEsf,0.028);
     esfMesh.rotation.y+=0.008;
     const alvOp=esfOculto?0:0.15;
     esfMat.opacity+=(alvOp-esfMat.opacity)*0.05;
