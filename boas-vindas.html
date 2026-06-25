@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COSM — Bem-vindo ao Universo</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:#080810;color:#fff;
+    font-family:'Courier New',monospace;
+    line-height:1.8;min-height:100vh;
+  }
+
+  /* Estrelas de fundo */
+  body::before{
+    content:'';position:fixed;top:0;left:0;width:100%;height:100%;
+    background-image:
+      radial-gradient(1px 1px at 15% 20%,rgba(255,255,255,0.6) 0%,transparent 100%),
+      radial-gradient(1px 1px at 42% 8%,rgba(255,255,255,0.4) 0%,transparent 100%),
+      radial-gradient(1px 1px at 68% 35%,rgba(255,255,255,0.5) 0%,transparent 100%),
+      radial-gradient(1px 1px at 83% 12%,rgba(255,255,255,0.3) 0%,transparent 100%),
+      radial-gradient(1px 1px at 27% 55%,rgba(255,255,255,0.4) 0%,transparent 100%),
+      radial-gradient(1px 1px at 91% 62%,rgba(255,255,255,0.5) 0%,transparent 100%),
+      radial-gradient(1px 1px at 55% 78%,rgba(255,255,255,0.3) 0%,transparent 100%),
+      radial-gradient(1px 1px at 7%  88%,rgba(255,255,255,0.4) 0%,transparent 100%),
+      radial-gradient(1px 1px at 73% 91%,rgba(255,255,255,0.6) 0%,transparent 100%),
+      radial-gradient(1px 1px at 38% 96%,rgba(255,255,255,0.3) 0%,transparent 100%);
+    pointer-events:none;z-index:0;
+  }
+
+  .container{
+    position:relative;z-index:1;
+    max-width:720px;margin:0 auto;padding:80px 40px 100px;
+  }
+
+  /* Cabeçalho */
+  header{text-align:center;margin-bottom:80px;}
+  .coord-tag{
+    font-size:10px;letter-spacing:4px;color:rgba(255,255,255,0.3);
+    margin-bottom:28px;
+  }
+  h1{
+    font-size:48px;letter-spacing:16px;color:#fff;
+    font-weight:normal;margin-bottom:16px;
+  }
+  .subtitulo{
+    font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.45);
+    line-height:2;
+  }
+  .linha-divisor{
+    width:60px;height:1px;background:rgba(255,255,255,0.2);
+    margin:40px auto;
+  }
+
+  /* Seções */
+  section{margin-bottom:64px;}
+  .sec-label{
+    font-size:9px;letter-spacing:5px;color:rgba(255,255,255,0.3);
+    text-transform:uppercase;margin-bottom:20px;
+  }
+  h2{
+    font-size:18px;letter-spacing:4px;color:#fff;
+    font-weight:normal;margin-bottom:18px;
+  }
+  p{
+    font-size:13px;color:rgba(255,255,255,0.65);
+    line-height:2;margin-bottom:14px;
+  }
+  .destaque{color:rgba(255,255,255,0.9);font-size:14px;}
+
+  /* Caixa de coordenada */
+  .coord-box{
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:10px;padding:20px 24px;
+    margin:24px 0;font-size:12px;
+    color:rgba(255,255,255,0.7);letter-spacing:1px;
+  }
+  .coord-box strong{color:#fff;display:block;margin-bottom:6px;font-size:11px;letter-spacing:3px;}
+
+  /* Lista de passos */
+  .passos{list-style:none;display:flex;flex-direction:column;gap:16px;margin:24px 0;}
+  .passos li{
+    display:flex;gap:16px;align-items:flex-start;
+    font-size:13px;color:rgba(255,255,255,0.65);
+  }
+  .passo-num{
+    font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.3);
+    padding-top:3px;flex-shrink:0;width:24px;
+  }
+
+  /* Frase de destaque */
+  .frase-grande{
+    border-left:2px solid rgba(255,255,255,0.2);
+    padding:18px 24px;margin:32px 0;
+    font-size:14px;color:rgba(255,255,255,0.7);
+    line-height:2;font-style:italic;
+  }
+
+  /* Tabela de funções */
+  .funcoes{width:100%;border-collapse:collapse;margin:24px 0;}
+  .funcoes td{
+    padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);
+    font-size:12px;vertical-align:top;
+  }
+  .funcoes td:first-child{
+    color:rgba(255,255,255,0.5);width:140px;letter-spacing:1px;
+    font-size:10px;padding-top:14px;
+  }
+  .funcoes td:last-child{color:rgba(255,255,255,0.75);}
+  .tag-ok{
+    display:inline-block;font-size:8px;letter-spacing:2px;
+    background:rgba(255,255,255,0.08);border-radius:4px;
+    padding:2px 8px;color:rgba(255,255,255,0.4);margin-left:8px;
+  }
+  .tag-breve{
+    display:inline-block;font-size:8px;letter-spacing:2px;
+    background:rgba(255,200,80,0.1);border-radius:4px;
+    padding:2px 8px;color:rgba(255,200,80,0.5);margin-left:8px;
+  }
+
+  /* Rodapé */
+  footer{
+    text-align:center;margin-top:80px;padding-top:40px;
+    border-top:1px solid rgba(255,255,255,0.08);
+  }
+  footer p{font-size:10px;color:rgba(255,255,255,0.2);letter-spacing:2px;line-height:2.4;}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="coord-tag">COSM://500:80:0 — MARCO ZERO</div>
+    <h1>COSM</h1>
+    <div class="subtitulo">
+      Um universo de coordenadas permanentes.<br>
+      Cada ponto no espaço pertence a alguém — ou ainda a ninguém.
+    </div>
+    <div class="linha-divisor"></div>
+  </header>
+
+  <section>
+    <div class="sec-label">01 — O que é</div>
+    <h2>O UNIVERSO DIGITAL PERMANENTE</h2>
+    <p class="destaque">O COSM é um espaço tridimensional infinito onde cada coordenada é um endereço real e permanente no universo digital.</p>
+    <p>Em vez de salvar arquivos em pastas sem sentido ou em servidores de terceiros, você registra o que quiser em uma coordenada do universo. Esse endereço é seu para sempre.</p>
+    <div class="coord-box">
+      <strong>EXEMPLO DE ENDEREÇO</strong>
+      COSM://177.00A : 247.16A : 35.23A<br>
+      <span style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:6px;display:block;">
+        177 anos-luz no eixo X · 247 anos-luz no eixo Y · 35 anos-luz no eixo Z
+      </span>
+    </div>
+    <p>Ninguém mais tem este endereço. Você navegou até aqui — este espaço é seu.</p>
+  </section>
+
+  <section>
+    <div class="sec-label">02 — Como funciona</div>
+    <h2>SEU ESPAÇO EM 4 PASSOS</h2>
+    <ul class="passos">
+      <li>
+        <span class="passo-num">01</span>
+        <span><strong style="color:#fff">Entre no universo.</strong> Ao abrir o COSM, você aparece próximo ao Marco Zero — o ponto de referência público do universo. Explore livremente com scroll e arrastar.</span>
+      </li>
+      <li>
+        <span class="passo-num">02</span>
+        <span><strong style="color:#fff">Crie sua frase secreta.</strong> Quando tentar salvar algo pela primeira vez, o COSM pede uma frase. Ela pode ser qualquer coisa que você consiga lembrar. Acentos são ignorados.</span>
+      </li>
+      <li>
+        <span class="passo-num">03</span>
+        <span><strong style="color:#fff">Sua coordenada é gerada.</strong> A frase é convertida via SHA-256 em coordenadas únicas a anos-luz daqui. O cubo voa até lá. Esse é o seu lugar no universo.</span>
+      </li>
+      <li>
+        <span class="passo-num">04</span>
+        <span><strong style="color:#fff">Guarde, crie, explore.</strong> No seu espaço, salve arquivos, crie notas, assista conteúdo. Tudo fica na sua coordenada — acessível de qualquer dispositivo com a mesma frase.</span>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="sec-label">03 — Privacidade</div>
+    <h2>NENHUM CADASTRO. NENHUM EMAIL.</h2>
+    <div class="frase-grande">
+      "Sua frase secreta é a única chave.<br>
+      Sem ela, ninguém — nem o COSM — sabe onde você está."
+    </div>
+    <p>A frase nunca sai do seu navegador. O COSM não armazena senhas, não pede nome, não tem banco de dados de usuários. A coordenada gerada é matematicamente única — duas frases diferentes nunca produzem o mesmo endereço.</p>
+    <div class="coord-box">
+      <strong>IMPORTANTE</strong>
+      Anote sua frase em papel físico e guarde em local seguro.<br>
+      Se perder a frase, perde o acesso ao seu espaço permanentemente.<br>
+      <span style="color:rgba(255,200,80,0.6);font-size:11px;">Não há recuperação de frase — por design.</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-label">04 — Funções disponíveis</div>
+    <h2>O QUE VOCÊ PODE FAZER AGORA</h2>
+    <table class="funcoes">
+      <tr>
+        <td>NAVEGAR</td>
+        <td>Scroll para voar · Arrastar para girar · COSM://X:Y:Z para teletransporte<span class="tag-ok">ATIVO</span></td>
+      </tr>
+      <tr>
+        <td>EXPLORAR</td>
+        <td>Visite o Marco Zero, descubra o espaço, sinta a escala do universo<span class="tag-ok">ATIVO</span></td>
+      </tr>
+      <tr>
+        <td>IDENTIDADE</td>
+        <td>Crie sua frase secreta e registre sua coordenada permanente<span class="tag-ok">ATIVO</span></td>
+      </tr>
+      <tr>
+        <td>ARQUIVOS</td>
+        <td>Salve imagens, vídeos e documentos no seu espaço<span class="tag-ok">ATIVO</span></td>
+      </tr>
+      <tr>
+        <td>MENSAGENS</td>
+        <td>Receba atualizações do universo na sua esfera pessoal<span class="tag-breve">EM BREVE</span></td>
+      </tr>
+      <tr>
+        <td>NOTAS</td>
+        <td>Crie textos e ideias diretamente no seu espaço<span class="tag-breve">EM BREVE</span></td>
+      </tr>
+      <tr>
+        <td>VISIBILIDADE</td>
+        <td>Torne seu espaço público ou mantenha invisível<span class="tag-breve">EM BREVE</span></td>
+      </tr>
+      <tr>
+        <td>COMPARTILHAR</td>
+        <td>Envie sua coordenada para quem você quiser receber visita<span class="tag-breve">EM BREVE</span></td>
+      </tr>
+    </table>
+  </section>
+
+  <section>
+    <div class="sec-label">05 — Visão</div>
+    <h2>PARA ONDE ESTAMOS INDO</h2>
+    <p>O COSM não é um aplicativo. É um protocolo — como o HTTP é o protocolo da web, o COSM:// é o endereçamento do universo digital tridimensional.</p>
+    <p>No futuro, qualquer plataforma poderá renderizar conteúdo em coordenadas COSM. Uma empresa registra <em style="color:rgba(255,255,255,0.85)">COSM://nike:0:0</em> e qualquer pessoa navega até lá de qualquer dispositivo — browser, óculos VR, console.</p>
+    <div class="frase-grande">
+      "Cada coordenada no universo é sua.<br>
+      Guarde, crie, explore — para sempre."
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      COSM — MARCO ZERO · COSM://500:80:0<br>
+      Versão 0.1 · Junho 2026<br>
+      cosm-production.up.railway.app
+    </p>
+  </footer>
+
+</div>
+</body>
+</html>

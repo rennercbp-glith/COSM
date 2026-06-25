@@ -54,100 +54,101 @@
   /* ── JANELA ─────────────────────────────────────────── */
   #janela{
     position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-    width:700px;height:460px;
-    background:rgba(0,4,18,0.97);
-    border:1px solid rgba(255,255,255,0.28);
+    width:740px;height:500px;
+    background:#0d0d11;
+    border:1px solid rgba(255,255,255,0.22);
     border-radius:12px;display:none;flex-direction:column;
     z-index:50;pointer-events:all;overflow:hidden;
-    box-shadow:0 0 60px rgba(255,255,255,0.04), 0 0 1px rgba(255,255,255,0.15);
+    box-shadow:0 8px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.06);
   }
   #janela.visivel{display:flex;}
 
   #janela-topo{
-    height:44px;flex-shrink:0;
-    border-bottom:1px solid rgba(255,255,255,0.12);
-    background:rgba(0,15,50,0.7);
+    height:46px;flex-shrink:0;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+    background:#161619;
     display:flex;align-items:center;padding:0 16px;gap:10px;
   }
   #janela-path{
-    flex:1;font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:1.5px;
+    flex:1;font-size:11px;color:rgba(255,255,255,0.7);letter-spacing:1px;
   }
   .jbtn{
-    background:none;border:1px solid rgba(255,255,255,0.18);border-radius:5px;
-    color:rgba(255,255,255,0.5);font-family:'Courier New',monospace;
-    font-size:10px;padding:3px 9px;cursor:pointer;letter-spacing:1px;
+    background:none;border:1px solid rgba(255,255,255,0.15);border-radius:5px;
+    color:rgba(255,255,255,0.55);font-family:'Courier New',monospace;
+    font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:1px;
     transition:all 0.15s;
   }
-  .jbtn:hover{background:rgba(255,255,255,0.07);color:#ffffff;border-color:rgba(255,255,255,0.45);}
-  .jbtn.ativo{background:rgba(255,255,255,0.1);color:#ffffff;border-color:rgba(255,255,255,0.45);}
-  #jbtn-fechar{border-color:rgba(255,80,80,0.25);color:rgba(255,100,100,0.5);}
-  #jbtn-fechar:hover{background:rgba(180,30,30,0.4);color:#ffaaaa;border-color:rgba(255,80,80,0.5);}
+  .jbtn:hover{background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.4);}
+  .jbtn.ativo{background:rgba(255,255,255,0.12);color:#fff;border-color:rgba(255,255,255,0.4);}
+  #jbtn-fechar{border-color:rgba(255,80,80,0.3);color:rgba(255,100,100,0.6);}
+  #jbtn-fechar:hover{background:rgba(180,30,30,0.5);color:#ffaaaa;border-color:rgba(255,80,80,0.6);}
 
   #janela-corpo{display:flex;flex:1;overflow:hidden;}
 
   #janela-sidebar{
-    width:148px;flex-shrink:0;
-    border-right:1px solid rgba(255,255,255,0.1);
-    background:rgba(0,8,28,0.6);
-    padding:14px 10px;display:flex;flex-direction:column;gap:6px;
+    width:160px;flex-shrink:0;
+    border-right:1px solid rgba(255,255,255,0.08);
+    background:#111114;
+    padding:16px 10px;display:flex;flex-direction:column;gap:4px;
   }
   .sidebar-label{
-    font-size:8px;color:rgba(255,255,255,0.3);letter-spacing:2px;
-    text-transform:uppercase;padding:0 4px;margin-top:4px;
+    font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:2px;
+    text-transform:uppercase;padding:0 6px;margin:10px 0 4px;
   }
   .sbtn{
-    background:rgba(0,40,100,0.35);border:1px solid rgba(255,255,255,0.2);
-    border-radius:7px;padding:10px 10px;color:rgba(255,255,255,0.75);
-    font-family:'Courier New',monospace;font-size:10px;
-    cursor:pointer;text-align:left;letter-spacing:0.5px;
-    transition:all 0.15s;display:flex;align-items:center;gap:7px;
+    background:transparent;border:none;border-radius:7px;
+    padding:9px 10px;color:rgba(255,255,255,0.8);
+    font-family:'Courier New',monospace;font-size:11px;
+    cursor:pointer;text-align:left;letter-spacing:0.3px;
+    transition:all 0.12s;display:flex;align-items:center;gap:9px;
   }
-  .sbtn:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.45);color:#ffffff;}
-  .sbtn-icone{font-size:14px;opacity:0.8;}
-  .sidebar-sep{height:1px;background:rgba(255,255,255,0.08);margin:4px 0;}
+  .sbtn:hover{background:rgba(255,255,255,0.08);color:#fff;}
+  .sbtn.ativo{background:rgba(255,255,255,0.1);color:#fff;}
+  .sbtn-icone{font-size:15px;}
+  .sidebar-sep{height:1px;background:rgba(255,255,255,0.07);margin:6px 0;}
 
-  #janela-area{flex:1;overflow-y:auto;padding:16px;scroll-behavior:smooth;}
+  #janela-area{flex:1;overflow-y:auto;padding:18px;scroll-behavior:smooth;background:#0d0d11;}
   #janela-area::-webkit-scrollbar{width:4px;}
   #janela-area::-webkit-scrollbar-track{background:transparent;}
-  #janela-area::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.2);border-radius:2px;}
+  #janela-area::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px;}
 
   #janela-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(90px,1fr));
-    gap:10px;
+    grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
+    gap:12px;
   }
   #janela-grid.grande{
-    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
-    gap:14px;
+    grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+    gap:16px;
   }
 
   .arq-card{
-    border:1px solid rgba(255,255,255,0.15);border-radius:8px;
-    padding:10px 8px 8px;cursor:pointer;
-    display:flex;flex-direction:column;align-items:center;gap:7px;
-    background:rgba(0,20,60,0.2);transition:all 0.15s;
+    border:1px solid rgba(255,255,255,0.1);border-radius:10px;
+    padding:12px 8px 10px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    background:rgba(255,255,255,0.03);transition:all 0.15s;
   }
-  .arq-card:hover{background:rgba(0,60,160,0.3);border-color:rgba(255,255,255,0.38);}
+  .arq-card:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.3);}
   .arq-thumb{
-    width:100%;aspect-ratio:1;border-radius:5px;overflow:hidden;
-    background:rgba(0,15,50,0.6);
-    display:flex;align-items:center;justify-content:center;font-size:26px;
+    width:100%;aspect-ratio:1;border-radius:7px;overflow:hidden;
+    background:rgba(255,255,255,0.05);
+    display:flex;align-items:center;justify-content:center;font-size:30px;
   }
   .arq-thumb img{width:100%;height:100%;object-fit:cover;}
   .arq-nome{
-    font-size:9px;color:rgba(255,255,255,0.65);text-align:center;
+    font-size:10px;color:rgba(255,255,255,0.85);text-align:center;
     word-break:break-all;width:100%;
     overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
-    line-height:1.4;
+    line-height:1.5;
   }
-  .arq-size{font-size:8px;color:rgba(255,255,255,0.3);letter-spacing:0.5px;}
+  .arq-size{font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:0.5px;}
 
   .janela-vazia{
     grid-column:1/-1;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;height:200px;gap:12px;
+    align-items:center;justify-content:center;height:260px;gap:14px;
   }
-  .janela-vazia-icone{font-size:36px;opacity:0.2;}
-  .janela-vazia-txt{font-size:10px;color:rgba(255,255,255,0.2);letter-spacing:2px;}
+  .janela-vazia-icone{font-size:40px;opacity:0.25;}
+  .janela-vazia-txt{font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:3px;}
 
   /* ── MODAL ENVIAR PARA COORD ────────────────────────── */
   #modal-enviar{
