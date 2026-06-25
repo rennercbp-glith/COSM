@@ -912,7 +912,8 @@ async function confirmarIdentidade(){
   homeCoord3D=camera.position.clone();
   portalDestino=homeCoord3D.clone();
 
-  // Esfera aparece
+  // Esfera aparece já na posição correta (sem lerp do zero)
+  snapEsferaParaCamera();
   esfMesh.visible=true;
 
   notif('✓ Espaço criado — o cubo está a caminho das suas coordenadas');
@@ -923,7 +924,20 @@ function ativarEsferaSeIdentidade(){
   const salvo=localStorage.getItem('cosm_identidade');
   if(!salvo) return;
   homeCoord3D=camera.position.clone();
+  snapEsferaParaCamera();
   esfMesh.visible=true;
+}
+
+function snapEsferaParaCamera(){
+  const _fwd=new THREE.Vector3();
+  camera.getWorldDirection(_fwd);
+  const _right=new THREE.Vector3().crossVectors(_fwd,new THREE.Vector3(0,1,0)).normalize();
+  esfMesh.position.copy(
+    camera.position.clone()
+      .addScaledVector(_fwd,120)
+      .addScaledVector(_right,220)
+      .addScaledVector(new THREE.Vector3(0,1,0),20)
+  );
 }
 
 function setEsferaVisivel(v){
@@ -1123,7 +1137,7 @@ function loop(){
       .addScaledVector(_fwd,120)
       .addScaledVector(_right,220)
       .addScaledVector(_up,20);
-    esfMesh.position.lerp(alvoEsf,0.028);
+    esfMesh.position.lerp(alvoEsf,0.10);
     esfMesh.rotation.y+=0.008;
     const alvOp=esfOculto?0:0.15;
     esfMat.opacity+=(alvOp-esfMat.opacity)*0.05;
