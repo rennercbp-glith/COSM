@@ -536,6 +536,12 @@ let displayAtivo=false, portalAlvo=null;
 let arquivos=[];
 let tamanhoGrid='p';
 let filtroAtual='todos';
+
+// ── Objetos 3D no espaço ────────────────────────────────
+const ficheiros3D=[]; // THREE.Group por arquivo
+let orbitMode=false;
+const orbitTarget=new THREE.Vector3();
+let orbitDist=400, orbitTheta=0, orbitPhi=Math.PI/2;
 let db=null;
 
 // ── Posicionamento espacial por IP ──────────────────────
@@ -599,7 +605,7 @@ function initDB(){
 function carregarDB(){
   if(!db) return;
   const req=db.transaction('arquivos','readonly').objectStore('arquivos').getAll();
-  req.onsuccess=()=>{ arquivos=req.result||[]; };
+  req.onsuccess=()=>{ arquivos=req.result||[]; criarMeshesTodosArquivos(); };
 }
 
 function salvarDB(arquivo){
@@ -611,6 +617,164 @@ function salvarDB(arquivo){
 function apagarDB(id){
   if(!db) return;
   db.transaction('arquivos','readwrite').objectStore('arquivos').delete(id);
+}
+
+function atualizarDB(arquivo){
+  if(!db||!arquivo.id) return;
+  db.transaction('arquivos','readwrite').objectStore('arquivos').put(arquivo);
+}
+
+// ═══════════════════════════════════════════════════════
+//  ARQUIVOS 3D NO ESPAÇO
+// ═══════════════════════════════════════════════════════
+function posAleatoria(){
+  const p=camera.position;
+  const fwd=new THREE.Vector3(); camera.getWorldDirection(fwd);
+  const dist=200+Math.random()*200;
+  return {
+    x:p.x+fwd.x*dist+(Math.random()-0.5)*150,
+    y:p.y+(Math.random()-0.5)*80,
+    z:p.z+fwd.z*dist+(Math.random()-0.5)*150
+  };
+}
+
+function criarLabel(nome){
+  const cv=document.createElement('canvas');
+  cv.width=512; cv.height=64;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='rgba(0,0,0,0.55)';
+  ctx.roundRect(0,4,512,56,10); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.8)';
+  ctx.font='20px monospace'; ctx.textAlign='center';
+  ctx.fillText(nome.length>38?nome.substring(0,35)+'…':nome,256,38);
+  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthTest:false}));
+  spr.scale.set(220,28,1);
+  return spr;
+}
+
+function criarMesh3D(arquivo){
+  const group=new THREE.Group();
+  const pos=arquivo.pos||{x:camera.position.x,y:camera.position.y,z:camera.position.z};
+  group.position.set(pos.x,pos.y,pos.z);
+  group.userData.arquivo=arquivo;
+  group.quaternion.copy(camera.quaternion);
+
+  let mesh, blobUrl=null;
+
+  if(arquivo.tipo==='video' && arquivo.dataUrl){
+    const vidEl=document.createElement('video');
+    blobUrl=dataUrlParaBlobUrl(arquivo.dataUrl);
+    vidEl.src=blobUrl; vidEl.loop=true; vidEl.muted=true; vidEl.playsInline=true;
+    vidEl.play().catch(()=>{});
+    const tex=new THREE.VideoTexture(vidEl);
+    mesh=new THREE.Mesh(new THREE.PlaneGeometry(320,180),
+      new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));
+    group._videoEl=vidEl;
+  } else if(arquivo.tipo==='imagem' && arquivo.dataUrl){
+    const tex=new THREE.TextureLoader().load(arquivo.dataUrl);
+    tex.colorSpace=THREE.SRGBColorSpace;
+    mesh=new THREE.Mesh(new THREE.PlaneGeometry(200,200),
+      new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));
+  } else {
+    const cv=document.createElement('canvas'); cv.width=256; cv.height=256;
+    const ctx=cv.getContext('2d');
+    ctx.fillStyle='rgba(12,12,22,0.92)'; ctx.roundRect(4,4,248,248,20); ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.lineWidth=2; ctx.roundRect(4,4,248,248,20); ctx.stroke();
+    const ics={video:'🎬',html:'🌐',pdf:'📕',texto:'📝',documento:'📄'};
+    ctx.font='88px serif'; ctx.textAlign='center'; ctx.fillText(ics[arquivo.tipo]||'📄',128,158);
+    mesh=new THREE.Mesh(new THREE.PlaneGeometry(140,140),
+      new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),transparent:true,side:THREE.DoubleSide}));
+  }
+
+  group._mesh=mesh; group._blobUrl=blobUrl;
+  const border=new THREE.LineSegments(
+    new THREE.EdgesGeometry(mesh.geometry),
+    new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.2}));
+  group.add(mesh); group.add(border);
+
+  const label=criarLabel(arquivo.nome);
+  const h=(mesh.geometry.parameters.height||140)/2+22;
+  label.position.set(0,h,0);
+  group.add(label);
+
+  scene.add(group);
+  ficheiros3D.push(group);
+  return group;
+}
+
+function criarMeshesTodosArquivos(){
+  arquivos.forEach(a=>{
+    if(!a.pos){ a.pos=posAleatoria(); atualizarDB(a); }
+    criarMesh3D(a);
+  });
+}
+
+function removerMesh3D(arquivo){
+  const idx=ficheiros3D.findIndex(g=>g.userData.arquivo===arquivo);
+  if(idx<0) return;
+  const g=ficheiros3D.splice(idx,1)[0];
+  if(g._videoEl){ g._videoEl.pause(); g._videoEl.src=''; }
+  if(g._blobUrl) URL.revokeObjectURL(g._blobUrl);
+  scene.remove(g);
+  g.traverse(o=>{
+    if(o.geometry) o.geometry.dispose();
+    if(o.material){ if(o.material.map) o.material.map.dispose(); o.material.dispose(); }
+  });
+}
+
+function entrarOrbita(posAlvo, distInicial){
+  orbitTarget.copy(posAlvo);
+  const rel=camera.position.clone().sub(posAlvo);
+  const len=rel.length();
+  orbitDist=Math.max(150, len>10?len:distInicial);
+  orbitTheta=Math.atan2(rel.x,rel.z);
+  orbitPhi=Math.max(0.1,Math.min(Math.PI-0.1, len>10?Math.acos(rel.y/len):Math.PI/2));
+  orbitMode=true; velCruz=0;
+  notif('MODO ÓRBITA · arraste para girar · scroll para zoom · ESC para sair');
+}
+
+function sairOrbita(){
+  if(!orbitMode) return;
+  orbitMode=false;
+  notif('');
+}
+
+function criarDemoMarcoZero(){
+  const P=PORTAL_COORD;
+
+  // Painel principal — o que é o COSM
+  const cv1=document.createElement('canvas'); cv1.width=512; cv1.height=280;
+  const c1=cv1.getContext('2d');
+  c1.fillStyle='rgba(8,8,20,0.96)'; c1.roundRect(0,0,512,280,14); c1.fill();
+  c1.strokeStyle='rgba(255,255,255,0.12)'; c1.lineWidth=1.5; c1.roundRect(0,0,512,280,14); c1.stroke();
+  c1.fillStyle='rgba(255,255,255,0.9)'; c1.font='bold 26px monospace'; c1.textAlign='center';
+  c1.fillText('COSM', 256, 52);
+  c1.fillStyle='rgba(255,255,255,0.38)'; c1.font='12px monospace';
+  c1.fillText('UNIVERSO DIGITAL PERMANENTE', 256, 80);
+  c1.textAlign='left'; c1.fillStyle='rgba(255,255,255,0.65)'; c1.font='13px monospace';
+  ['📁  Arquivos flutuam no espaço 3D','🎬  Vídeos viram tela de cinema','🖼  Imagens viram quadros','🔒  Sem cadastro — coordenada = identidade'].forEach((t,i)=>c1.fillText(t,44,130+i*36));
+  const m1=new THREE.Mesh(new THREE.PlaneGeometry(256,140),
+    new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv1),transparent:true,side:THREE.DoubleSide}));
+  m1.position.set(P.x-300,P.y+120,P.z); m1.rotation.y=0.35;
+  scene.add(m1);
+
+  // Painel Marco Zero
+  const cv2=document.createElement('canvas'); cv2.width=400; cv2.height=200;
+  const c2=cv2.getContext('2d');
+  c2.fillStyle='rgba(8,8,20,0.96)'; c2.roundRect(0,0,400,200,14); c2.fill();
+  c2.strokeStyle='rgba(255,255,255,0.12)'; c2.lineWidth=1.5; c2.roundRect(0,0,400,200,14); c2.stroke();
+  c2.fillStyle='rgba(255,255,255,0.32)'; c2.font='11px monospace'; c2.textAlign='center';
+  c2.fillText('MARCO ZERO', 200, 42);
+  c2.fillStyle='rgba(255,255,255,0.85)'; c2.font='17px monospace';
+  c2.fillText('COSM://500:80:0', 200, 82);
+  c2.fillStyle='rgba(255,255,255,0.4)'; c2.font='12px monospace';
+  c2.fillText('Ponto de referência público do universo', 200, 118);
+  c2.fillStyle='rgba(255,200,80,0.65)'; c2.font='11px monospace';
+  c2.fillText('Clique no cubo para explorar', 200, 162);
+  const m2=new THREE.Mesh(new THREE.PlaneGeometry(200,100),
+    new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv2),transparent:true,side:THREE.DoubleSide}));
+  m2.position.set(P.x+300,P.y+100,P.z); m2.rotation.y=-0.35;
+  scene.add(m2);
 }
 
 
@@ -640,6 +804,11 @@ canvas.addEventListener('mousemove',e=>{
   const dx=e.clientX-lastX, dy=e.clientY-lastY;
   if(Math.abs(dx)>2||Math.abs(dy)>2) mouseMoved=true;
   lastX=e.clientX; lastY=e.clientY;
+  if(orbitMode){
+    orbitTheta-=dx*0.005;
+    orbitPhi=Math.max(0.1,Math.min(Math.PI-0.1,orbitPhi+dy*0.005));
+    return;
+  }
   const s=0.003;
   camera.quaternion
     .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),dx*s))
@@ -658,22 +827,34 @@ canvas.addEventListener('mouseup',e=>{
   );
   const ray=new THREE.Raycaster();
   ray.setFromCamera(mouse,camera);
-  const hits=ray.intersectObjects([portalMesh,esfMesh],true);
+  const fileMeshes=ficheiros3D.map(g=>g._mesh);
+  const hits=ray.intersectObjects([portalMesh,esfMesh,...fileMeshes],false);
 
   if(hits.length>0){
-    if(hits[0].object===esfMesh||hits[0].object.parent===esfMesh){
+    const obj=hits[0].object;
+    const fileGroup=ficheiros3D.find(g=>g._mesh===obj);
+    if(fileGroup){
+      entrarOrbita(fileGroup.position, 400);
+    } else if(obj===esfMesh||obj.parent===esfMesh){
       abrirMenuEsfera(e.clientX,e.clientY);
     } else {
       fecharMenuEsfera();
       dispararAnimacaoCubo(()=>abrirJanela());
     }
-  } else { velCruz=0; fecharJanela(); fecharMenuEsfera(); }
+  } else {
+    if(orbitMode) sairOrbita();
+    else { velCruz=0; fecharJanela(); fecharMenuEsfera(); }
+  }
 });
 
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
 document.addEventListener('wheel',e=>{
   e.preventDefault();
+  if(orbitMode){
+    orbitDist=Math.max(80,Math.min(3000,orbitDist+e.deltaY*0.4));
+    return;
+  }
   velCruz=Math.max(-VEL_MAX,Math.min(VEL_MAX,velCruz-e.deltaY*0.8));
   fecharJanela();
 },{passive:false});
@@ -740,6 +921,7 @@ const teclas={};
 document.addEventListener('keydown',e=>{
   teclas[e.code]=true;
   if(e.code==='Escape'){
+    if(orbitMode){ sairOrbita(); return; }
     const prev=document.getElementById('preview');
     if(prev.style.display==='flex') fecharPreview();
     else fecharJanela();
@@ -1079,9 +1261,10 @@ function registrarArquivo(input){
       'documento';
 
     const finalizar=dataUrl=>{
-      const arquivo={nome:file.name,tipo,dataUrl,tamanho:file.size};
-      arquivos.push(arquivo);
-      salvarDB(arquivo);
+      const novoArq={nome:file.name,tipo,dataUrl,tamanho:file.size,pos:posAleatoria()};
+      arquivos.push(novoArq);
+      salvarDB(novoArq);
+      criarMesh3D(novoArq);
       renderGrid();
       notif(`✓ ${file.name} adicionado`);
     };
@@ -1206,6 +1389,8 @@ function deletarArquivoPreview(){
   if(!a) return;
   arquivos=arquivos.filter(x=>x!==a);
   apagarDB(a.id);
+  removerMesh3D(a);
+  sairOrbita();
   fecharPreview();
   renderGrid();
   notif(`🗑 ${a.nome} apagado`);
@@ -1283,6 +1468,15 @@ function loop(){
     }
   }
 
+  // Órbita — câmera circula o objeto selecionado
+  if(orbitMode){
+    const ox=orbitTarget.x+orbitDist*Math.sin(orbitPhi)*Math.sin(orbitTheta);
+    const oy=orbitTarget.y+orbitDist*Math.cos(orbitPhi);
+    const oz=orbitTarget.z+orbitDist*Math.sin(orbitPhi)*Math.cos(orbitTheta);
+    camera.position.lerp(new THREE.Vector3(ox,oy,oz),0.08);
+    camera.lookAt(orbitTarget);
+  }
+
   // Portal — lerp para destino (PORTAL_COORD ou espaço pessoal após identidade)
   portalMesh.position.lerp(portalDestino,0.018);
   portalMesh.rotation.y+=0.008;
@@ -1358,6 +1552,7 @@ function loop(){
 initDB().then(carregarDB);
 iniciarPosicaoPorIP();
 ativarEsferaSeIdentidade();
+criarDemoMarcoZero();
 loop();
 
 // ═══════════════════════════════════════════════════════
