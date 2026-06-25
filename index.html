@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Cosmic Ledger</title>
+<title>COSM</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:#000;overflow:hidden;font-family:'Courier New',monospace;color:#aaccff;}
@@ -206,14 +206,16 @@
     background:rgba(0,0,8,0.97);display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:24px;z-index:100;
   }
-  #intro h1{font-size:28px;letter-spacing:8px;color:#aaddff;}
-  #intro p{font-size:12px;color:rgba(100,200,255,0.5);letter-spacing:2px;text-align:center;line-height:2;}
+  #intro-titulo{display:flex;align-items:center;gap:20px;}
+  #intro h1{font-size:28px;letter-spacing:8px;color:#aaddff;margin:0;}
+  #mc{display:block;opacity:0.9;}
+  #intro p{font-size:12px;color:#fff;letter-spacing:2px;text-align:center;line-height:2;}
   #btn-entrar{
-    background:rgba(0,60,140,0.8);border:1px solid rgba(100,200,255,0.4);
-    border-radius:8px;padding:12px 32px;color:#aaddff;font-family:'Courier New',monospace;
-    font-size:13px;cursor:pointer;letter-spacing:2px;transition:background 0.2s;
+    background:#000;border:1px solid rgba(255,255,255,0.25);
+    border-radius:8px;padding:12px 32px;color:#fff;font-family:'Courier New',monospace;
+    font-size:13px;cursor:pointer;letter-spacing:2px;transition:background 0.2s,border-color 0.2s;
   }
-  #btn-entrar:hover{background:rgba(0,100,200,0.8);}
+  #btn-entrar:hover{background:#111;border-color:rgba(255,255,255,0.5);}
   .tecla{
     display:inline-block;background:rgba(100,200,255,0.1);
     border:1px solid rgba(100,200,255,0.25);border-radius:4px;padding:1px 6px;font-size:10px;
@@ -291,8 +293,11 @@
 </div>
 
 <div id="intro">
-  <h1>COSMIC LEDGER</h1>
-  <p>Um universo de coordenadas infinitas.<br>Cada ponto no espaço guarda um arquivo para sempre.</p>
+  <div id="intro-titulo">
+    <h1>COSM</h1>
+    <canvas id="mc" width="160" height="100"></canvas>
+  </div>
+  <p>Cada coordenada no universo é sua.<br>Guarde, crie, explore — para sempre.</p>
   <button id="btn-entrar" onclick="entrar()">▶ ENTRAR NO UNIVERSO</button>
   <p style="font-size:10px;">
     <span class="tecla">Scroll ↑↓</span> voar &nbsp;
@@ -382,6 +387,53 @@ let displayAtivo=false, portalAlvo=null;
 let arquivos=[];
 let tamanhoGrid='p';
 let db=null;
+
+// ── Posicionamento espacial por IP ──────────────────────
+let coordBase={x:0,y:0,z:0};
+let coordDisplayTimer=null;
+
+function hashStr(s){
+  let h=5381;
+  for(let i=0;i<s.length;i++) h=((h<<5)+h)+s.charCodeAt(i);
+  return Math.abs(h);
+}
+
+function ipParaCoordenadas(ip){
+  const p=ip.split('.').map(Number);
+  const E=1000000000; // 1 bilhão = escala de anos-luz
+  return {
+    x: p[0]*E + p[1]*3921568,
+    y: p[2]*E + p[3]*3921568,
+    z: ((p[0]^p[2])*Math.floor(E/2)) + ((p[1]^p[3])*1960784)
+  };
+}
+
+function seedParaCoordenadas(seed){
+  const E=1000000000;
+  const a=(seed%256), b=Math.floor(seed/256)%256;
+  const c=Math.floor(seed/65536)%256, d=Math.floor(seed/16777216)%256;
+  return {x:a*E+b*3921568, y:c*E+d*3921568, z:((a^c)*Math.floor(E/2))};
+}
+
+function formatCoord(v){
+  const s=v<0?'-':'', a=Math.abs(v);
+  if(a>=1e9) return s+(a/1e9).toFixed(2)+'A';
+  if(a>=1e6) return s+(a/1e6).toFixed(2)+'S';
+  if(a>=1e3) return s+(a/1e3).toFixed(1)+'k';
+  return s+Math.round(a)+'m';
+}
+
+async function iniciarPosicaoPorIP(){
+  try{
+    const r=await fetch('https://api.ipify.org?format=json');
+    const {ip}=await r.json();
+    coordBase=ipParaCoordenadas(ip);
+  }catch{
+    const seed=hashStr(navigator.userAgent+screen.width+screen.colorDepth+
+      Intl.DateTimeFormat().resolvedOptions().timeZone);
+    coordBase=seedParaCoordenadas(seed);
+  }
+}
 
 function initDB(){
   return new Promise(resolve=>{
@@ -705,8 +757,14 @@ function loop(){
 
   // HUD
   const p=camera.position;
-  document.getElementById('txt-pos').textContent=
-    `${Math.round(p.x)}:${Math.round(p.y)}:${Math.round(p.z)}`;
+  if(!coordDisplayTimer){
+    coordDisplayTimer=setTimeout(()=>{
+      const dx=coordBase.x+p.x, dy=coordBase.y+p.y, dz=coordBase.z+p.z;
+      document.getElementById('txt-pos').textContent=
+        `${formatCoord(dx)} : ${formatCoord(dy)} : ${formatCoord(dz)}`;
+      coordDisplayTimer=null;
+    },100);
+  }
   document.getElementById('txt-vel').textContent=
     Math.abs(Math.round(velCruz))+(velCruz<-1?' ◀':velCruz>1?' ▶':' —');
 
@@ -714,7 +772,86 @@ function loop(){
 }
 
 initDB().then(carregarDB);
+iniciarPosicaoPorIP();
 loop();
+
+// ═══════════════════════════════════════════════════════
+//  FITA DE MÖBIUS — se forma sozinha, parece infinito
+// ═══════════════════════════════════════════════════════
+(function(){
+  const mc=document.getElementById('mc');
+  if(!mc) return;
+  const MR=new THREE.WebGLRenderer({canvas:mc,alpha:true,antialias:true});
+  MR.setPixelRatio(Math.min(devicePixelRatio,2));
+  MR.setSize(160,100);
+  MR.setClearColor(0x000000,0);
+
+  const MS=new THREE.Scene();
+  const MC=new THREE.PerspectiveCamera(46,160/100,0.1,100);
+  MC.position.z=4.6;
+
+  const SEG=280, W=0.44;
+  const verts=[], idx=[];
+  for(let i=0;i<=SEG;i++){
+    const u=i/SEG*Math.PI*2;
+    for(const v of [-W,W]){
+      verts.push(
+        (1+v*Math.cos(u/2))*Math.cos(u),
+        (1+v*Math.cos(u/2))*Math.sin(u),
+        v*Math.sin(u/2)
+      );
+    }
+  }
+  for(let i=0;i<SEG;i++){
+    const a=i*2;
+    idx.push(a,a+1,a+2, a+1,a+3,a+2);
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  geo.setDrawRange(0,0);
+
+  const grp=new THREE.Group();
+  grp.scale.setScalar(0.88);
+  // Inclinação que faz parecer o símbolo ∞
+  grp.rotation.x=1.15;
+  grp.rotation.z=0.12;
+  MS.add(grp);
+
+  const fillMat=new THREE.MeshBasicMaterial({color:0x071428,transparent:true,opacity:0.22,side:THREE.DoubleSide});
+  const wireMat=new THREE.MeshBasicMaterial({color:0x55aaff,wireframe:true,transparent:true,opacity:0.85,side:THREE.DoubleSide});
+  grp.add(new THREE.Mesh(geo,fillMat));
+  grp.add(new THREE.Mesh(geo,wireMat));
+
+  const TOTAL=idx.length;
+  const BUILD=150; // frames para formar a fita
+  let prog=0, fase='forming', fTimer=0, op=1;
+
+  function loopM(){
+    requestAnimationFrame(loopM);
+    grp.rotation.y+=0.007;
+
+    if(fase==='forming'){
+      prog=Math.min(1,prog+1/BUILD);
+      geo.setDrawRange(0,Math.floor(prog*TOTAL));
+      if(prog>=1){ fase='hold'; fTimer=0; }
+    } else if(fase==='hold'){
+      if(++fTimer>90){ fase='fade'; fTimer=0; }
+    } else if(fase==='fade'){
+      op=Math.max(0,1-(++fTimer/50));
+      fillMat.opacity=0.22*op;
+      wireMat.opacity=0.85*op;
+      if(fTimer>=50){
+        fase='forming'; prog=0; op=1;
+        fillMat.opacity=0.22; wireMat.opacity=0.85;
+        geo.setDrawRange(0,0);
+      }
+    }
+    MR.render(MS,MC);
+  }
+  loopM();
+})();
 </script>
 </body>
 </html>
