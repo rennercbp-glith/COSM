@@ -264,6 +264,36 @@
   }
   #preview-fechar:hover{background:rgba(0,100,200,0.8);}
 
+  /* ── YOUTUBE OVERLAY ───────────────────────────────── */
+  #youtube-overlay{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,8,0.94);display:none;align-items:center;
+    justify-content:center;flex-direction:column;gap:14px;z-index:260;pointer-events:all;
+  }
+  #youtube-overlay.visivel{display:flex;}
+  #youtube-iframe{
+    width:min(90vw,1120px);height:min(80vh,630px);
+    border:none;border-radius:10px;
+    box-shadow:0 0 80px rgba(255,255,255,0.06);
+  }
+  #yt-fechar{
+    background:rgba(0,60,140,0.7);border:1px solid rgba(255,255,255,0.35);
+    border-radius:7px;padding:8px 28px;color:#ffffff;
+    font-family:'Courier New',monospace;font-size:11px;cursor:pointer;
+    letter-spacing:2px;transition:background 0.2s;
+  }
+  #yt-fechar:hover{background:rgba(0,100,200,0.8);}
+
+  /* ── MODAL YOUTUBE ──────────────────────────────────── */
+  #modal-yt{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:rgba(0,6,22,0.98);border:1px solid rgba(255,255,255,0.3);
+    border-radius:10px;padding:28px;width:340px;
+    display:none;flex-direction:column;gap:14px;z-index:100;pointer-events:all;
+    box-shadow:0 0 40px rgba(255,255,255,0.05);
+  }
+  #modal-yt.visivel{display:flex;}
+
   /* ── INTRO ──────────────────────────────────────────── */
   #intro{
     position:fixed;top:0;left:0;width:100%;height:100%;
@@ -354,6 +384,9 @@
       <div class="sbtn" onclick="document.getElementById('file-input').click()">
         <span class="sbtn-icone">⬆</span> Enviar arquivo
       </div>
+      <div class="sbtn" onclick="abrirModalYt()">
+        <span class="sbtn-icone">▶</span> YouTube
+      </div>
       <div class="sidebar-sep"></div>
       <div class="sidebar-label">Visualização</div>
       <div id="sbtn-modo" class="sbtn" onclick="setModo(!modoEspacial)">
@@ -379,6 +412,24 @@
   <div class="modal-btns">
     <div class="modal-btn" onclick="confirmarEnviarPara()">ENVIAR</div>
     <div class="modal-btn cancelar" onclick="fecharEnviarPara()">CANCELAR</div>
+  </div>
+</div>
+
+<!-- YouTube overlay -->
+<div id="youtube-overlay">
+  <iframe id="youtube-iframe" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+  <div id="yt-fechar" onclick="fecharYoutube()">✕ FECHAR</div>
+</div>
+
+<!-- Modal: adicionar YouTube -->
+<div id="modal-yt">
+  <div id="modal-titulo">TELA YOUTUBE</div>
+  <div id="modal-desc">Cole o link do vídeo do YouTube.</div>
+  <input id="yt-input" class="modal-btn" type="text" placeholder="https://youtu.be/..." spellcheck="false"
+    style="text-align:left;cursor:text;padding:8px 12px;font-size:12px;"/>
+  <div class="modal-btns">
+    <div class="modal-btn" onclick="confirmarModalYt()">CRIAR TELA</div>
+    <div class="modal-btn cancelar" onclick="fecharModalYt()">CANCELAR</div>
   </div>
 </div>
 
@@ -693,6 +744,12 @@ function criarMesh3D(arquivo){
     mesh=new THREE.Mesh(new THREE.PlaneGeometry(320,180),
       new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));
     group._videoEl=vidEl;
+  } else if(arquivo.tipo==='youtube'){
+    const tex=new THREE.TextureLoader().load(
+      'https://img.youtube.com/vi/'+arquivo.dataUrl+'/hqdefault.jpg');
+    tex.colorSpace=THREE.SRGBColorSpace;
+    mesh=new THREE.Mesh(new THREE.PlaneGeometry(320,180),
+      new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));
   } else if(arquivo.tipo==='imagem' && arquivo.dataUrl){
     const tex=new THREE.TextureLoader().load(arquivo.dataUrl);
     tex.colorSpace=THREE.SRGBColorSpace;
@@ -833,6 +890,50 @@ function sairOrbita(){
   orbitMode=false;
   notif('');
   fecharMenuArquivo();
+}
+
+// ═══════════════════════════════════════════════════════
+//  YOUTUBE
+// ═══════════════════════════════════════════════════════
+function extrairVideoId(url){
+  const m=url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/))([^&?\/\s]{11})/);
+  return m?m[1]:null;
+}
+
+function abrirModalYt(){
+  document.getElementById('yt-input').value='';
+  document.getElementById('modal-yt').classList.add('visivel');
+  setTimeout(()=>document.getElementById('yt-input').focus(),80);
+}
+
+function fecharModalYt(){
+  document.getElementById('modal-yt').classList.remove('visivel');
+}
+
+function confirmarModalYt(){
+  const url=document.getElementById('yt-input').value.trim();
+  const vid=extrairVideoId(url);
+  if(!vid){ notif('⚠ Link inválido'); return; }
+  fecharModalYt();
+  verificarIdentidade(()=>{
+    const novoArq={nome:'YouTube: '+vid,tipo:'youtube',dataUrl:vid,tamanho:0,pos:posAleatoria()};
+    arquivos.push(novoArq);
+    salvarDB(novoArq);
+    criarMesh3D(novoArq);
+    renderGrid();
+    notif('✓ Tela YouTube criada no espaço');
+  });
+}
+
+function abrirYoutube(videoId){
+  document.getElementById('youtube-iframe').src=
+    'https://www.youtube.com/embed/'+videoId+'?autoplay=1&rel=0';
+  document.getElementById('youtube-overlay').classList.add('visivel');
+}
+
+function fecharYoutube(){
+  document.getElementById('youtube-iframe').src='';
+  document.getElementById('youtube-overlay').classList.remove('visivel');
 }
 
 function criarDemoMarcoZero(){
@@ -1028,6 +1129,7 @@ const teclas={};
 document.addEventListener('keydown',e=>{
   teclas[e.code]=true;
   if(e.code==='Escape'){
+    if(document.getElementById('youtube-overlay').classList.contains('visivel')){ fecharYoutube(); return; }
     if(orbitMode){ sairOrbita(); return; }
     const prev=document.getElementById('preview');
     if(prev.style.display==='flex') fecharPreview();
@@ -1156,6 +1258,7 @@ function renderGrid(){
 
   const lista=filtroAtual==='todos'?arquivos:
     filtroAtual==='documento'?arquivos.filter(a=>['documento','pdf','texto'].includes(a.tipo)):
+    filtroAtual==='video'?arquivos.filter(a=>['video','youtube'].includes(a.tipo)):
     arquivos.filter(a=>a.tipo===filtroAtual);
 
   if(lista.length===0){
@@ -1176,7 +1279,7 @@ function renderGrid(){
       img.src=a.dataUrl;
       thumb.appendChild(img);
     } else {
-      const _ic={video:'🎬',html:'🌐',pdf:'📕',texto:'📝',documento:'📄'};
+      const _ic={video:'🎬',html:'🌐',pdf:'📕',texto:'📝',documento:'📄',youtube:'▶'};
       thumb.textContent=_ic[a.tipo]||'📄';
     }
 
@@ -1472,6 +1575,10 @@ function abrirArquivo(a){
     iframe.style.display='block';
     document.getElementById('preview-nome').textContent=a.nome+' — '+kb;
     del.style.display='block'; del._arquivo=a;
+  } else if(a.tipo==='youtube'){
+    abrirYoutube(a.dataUrl);
+    prev.style.display='none';
+    return;
   } else if(a.tipo==='texto' && a.dataUrl){
     txt.textContent=a.dataUrl;
     txt.style.display='block';
