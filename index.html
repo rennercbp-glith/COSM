@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Cosmic Ledger</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#000;overflow:hidden;font-family:'Courier New',monospace;color:#aaccff;}
+  #c{display:block;cursor:crosshair;}
+  #hud{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;}
+
+  #barra-coord{
+    position:absolute;top:24px;left:50%;transform:translateX(-50%);
+    display:flex;align-items:center;gap:10px;pointer-events:all;
+  }
+  #coord-label{font-size:10px;letter-spacing:2px;color:rgba(100,200,255,0.5);}
+  #coord-input{
+    background:rgba(0,8,24,0.85);border:1px solid rgba(100,200,255,0.35);
+    border-radius:6px;padding:6px 14px;color:#aaddff;font-family:'Courier New',monospace;
+    font-size:13px;width:220px;outline:none;letter-spacing:1px;transition:border-color 0.2s;
+  }
+  #coord-input:focus{border-color:rgba(100,200,255,0.8);}
+  #btn-ir{
+    background:rgba(0,80,160,0.7);border:1px solid rgba(100,200,255,0.4);
+    border-radius:6px;padding:6px 14px;color:#aaddff;font-family:'Courier New',monospace;
+    font-size:12px;cursor:pointer;pointer-events:all;transition:background 0.2s;
+  }
+  #btn-ir:hover{background:rgba(0,120,220,0.8);}
+
+  #pos-atual{
+    position:absolute;bottom:24px;left:24px;
+    background:rgba(0,8,24,0.75);border:1px solid rgba(100,200,255,0.2);
+    border-radius:10px;padding:10px 16px;
+  }
+  .pos-linha{font-size:10px;color:rgba(100,200,255,0.45);letter-spacing:1px;}
+  #txt-pos{font-size:13px;color:#aaddff;letter-spacing:1px;}
+
+  #vel-info{
+    position:absolute;bottom:24px;right:24px;
+    background:rgba(0,8,24,0.75);border:1px solid rgba(100,200,255,0.2);
+    border-radius:10px;padding:10px 16px;text-align:right;
+  }
+  #vel-label{font-size:10px;color:rgba(100,200,255,0.45);letter-spacing:1px;}
+  #txt-vel{font-size:13px;color:#aaddff;}
+
+  #notif{
+    position:absolute;top:72px;left:50%;transform:translateX(-50%);
+    background:rgba(0,40,100,0.92);border:1px solid rgba(100,200,255,0.4);
+    border-radius:8px;padding:8px 18px;font-size:10px;color:#aaddff;
+    letter-spacing:1px;display:none;pointer-events:none;white-space:nowrap;
+  }
+
+  /* ── JANELA ─────────────────────────────────────────── */
+  #janela{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:700px;height:460px;
+    background:rgba(0,4,18,0.97);
+    border:1px solid rgba(100,200,255,0.28);
+    border-radius:12px;display:none;flex-direction:column;
+    z-index:50;pointer-events:all;overflow:hidden;
+    box-shadow:0 0 60px rgba(0,80,255,0.12), 0 0 1px rgba(100,200,255,0.4);
+  }
+  #janela.visivel{display:flex;}
+
+  #janela-topo{
+    height:44px;flex-shrink:0;
+    border-bottom:1px solid rgba(100,200,255,0.12);
+    background:rgba(0,15,50,0.7);
+    display:flex;align-items:center;padding:0 16px;gap:10px;
+  }
+  #janela-path{
+    flex:1;font-size:10px;color:rgba(100,200,255,0.5);letter-spacing:1.5px;
+  }
+  .jbtn{
+    background:none;border:1px solid rgba(100,200,255,0.18);border-radius:5px;
+    color:rgba(100,200,255,0.5);font-family:'Courier New',monospace;
+    font-size:10px;padding:3px 9px;cursor:pointer;letter-spacing:1px;
+    transition:all 0.15s;
+  }
+  .jbtn:hover{background:rgba(0,80,200,0.3);color:#aaddff;border-color:rgba(100,200,255,0.45);}
+  .jbtn.ativo{background:rgba(0,80,200,0.4);color:#aaddff;border-color:rgba(100,200,255,0.45);}
+  #jbtn-fechar{border-color:rgba(255,80,80,0.25);color:rgba(255,100,100,0.5);}
+  #jbtn-fechar:hover{background:rgba(180,30,30,0.4);color:#ffaaaa;border-color:rgba(255,80,80,0.5);}
+
+  #janela-corpo{display:flex;flex:1;overflow:hidden;}
+
+  #janela-sidebar{
+    width:148px;flex-shrink:0;
+    border-right:1px solid rgba(100,200,255,0.1);
+    background:rgba(0,8,28,0.6);
+    padding:14px 10px;display:flex;flex-direction:column;gap:6px;
+  }
+  .sidebar-label{
+    font-size:8px;color:rgba(100,200,255,0.3);letter-spacing:2px;
+    text-transform:uppercase;padding:0 4px;margin-top:4px;
+  }
+  .sbtn{
+    background:rgba(0,40,100,0.35);border:1px solid rgba(100,200,255,0.2);
+    border-radius:7px;padding:10px 10px;color:#9bcfee;
+    font-family:'Courier New',monospace;font-size:10px;
+    cursor:pointer;text-align:left;letter-spacing:0.5px;
+    transition:all 0.15s;display:flex;align-items:center;gap:7px;
+  }
+  .sbtn:hover{background:rgba(0,80,200,0.45);border-color:rgba(100,200,255,0.45);color:#aaddff;}
+  .sbtn-icone{font-size:14px;opacity:0.8;}
+  .sidebar-sep{height:1px;background:rgba(100,200,255,0.08);margin:4px 0;}
+
+  #janela-area{flex:1;overflow-y:auto;padding:16px;scroll-behavior:smooth;}
+  #janela-area::-webkit-scrollbar{width:4px;}
+  #janela-area::-webkit-scrollbar-track{background:transparent;}
+  #janela-area::-webkit-scrollbar-thumb{background:rgba(100,200,255,0.2);border-radius:2px;}
+
+  #janela-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(90px,1fr));
+    gap:10px;
+  }
+  #janela-grid.grande{
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:14px;
+  }
+
+  .arq-card{
+    border:1px solid rgba(100,200,255,0.15);border-radius:8px;
+    padding:10px 8px 8px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:7px;
+    background:rgba(0,20,60,0.2);transition:all 0.15s;
+  }
+  .arq-card:hover{background:rgba(0,60,160,0.3);border-color:rgba(100,200,255,0.38);}
+  .arq-thumb{
+    width:100%;aspect-ratio:1;border-radius:5px;overflow:hidden;
+    background:rgba(0,15,50,0.6);
+    display:flex;align-items:center;justify-content:center;font-size:26px;
+  }
+  .arq-thumb img{width:100%;height:100%;object-fit:cover;}
+  .arq-nome{
+    font-size:9px;color:rgba(150,210,255,0.65);text-align:center;
+    word-break:break-all;width:100%;
+    overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+    line-height:1.4;
+  }
+  .arq-size{font-size:8px;color:rgba(100,200,255,0.3);letter-spacing:0.5px;}
+
+  .janela-vazia{
+    grid-column:1/-1;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;height:200px;gap:12px;
+  }
+  .janela-vazia-icone{font-size:36px;opacity:0.2;}
+  .janela-vazia-txt{font-size:10px;color:rgba(100,200,255,0.2);letter-spacing:2px;}
+
+  /* ── MODAL ENVIAR PARA COORD ────────────────────────── */
+  #modal-enviar{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:rgba(0,6,22,0.98);border:1px solid rgba(100,200,255,0.3);
+    border-radius:10px;padding:28px 28px;width:300px;
+    display:none;flex-direction:column;gap:14px;z-index:100;pointer-events:all;
+    box-shadow:0 0 40px rgba(0,80,255,0.15);
+  }
+  #modal-enviar.visivel{display:flex;}
+  #modal-titulo{font-size:9px;letter-spacing:3px;color:rgba(100,200,255,0.45);text-transform:uppercase;}
+  #modal-desc{font-size:10px;color:rgba(100,200,255,0.4);line-height:1.6;}
+  #modal-input{
+    background:rgba(0,10,30,0.9);border:1px solid rgba(100,200,255,0.3);
+    border-radius:6px;padding:8px 12px;color:#aaddff;
+    font-family:'Courier New',monospace;font-size:13px;outline:none;
+    letter-spacing:1px;width:100%;
+  }
+  #modal-input:focus{border-color:rgba(100,200,255,0.7);}
+  .modal-btns{display:flex;gap:8px;}
+  .modal-btn{
+    flex:1;background:rgba(0,60,140,0.6);border:1px solid rgba(100,200,255,0.3);
+    border-radius:7px;padding:9px;color:#aaddff;font-family:'Courier New',monospace;
+    font-size:10px;cursor:pointer;text-align:center;letter-spacing:1px;transition:background 0.15s;
+  }
+  .modal-btn:hover{background:rgba(0,100,220,0.7);}
+  .modal-btn.cancelar{background:rgba(20,20,40,0.5);color:rgba(100,200,255,0.4);}
+  .modal-btn.cancelar:hover{background:rgba(40,40,80,0.5);color:#aaddff;}
+
+  /* ── PREVIEW ────────────────────────────────────────── */
+  #preview{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,8,0.97);display:none;flex-direction:column;
+    align-items:center;justify-content:center;gap:18px;z-index:200;pointer-events:all;
+  }
+  #preview img{max-width:88vw;max-height:78vh;object-fit:contain;
+    border:1px solid rgba(100,200,255,0.2);border-radius:4px;}
+  #preview-doc{
+    border:1px solid rgba(100,200,255,0.2);border-radius:12px;
+    padding:36px 48px;text-align:center;
+  }
+  #preview-doc-icone{font-size:48px;margin-bottom:12px;}
+  #preview-doc-nome{font-size:15px;color:#aaddff;margin-bottom:6px;}
+  #preview-doc-info{font-size:10px;color:rgba(100,200,255,0.45);letter-spacing:1px;}
+  #preview-nome{font-size:10px;color:rgba(100,200,255,0.45);letter-spacing:2px;}
+  #preview-fechar{
+    background:rgba(0,60,140,0.7);border:1px solid rgba(100,200,255,0.35);
+    border-radius:7px;padding:8px 28px;color:#aaddff;
+    font-family:'Courier New',monospace;font-size:11px;cursor:pointer;
+    letter-spacing:2px;transition:background 0.2s;
+  }
+  #preview-fechar:hover{background:rgba(0,100,200,0.8);}
+
+  /* ── INTRO ──────────────────────────────────────────── */
+  #intro{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,8,0.97);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:24px;z-index:100;
+  }
+  #intro h1{font-size:28px;letter-spacing:8px;color:#aaddff;}
+  #intro p{font-size:12px;color:rgba(100,200,255,0.5);letter-spacing:2px;text-align:center;line-height:2;}
+  #btn-entrar{
+    background:rgba(0,60,140,0.8);border:1px solid rgba(100,200,255,0.4);
+    border-radius:8px;padding:12px 32px;color:#aaddff;font-family:'Courier New',monospace;
+    font-size:13px;cursor:pointer;letter-spacing:2px;transition:background 0.2s;
+  }
+  #btn-entrar:hover{background:rgba(0,100,200,0.8);}
+  .tecla{
+    display:inline-block;background:rgba(100,200,255,0.1);
+    border:1px solid rgba(100,200,255,0.25);border-radius:4px;padding:1px 6px;font-size:10px;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="hud">
+  <div id="barra-coord">
+    <span id="coord-label">COSM://</span>
+    <input id="coord-input" type="text" placeholder="X:Y:Z" spellcheck="false"/>
+    <button id="btn-ir" onclick="irParaCoordenada()">IR</button>
+  </div>
+  <div id="pos-atual">
+    <div class="pos-linha">COORDENADA ATUAL</div>
+    <div id="txt-pos">0:0:0</div>
+  </div>
+  <div id="vel-info">
+    <div id="vel-label">VELOCIDADE</div>
+    <div id="txt-vel">0 —</div>
+  </div>
+  <input id="file-input" type="file" style="display:none" onchange="registrarArquivo(this)"/>
+  <div id="notif"></div>
+</div>
+
+<!-- Janela gerenciador de arquivos -->
+<div id="janela">
+  <div id="janela-topo">
+    <div id="janela-path">COSM://500:80:0</div>
+    <button class="jbtn ativo" id="jbtn-p" onclick="setTamanho('p')">▪▪▪</button>
+    <button class="jbtn" id="jbtn-g" onclick="setTamanho('g')">▬▬</button>
+    <button class="jbtn" id="jbtn-fechar" onclick="fecharJanela()">✕</button>
+  </div>
+  <div id="janela-corpo">
+    <div id="janela-sidebar">
+      <div class="sidebar-label">Ações</div>
+      <div class="sbtn" onclick="document.getElementById('file-input').click()">
+        <span class="sbtn-icone">⬆</span> Enviar arquivo
+      </div>
+      <div class="sidebar-sep"></div>
+      <div class="sidebar-label">Compartilhar</div>
+      <div class="sbtn" onclick="abrirEnviarPara()">
+        <span class="sbtn-icone">⇗</span> Enviar para coord
+      </div>
+    </div>
+    <div id="janela-area">
+      <div id="janela-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal enviar para coordenada -->
+<div id="modal-enviar">
+  <div id="modal-titulo">Enviar para coordenada</div>
+  <div id="modal-desc">Digite a coordenada COSM de destino.<br/>O arquivo selecionado será enviado.</div>
+  <input id="modal-input" type="text" placeholder="X:Y:Z" spellcheck="false"/>
+  <div class="modal-btns">
+    <div class="modal-btn" onclick="confirmarEnviarPara()">ENVIAR</div>
+    <div class="modal-btn cancelar" onclick="fecharEnviarPara()">CANCELAR</div>
+  </div>
+</div>
+
+<!-- Visualização de arquivo -->
+<div id="preview">
+  <img id="preview-img" src="" alt="" style="display:none"/>
+  <div id="preview-doc" style="display:none">
+    <div id="preview-doc-icone">📄</div>
+    <div id="preview-doc-nome"></div>
+    <div id="preview-doc-info"></div>
+  </div>
+  <div id="preview-nome"></div>
+  <div id="preview-fechar" onclick="fecharPreview()">✕ FECHAR ARQUIVO</div>
+</div>
+
+<div id="intro">
+  <h1>COSMIC LEDGER</h1>
+  <p>Um universo de coordenadas infinitas.<br>Cada ponto no espaço guarda um arquivo para sempre.</p>
+  <button id="btn-entrar" onclick="entrar()">▶ ENTRAR NO UNIVERSO</button>
+  <p style="font-size:10px;">
+    <span class="tecla">Scroll ↑↓</span> voar &nbsp;
+    <span class="tecla">Arrastar</span> girar &nbsp;
+    <span class="tecla">COSM://X:Y:Z</span> teletransporte
+  </p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════
+//  SETUP
+// ═══════════════════════════════════════════════════════
+const canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(devicePixelRatio);
+renderer.setSize(innerWidth,innerHeight);
+window.addEventListener('resize',()=>{
+  renderer.setSize(innerWidth,innerHeight);
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+});
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,50000000);
+camera.position.set(0,0,800);
+
+// ═══════════════════════════════════════════════════════
+//  ESTRELAS
+// ═══════════════════════════════════════════════════════
+(function(){
+  const N=20000;
+  const pos=new Float32Array(N*3), col=new Float32Array(N*3);
+  for(let i=0;i<N;i++){
+    const r=3000+Math.random()*120000;
+    const theta=Math.random()*Math.PI*2, phi=Math.acos(2*Math.random()-1);
+    pos[i*3]=r*Math.sin(phi)*Math.cos(theta);
+    pos[i*3+1]=r*Math.sin(phi)*Math.sin(theta);
+    pos[i*3+2]=r*Math.cos(phi);
+    const t=Math.random();
+    if(t<0.6){col[i*3]=0.85+Math.random()*0.15;col[i*3+1]=0.85+Math.random()*0.15;col[i*3+2]=0.9+Math.random()*0.1;}
+    else if(t<0.8){col[i*3]=0.7+Math.random()*0.2;col[i*3+1]=0.8+Math.random()*0.15;col[i*3+2]=1.0;}
+    else{col[i*3]=1.0;col[i*3+1]=0.7+Math.random()*0.2;col[i*3+2]=0.5+Math.random()*0.2;}
+  }
+  const cv=document.createElement('canvas');cv.width=16;cv.height=16;
+  const cx=cv.getContext('2d');
+  const g=cx.createRadialGradient(8,8,0,8,8,7);
+  g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(1,'rgba(255,255,255,0)');
+  cx.fillStyle=g;cx.fillRect(0,0,16,16);
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+  const est=new THREE.Points(geo,new THREE.PointsMaterial({
+    size:1.8,map:new THREE.CanvasTexture(cv),
+    vertexColors:true,transparent:true,depthWrite:false,alphaTest:0.01,sizeAttenuation:true,
+  }));
+  est.name='estrelas';
+  scene.add(est);
+})();
+
+// ═══════════════════════════════════════════════════════
+//  PORTAL — cubo wireframe em COSM://500:80:0
+// ═══════════════════════════════════════════════════════
+const PORTAL_COORD=new THREE.Vector3(500,80,0);
+
+const portalMesh=new THREE.Mesh(
+  new THREE.BoxGeometry(70,70,70),
+  new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,colorWrite:false})
+);
+portalMesh.position.copy(PORTAL_COORD);
+portalMesh.userData={tipo:'portal'};
+
+const portalLinhas=new THREE.LineSegments(
+  new THREE.EdgesGeometry(new THREE.BoxGeometry(70,70,70)),
+  new THREE.LineBasicMaterial({color:0x4488ff,transparent:true,opacity:0.9})
+);
+portalMesh.add(portalLinhas);
+scene.add(portalMesh);
+
+// ═══════════════════════════════════════════════════════
+//  ESTADOS
+// ═══════════════════════════════════════════════════════
+let velCruz=0;
+const VEL_MAX=800;
+let arrastando=false, mouseMoved=false, lastX=0, lastY=0;
+let voando=false, alvoVoo=null;
+let displayAtivo=false, portalAlvo=null;
+let arquivos=[];
+let tamanhoGrid='p';
+let db=null;
+
+function initDB(){
+  return new Promise(resolve=>{
+    const req=indexedDB.open('CosmicLedger',1);
+    req.onupgradeneeded=e=>{
+      e.target.result.createObjectStore('arquivos',{keyPath:'id',autoIncrement:true});
+    };
+    req.onsuccess=e=>{ db=e.target.result; resolve(); };
+    req.onerror=()=>resolve();
+  });
+}
+
+function carregarDB(){
+  if(!db) return;
+  const req=db.transaction('arquivos','readonly').objectStore('arquivos').getAll();
+  req.onsuccess=()=>{ arquivos=req.result||[]; };
+}
+
+function salvarDB(arquivo){
+  if(!db) return;
+  const req=db.transaction('arquivos','readwrite').objectStore('arquivos').add(arquivo);
+  req.onsuccess=()=>{ arquivo.id=req.result; };
+}
+
+// ═══════════════════════════════════════════════════════
+//  NAVEGAÇÃO
+// ═══════════════════════════════════════════════════════
+canvas.addEventListener('mousedown',e=>{
+  if(e.button!==0) return;
+  arrastando=true; mouseMoved=false;
+  lastX=e.clientX; lastY=e.clientY;
+  canvas.style.cursor='grabbing';
+});
+
+canvas.addEventListener('mousemove',e=>{
+  if(!arrastando) return;
+  const dx=e.clientX-lastX, dy=e.clientY-lastY;
+  if(Math.abs(dx)>2||Math.abs(dy)>2) mouseMoved=true;
+  lastX=e.clientX; lastY=e.clientY;
+  const s=0.003;
+  camera.quaternion
+    .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),dx*s))
+    .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),dy*s))
+    .normalize();
+});
+
+canvas.addEventListener('mouseup',e=>{
+  arrastando=false;
+  canvas.style.cursor='crosshair';
+  if(mouseMoved) return;
+
+  const mouse=new THREE.Vector2(
+    (e.clientX/innerWidth)*2-1,
+    -(e.clientY/innerHeight)*2+1
+  );
+  const ray=new THREE.Raycaster();
+  ray.setFromCamera(mouse,camera);
+  const hits=ray.intersectObjects([portalMesh],true);
+
+  if(hits.length>0) abrirJanela();
+  else { velCruz=0; fecharJanela(); }
+});
+
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+
+document.addEventListener('wheel',e=>{
+  e.preventDefault();
+  velCruz=Math.max(-VEL_MAX,Math.min(VEL_MAX,velCruz-e.deltaY*0.8));
+  fecharJanela();
+},{passive:false});
+
+const teclas={};
+document.addEventListener('keydown',e=>{
+  teclas[e.code]=true;
+  if(e.code==='Escape'){
+    const prev=document.getElementById('preview');
+    if(prev.style.display==='flex') fecharPreview();
+    else fecharJanela();
+  }
+  if(['KeyW','KeyS','KeyA','KeyD','Space','KeyC'].includes(e.code)) fecharJanela();
+});
+document.addEventListener('keyup',e=>delete teclas[e.code]);
+document.getElementById('coord-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter') irParaCoordenada();
+});
+
+// ═══════════════════════════════════════════════════════
+//  TELETRANSPORTE
+// ═══════════════════════════════════════════════════════
+function irParaCoordenada(){
+  const val=document.getElementById('coord-input').value.trim();
+  const partes=val.split(':').map(Number);
+  if(partes.length!==3||partes.some(isNaN)){
+    document.getElementById('coord-input').style.borderColor='rgba(255,80,80,0.8)';
+    setTimeout(()=>document.getElementById('coord-input').style.borderColor='',1000);
+    return;
+  }
+  alvoVoo=new THREE.Vector3(partes[0],partes[1],partes[2]+200);
+  voando=true; velCruz=0;
+  fecharJanela();
+}
+
+// ═══════════════════════════════════════════════════════
+//  JANELA — gerenciador de arquivos
+// ═══════════════════════════════════════════════════════
+function abrirJanela(){
+  renderGrid();
+  document.getElementById('janela').classList.add('visivel');
+}
+
+function fecharJanela(){
+  document.getElementById('janela').classList.remove('visivel');
+  fecharEnviarPara();
+}
+
+function setTamanho(t){
+  tamanhoGrid=t;
+  document.getElementById('jbtn-p').classList.toggle('ativo',t==='p');
+  document.getElementById('jbtn-g').classList.toggle('ativo',t==='g');
+  const grid=document.getElementById('janela-grid');
+  grid.classList.toggle('grande',t==='g');
+}
+
+function renderGrid(){
+  const grid=document.getElementById('janela-grid');
+  grid.innerHTML='';
+  grid.className=tamanhoGrid==='g'?'grande':'';
+
+  if(arquivos.length===0){
+    grid.innerHTML='<div class="janela-vazia"><div class="janela-vazia-icone">📂</div><div class="janela-vazia-txt">PASTA VAZIA</div></div>';
+    return;
+  }
+
+  arquivos.forEach((a,i)=>{
+    const card=document.createElement('div');
+    card.className='arq-card';
+    card.onclick=()=>abrirArquivo(a);
+
+    const thumb=document.createElement('div');
+    thumb.className='arq-thumb';
+    if(a.tipo==='imagem' && a.dataUrl){
+      const img=document.createElement('img');
+      img.src=a.dataUrl;
+      thumb.appendChild(img);
+    } else {
+      thumb.textContent=a.tipo==='video'?'🎬':'📄';
+    }
+
+    const nome=document.createElement('div');
+    nome.className='arq-nome';
+    nome.textContent=a.nome;
+
+    const size=document.createElement('div');
+    size.className='arq-size';
+    size.textContent=(a.tamanho/1024).toFixed(0)+' KB';
+
+    card.appendChild(thumb);
+    card.appendChild(nome);
+    card.appendChild(size);
+    grid.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  UPLOAD
+// ═══════════════════════════════════════════════════════
+function notif(txt){
+  const n=document.getElementById('notif');
+  n.textContent=txt; n.style.display='block';
+  clearTimeout(notif._t);
+  notif._t=setTimeout(()=>n.style.display='none',4000);
+}
+
+function registrarArquivo(input){
+  const file=input.files[0];
+  if(!file) return;
+  input.value='';
+
+  const ext=file.name.split('.').pop().toLowerCase();
+  const tipo=['jpg','jpeg','png','gif','webp'].includes(ext)?'imagem':
+             ['mp4','webm','mov'].includes(ext)?'video':'documento';
+
+  const finalizar=dataUrl=>{
+    const arquivo={nome:file.name,tipo,dataUrl,tamanho:file.size};
+    arquivos.push(arquivo);
+    salvarDB(arquivo);
+    renderGrid();
+    notif(`✓ ${file.name} adicionado`);
+  };
+
+  if(tipo==='imagem'){
+    const reader=new FileReader();
+    reader.onload=e=>finalizar(e.target.result);
+    reader.readAsDataURL(file);
+  } else {
+    finalizar(null);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  ENVIAR PARA COORDENADA
+// ═══════════════════════════════════════════════════════
+function abrirEnviarPara(){
+  document.getElementById('modal-input').value='';
+  document.getElementById('modal-enviar').classList.add('visivel');
+}
+
+function fecharEnviarPara(){
+  document.getElementById('modal-enviar').classList.remove('visivel');
+}
+
+function confirmarEnviarPara(){
+  const val=document.getElementById('modal-input').value.trim();
+  const partes=val.split(':').map(Number);
+  if(partes.length!==3||partes.some(isNaN)){
+    document.getElementById('modal-input').style.borderColor='rgba(255,80,80,0.8)';
+    setTimeout(()=>document.getElementById('modal-input').style.borderColor='',1000);
+    return;
+  }
+  fecharEnviarPara();
+  notif(`⇗ Enviado para COSM://${val}`);
+}
+
+// ═══════════════════════════════════════════════════════
+//  VISUALIZAÇÃO DE ARQUIVOS
+// ═══════════════════════════════════════════════════════
+function abrirArquivo(a){
+  const prev=document.getElementById('preview');
+  const img=document.getElementById('preview-img');
+  const doc=document.getElementById('preview-doc');
+  document.getElementById('preview-nome').textContent=
+    a.nome+' — '+(a.tamanho/1024).toFixed(1)+' KB';
+
+  if(a.tipo==='imagem' && a.dataUrl){
+    img.src=a.dataUrl;
+    img.style.display='block';
+    doc.style.display='none';
+  } else {
+    img.style.display='none';
+    doc.style.display='block';
+    document.getElementById('preview-doc-icone').textContent=a.tipo==='video'?'🎬':'📄';
+    document.getElementById('preview-doc-nome').textContent=a.nome;
+    document.getElementById('preview-doc-info').textContent=(a.tamanho/1024).toFixed(1)+' KB';
+  }
+  prev.style.display='flex';
+}
+
+function fecharPreview(){
+  document.getElementById('preview').style.display='none';
+}
+
+// ═══════════════════════════════════════════════════════
+//  INTRO
+// ═══════════════════════════════════════════════════════
+function entrar(){document.getElementById('intro').style.display='none';}
+
+// ═══════════════════════════════════════════════════════
+//  LOOP PRINCIPAL
+// ═══════════════════════════════════════════════════════
+const clock=new THREE.Clock();
+
+function loop(){
+  requestAnimationFrame(loop);
+  const t=clock.getElapsedTime();
+
+  // Voo automático para coordenada
+  if(voando && alvoVoo){
+    const dist=camera.position.distanceTo(alvoVoo);
+    if(dist<80){
+      voando=false; alvoVoo=null;
+      displayAtivo=true;
+      const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+      portalAlvo=camera.position.clone().addScaledVector(fwd,200);
+    } else {
+      camera.position.addScaledVector(
+        alvoVoo.clone().sub(camera.position).normalize(),
+        Math.min(dist*0.06,VEL_MAX)
+      );
+      camera.lookAt(alvoVoo);
+    }
+  }
+
+  // Cruzeiro
+  if(!voando && Math.abs(velCruz)>0.5){
+    camera.position.addScaledVector(
+      new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion),velCruz
+    );
+    velCruz*=0.96;
+  }
+
+  // WASD
+  if(!voando){
+    const spd=teclas['ShiftLeft']?120:40;
+    const dir=new THREE.Vector3();
+    if(teclas['KeyW']||teclas['ArrowUp'])    dir.z-=1;
+    if(teclas['KeyS']||teclas['ArrowDown'])  dir.z+=1;
+    if(teclas['KeyA']||teclas['ArrowLeft'])  dir.x-=1;
+    if(teclas['KeyD']||teclas['ArrowRight']) dir.x+=1;
+    if(teclas['Space']) dir.y+=1;
+    if(teclas['KeyC'])  dir.y-=1;
+    if(dir.length()>0){
+      dir.normalize().applyQuaternion(camera.quaternion);
+      camera.position.addScaledVector(dir,spd);
+    }
+  }
+
+  // Portal — flutua em frente à câmera ao chegar, senão fica na coord fixa
+  const destPortal=displayAtivo && portalAlvo ? portalAlvo : PORTAL_COORD;
+  portalMesh.position.lerp(destPortal,0.06);
+  portalMesh.rotation.y+=0.008;
+  portalMesh.rotation.x+=0.003;
+
+  // Fade do portal por distância
+  const distPortal=camera.position.distanceTo(portalMesh.position);
+  const fadePortal=1-Math.min(1,Math.max(0,(distPortal-800)/1700));
+  portalLinhas.material.opacity=(0.6+Math.sin(t*1.8)*0.25)*fadePortal;
+
+  // Estrelas seguem câmera
+  const est=scene.getObjectByName('estrelas');
+  if(est) est.position.copy(camera.position);
+
+  // HUD
+  const p=camera.position;
+  document.getElementById('txt-pos').textContent=
+    `${Math.round(p.x)}:${Math.round(p.y)}:${Math.round(p.z)}`;
+  document.getElementById('txt-vel').textContent=
+    Math.abs(Math.round(velCruz))+(velCruz<-1?' ◀':velCruz>1?' ▶':' —');
+
+  renderer.render(scene,camera);
+}
+
+initDB().then(carregarDB);
+loop();
+</script>
+</body>
+</html>
