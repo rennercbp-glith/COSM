@@ -163,43 +163,46 @@
   /* ── Modal identidade ──────────────────────────────── */
   #modal-id{
     position:fixed;top:0;left:0;width:100%;height:100%;
-    background:rgba(0,0,8,0.94);display:none;align-items:center;
+    background:rgba(0,0,0,0.88);display:none;align-items:center;
     justify-content:center;z-index:300;pointer-events:all;
+    backdrop-filter:blur(4px);
   }
   #modal-id.visivel{display:flex;}
   #modal-id-box{
-    background:rgba(0,4,20,0.99);border:1px solid rgba(255,255,255,0.3);
-    border-radius:14px;padding:36px;max-width:460px;width:90%;
-    display:flex;flex-direction:column;gap:20px;
-    box-shadow:0 0 60px rgba(0,60,200,0.2);
+    background:#0e0e14;border:1px solid rgba(255,255,255,0.2);
+    border-radius:14px;padding:40px;max-width:480px;width:92%;
+    display:flex;flex-direction:column;gap:22px;
+    box-shadow:0 20px 80px rgba(0,0,0,0.9);
   }
-  #modal-id-titulo{font-size:10px;letter-spacing:4px;color:rgba(255,255,255,0.5);text-transform:uppercase;}
-  #modal-id-desc{font-size:12px;color:rgba(200,220,255,0.7);line-height:1.9;}
+  #modal-id-titulo{font-size:11px;letter-spacing:5px;color:rgba(255,255,255,0.45);text-transform:uppercase;}
+  #modal-id-desc{font-size:13px;color:rgba(255,255,255,0.8);line-height:2;}
   #modal-id-input{
-    background:rgba(0,8,28,0.9);border:1px solid rgba(255,255,255,0.3);
-    border-radius:8px;padding:12px 16px;color:#fff;font-family:'Courier New',monospace;
-    font-size:13px;outline:none;letter-spacing:1px;transition:border-color 0.2s;
+    background:#18181f;border:1px solid rgba(255,255,255,0.25);
+    border-radius:8px;padding:14px 18px;color:#fff;font-family:'Courier New',monospace;
+    font-size:14px;outline:none;letter-spacing:1px;transition:border-color 0.2s;
   }
-  #modal-id-input:focus{border-color:rgba(255,255,255,0.7);}
-  #modal-id-norm{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:1px;min-height:16px;}
+  #modal-id-input::placeholder{color:rgba(255,255,255,0.25);}
+  #modal-id-input:focus{border-color:rgba(255,255,255,0.6);}
+  #modal-id-norm{font-size:11px;color:rgba(255,255,255,0.55);letter-spacing:1px;min-height:18px;}
   #modal-id-coord{
-    font-size:12px;color:#ffffff;letter-spacing:1px;
-    background:rgba(0,20,60,0.5);border-radius:8px;padding:10px 14px;
-    min-height:36px;font-family:'Courier New',monospace;
+    font-size:13px;color:#fff;letter-spacing:1px;
+    background:#18181f;border:1px solid rgba(255,255,255,0.12);
+    border-radius:8px;padding:14px 18px;
+    min-height:44px;font-family:'Courier New',monospace;
   }
   #modal-id-aviso{
-    font-size:10px;color:rgba(255,200,80,0.7);letter-spacing:1px;line-height:1.7;
-    border-left:2px solid rgba(255,200,80,0.3);padding-left:12px;
+    font-size:11px;color:rgba(255,210,80,0.85);letter-spacing:0.5px;line-height:1.8;
+    border-left:2px solid rgba(255,210,80,0.4);padding-left:14px;
   }
   #modal-id-btns{display:flex;gap:12px;justify-content:flex-end;}
   .mid-btn{
-    background:transparent;border:1px solid rgba(255,255,255,0.3);
-    border-radius:8px;padding:10px 20px;color:#ffffff;font-family:'Courier New',monospace;
+    background:transparent;border:1px solid rgba(255,255,255,0.22);
+    border-radius:8px;padding:11px 22px;color:#fff;font-family:'Courier New',monospace;
     font-size:11px;letter-spacing:1px;cursor:pointer;transition:all 0.2s;
   }
-  .mid-btn:hover{background:rgba(0,60,140,0.4);}
-  .mid-btn:disabled{opacity:0.3;cursor:default;}
-  #modal-id-confirmar{background:rgba(0,60,160,0.6);border-color:rgba(255,255,255,0.5);}
+  .mid-btn:hover{background:rgba(255,255,255,0.08);}
+  .mid-btn:disabled{opacity:0.25;cursor:default;}
+  #modal-id-confirmar{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.4);}
   #modal-titulo{font-size:9px;letter-spacing:3px;color:rgba(255,255,255,0.45);text-transform:uppercase;}
   #modal-desc{font-size:10px;color:rgba(255,255,255,0.4);line-height:1.6;}
   #modal-input{
@@ -297,6 +300,12 @@
   </div>
   <input id="file-input" type="file" style="display:none" onchange="registrarArquivo(this)"/>
   <div id="notif"></div>
+  <button id="btn-esfera" onclick="toggleEsfera()" style="display:none;
+    position:absolute;bottom:24px;right:120px;
+    background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);
+    border-radius:8px;padding:7px 14px;color:rgba(255,255,255,0.5);
+    font-family:'Courier New',monospace;font-size:9px;letter-spacing:2px;
+    cursor:pointer;pointer-events:all;transition:all 0.2s;">● ESFERA</button>
 </div>
 
 <!-- Janela gerenciador de arquivos -->
@@ -490,11 +499,12 @@ let portalAnimCb=null;
 
 // ── Esfera de identidade ────────────────────────────────
 const esfMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,wireframe:false});
-const esfMesh=new THREE.Mesh(new THREE.SphereGeometry(6,20,20),esfMat);
+const esfMesh=new THREE.Mesh(new THREE.SphereGeometry(3,20,20),esfMat);
 const esfHalo=new THREE.Mesh(
-  new THREE.SphereGeometry(9,20,20),
+  new THREE.SphereGeometry(4.5,16,16),
   new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,wireframe:true,depthWrite:false})
 );
+let esfVisivel=true;
 esfMesh.add(esfHalo);
 esfMesh.visible=false;
 scene.add(esfMesh);
@@ -917,6 +927,7 @@ async function confirmarIdentidade(){
 
   // Esfera aparece
   esfMesh.visible=true;
+  document.getElementById('btn-esfera').style.display='block';
 
   notif('✓ Espaço criado — o cubo está a caminho das suas coordenadas');
   if(_idCallback){ _idCallback(); _idCallback=null; }
@@ -925,8 +936,16 @@ async function confirmarIdentidade(){
 function ativarEsferaSeIdentidade(){
   const salvo=localStorage.getItem('cosm_identidade');
   if(!salvo) return;
-  homeCoord3D=camera.position.clone(); // home = onde a câmera está ao carregar (perto da origem)
+  homeCoord3D=camera.position.clone();
   esfMesh.visible=true;
+  document.getElementById('btn-esfera').style.display='block';
+}
+
+function toggleEsfera(){
+  esfVisivel=!esfVisivel;
+  const btn=document.getElementById('btn-esfera');
+  btn.textContent=esfVisivel?'● ESFERA':'○ ESFERA';
+  btn.style.color=esfVisivel?'rgba(255,255,255,0.5)':'rgba(255,255,255,0.25)';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1104,15 +1123,21 @@ function loop(){
   if(esfMesh.visible && homeCoord3D){
     const distHome=camera.position.distanceTo(homeCoord3D);
     const emCasa=distHome<400;
-    const alvOp=emCasa?0.85:0;
-    esfMat.opacity+=(alvOp-esfMat.opacity)*0.04;
-    esfHalo.material.opacity=esfMat.opacity*0.3;
-    // flutua levemente na frente e acima da câmera
+    const alvOp=(esfVisivel&&emCasa)?0.18:0;
+    esfMat.opacity+=(alvOp-esfMat.opacity)*0.05;
+    const haloAlv=(esfVisivel&&emCasa)?0.55:0;
+    esfHalo.material.opacity+=(haloAlv-esfHalo.material.opacity)*0.05;
+    // lado direito da tela: frente + deslocamento para a direita
     const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
-    const alvoEsf=camera.position.clone().addScaledVector(fwd,35).add(new THREE.Vector3(0,12,0));
-    esfMesh.position.lerp(alvoEsf,0.08);
-    esfMesh.rotation.y+=0.01;
-    const pulso=1+Math.sin(t*2.2)*0.08;
+    const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);
+    const up2=new THREE.Vector3(0,1,0).applyQuaternion(camera.quaternion);
+    const alvoEsf=camera.position.clone()
+      .addScaledVector(fwd,50)
+      .addScaledVector(right,18)
+      .addScaledVector(up2,-6);
+    esfMesh.position.lerp(alvoEsf,0.06);
+    esfMesh.rotation.y+=0.008;
+    const pulso=1+Math.sin(t*2.2)*0.07;
     esfMesh.scale.setScalar(emCasa?pulso:1);
   }
 
