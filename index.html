@@ -1120,9 +1120,9 @@ function loop(){
     const _right=new THREE.Vector3().crossVectors(_fwd,new THREE.Vector3(0,1,0)).normalize();
     const _up=new THREE.Vector3(0,1,0);
     const alvoEsf=camera.position.clone()
-      .addScaledVector(_fwd,260)
-      .addScaledVector(_right,140)
-      .addScaledVector(_up,30);
+      .addScaledVector(_fwd,120)
+      .addScaledVector(_right,220)
+      .addScaledVector(_up,20);
     esfMesh.position.lerp(alvoEsf,0.028);
     esfMesh.rotation.y+=0.008;
     const alvOp=esfOculto?0:0.15;
