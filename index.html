@@ -354,6 +354,8 @@
 <!-- Visualização de arquivo -->
 <div id="preview">
   <img id="preview-img" src="" alt="" style="display:none"/>
+  <iframe id="preview-iframe" srcdoc="" sandbox="allow-scripts"
+    style="display:none;width:85vw;height:75vh;border:none;border-radius:12px;background:#fff;"></iframe>
   <div id="preview-doc" style="display:none">
     <div id="preview-doc-icone">📄</div>
     <div id="preview-doc-nome"></div>
@@ -361,7 +363,15 @@
   </div>
   <div id="preview-texto"></div>
   <div id="preview-nome"></div>
-  <div id="preview-fechar" onclick="fecharPreview()">✕ FECHAR</div>
+  <div style="display:flex;gap:12px;align-items:center;">
+    <div id="preview-fechar" onclick="fecharPreview()">✕ FECHAR</div>
+    <div id="preview-deletar" onclick="deletarArquivoPreview()" style="display:none;
+      background:rgba(180,30,30,0.3);border:1px solid rgba(255,80,80,0.4);
+      border-radius:7px;padding:8px 20px;color:rgba(255,120,120,0.9);
+      font-family:'Courier New',monospace;font-size:11px;cursor:pointer;letter-spacing:2px;">
+      🗑 APAGAR
+    </div>
+  </div>
 </div>
 
 <!-- Modal: criação de identidade permanente -->
@@ -577,6 +587,12 @@ function salvarDB(arquivo){
   const req=db.transaction('arquivos','readwrite').objectStore('arquivos').add(arquivo);
   req.onsuccess=()=>{ arquivo.id=req.result; };
 }
+
+function apagarDB(id){
+  if(!db) return;
+  db.transaction('arquivos','readwrite').objectStore('arquivos').delete(id);
+}
+
 
 // ═══════════════════════════════════════════════════════
 //  NAVEGAÇÃO
@@ -838,7 +854,7 @@ function renderGrid(){
       img.src=a.dataUrl;
       thumb.appendChild(img);
     } else {
-      thumb.textContent=a.tipo==='video'?'🎬':'📄';
+      thumb.textContent=a.tipo==='video'?'🎬':a.tipo==='html'?'🌐':'📄';
     }
 
     const nome=document.createElement('div');
@@ -1021,7 +1037,8 @@ function registrarArquivo(input){
   verificarIdentidade(()=>{
     const ext=file.name.split('.').pop().toLowerCase();
     const tipo=['jpg','jpeg','png','gif','webp'].includes(ext)?'imagem':
-               ['mp4','webm','mov'].includes(ext)?'video':'documento';
+               ['mp4','webm','mov'].includes(ext)?'video':
+               ['html','htm'].includes(ext)?'html':'documento';
 
     const finalizar=dataUrl=>{
       const arquivo={nome:file.name,tipo,dataUrl,tamanho:file.size};
@@ -1035,6 +1052,10 @@ function registrarArquivo(input){
       const reader=new FileReader();
       reader.onload=e=>finalizar(e.target.result);
       reader.readAsDataURL(file);
+    } else if(tipo==='html'){
+      const reader=new FileReader();
+      reader.onload=e=>finalizar(e.target.result);
+      reader.readAsText(file);
     } else {
       finalizar(null);
     }
@@ -1078,22 +1099,49 @@ function abrirArquivo(a){
   doc.style.display='none';
   txt.style.display='none';
 
+  const iframe=document.getElementById('preview-iframe');
+  const del=document.getElementById('preview-deletar');
+  iframe.style.display='none';
+  del.style.display='none';
+
   if(a.tipo==='info'){
     txt.innerHTML=a.conteudo;
     txt.style.display='block';
     document.getElementById('preview-nome').textContent=a.nome;
+  } else if(a.tipo==='html' && a.dataUrl){
+    iframe.srcdoc=a.dataUrl;
+    iframe.style.display='block';
+    document.getElementById('preview-nome').textContent=a.nome;
+    del.style.display='block';
+    del._arquivo=a;
   } else if(a.tipo==='imagem' && a.dataUrl){
     img.src=a.dataUrl;
     img.style.display='block';
     document.getElementById('preview-nome').textContent=a.nome+' — '+(a.tamanho/1024).toFixed(1)+' KB';
+    del.style.display='block';
+    del._arquivo=a;
   } else {
     doc.style.display='block';
     document.getElementById('preview-doc-icone').textContent=a.tipo==='video'?'🎬':'📄';
     document.getElementById('preview-doc-nome').textContent=a.nome;
     document.getElementById('preview-doc-info').textContent=(a.tamanho/1024).toFixed(1)+' KB';
     document.getElementById('preview-nome').textContent=a.nome+' — '+(a.tamanho/1024).toFixed(1)+' KB';
+    del.style.display='block';
+    del._arquivo=a;
   }
   prev.style.display='flex';
+}
+
+let _arquivoAtualPreview=null;
+function deletarArquivoPreview(){
+  const del=document.getElementById('preview-deletar');
+  const a=del._arquivo;
+  if(!a) return;
+  arquivos=arquivos.filter(x=>x!==a);
+  apagarDB(a.id);
+  fecharPreview();
+  renderGrid();
+  notif(`🗑 ${a.nome} apagado`);
 }
 
 function fecharPreview(){
@@ -1102,6 +1150,9 @@ function fecharPreview(){
   document.getElementById('preview-texto').style.display='none';
   document.getElementById('preview-img').style.display='none';
   document.getElementById('preview-doc').style.display='none';
+  document.getElementById('preview-iframe').style.display='none';
+  document.getElementById('preview-iframe').srcdoc='';
+  document.getElementById('preview-deletar').style.display='none';
 }
 
 // ═══════════════════════════════════════════════════════
