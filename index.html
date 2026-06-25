@@ -310,16 +310,8 @@
     padding:6px;display:none;flex-direction:column;gap:2px;z-index:200;min-width:130px;">
     <button class="mesf-btn" onclick="setEsferaVisivel(true)">● Visível</button>
     <button class="mesf-btn" onclick="setEsferaVisivel(false)">○ Oculto</button>
-    <button class="mesf-btn" onclick="ativarDragEsfera()">✦ Mover</button>
+    <button id="btn-mover-esfera" class="mesf-btn" onclick="toggleDragEsfera()">✦ Mover</button>
   </div>
-  <!-- Botão fixar esfera -->
-  <button id="btn-fixar-esfera" onclick="fixarEsfera()" style="display:none;position:absolute;
-    bottom:24px;left:50%;transform:translateX(-50%);
-    background:#0e0e14;border:1px solid rgba(255,255,255,0.35);border-radius:8px;
-    padding:10px 28px;color:#fff;font-family:'Courier New',monospace;font-size:11px;
-    letter-spacing:3px;cursor:pointer;z-index:200;pointer-events:all;">
-    FIXAR POSIÇÃO
-  </button>
 </div>
 
 <!-- Janela gerenciador de arquivos -->
@@ -980,30 +972,30 @@ function abrirMenuEsfera(screenX,screenY){
   m.style.top=Math.max(screenY-80, 10)+'px';
 }
 
-function ativarDragEsfera(){
-  fecharMenuEsfera();
-  esfDragAtivo=true;
-  // Plano de drag perpendicular à câmera passando pela esfera
-  const _fwd=new THREE.Vector3();
-  camera.getWorldDirection(_fwd);
-  esfDragPlane.setFromNormalAndCoplanarPoint(_fwd, esfMesh.position);
-  document.getElementById('btn-fixar-esfera').style.display='block';
-  document.body.style.cursor='move';
-}
-
-function fixarEsfera(){
-  // Calcula offset em espaço local da câmera
-  const _fwd=new THREE.Vector3();
-  camera.getWorldDirection(_fwd);
-  const _right=new THREE.Vector3().crossVectors(_fwd,new THREE.Vector3(0,1,0)).normalize();
-  const diff=esfMesh.position.clone().sub(camera.position);
-  esfFwd=diff.dot(_fwd);
-  esfRight=diff.dot(_right);
-  esfUp=diff.dot(new THREE.Vector3(0,1,0));
-  esfDragAtivo=false;
-  document.getElementById('btn-fixar-esfera').style.display='none';
-  document.body.style.cursor='';
-  notif('✓ Posição da esfera fixada');
+function toggleDragEsfera(){
+  if(!esfDragAtivo){
+    // Ativa modo mover
+    esfDragAtivo=true;
+    const _fwd=new THREE.Vector3();
+    camera.getWorldDirection(_fwd);
+    esfDragPlane.setFromNormalAndCoplanarPoint(_fwd, esfMesh.position);
+    document.getElementById('btn-mover-esfera').textContent='● FIXAR';
+    document.body.style.cursor='move';
+  } else {
+    // Fixa posição atual
+    const _fwd=new THREE.Vector3();
+    camera.getWorldDirection(_fwd);
+    const _right=new THREE.Vector3().crossVectors(_fwd,new THREE.Vector3(0,1,0)).normalize();
+    const diff=esfMesh.position.clone().sub(camera.position);
+    esfFwd=diff.dot(_fwd);
+    esfRight=diff.dot(_right);
+    esfUp=diff.dot(new THREE.Vector3(0,1,0));
+    esfDragAtivo=false;
+    document.getElementById('btn-mover-esfera').textContent='✦ Mover';
+    document.body.style.cursor='';
+    fecharMenuEsfera();
+    notif('✓ Posição fixada');
+  }
 }
 
 // ═══════════════════════════════════════════════════════
