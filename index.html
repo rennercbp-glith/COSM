@@ -14,40 +14,40 @@
     position:absolute;top:24px;left:50%;transform:translateX(-50%);
     display:flex;align-items:center;gap:10px;pointer-events:all;
   }
-  #coord-label{font-size:10px;letter-spacing:2px;color:rgba(100,200,255,0.5);}
+  #coord-label{font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.5);}
   #coord-input{
-    background:rgba(0,8,24,0.85);border:1px solid rgba(100,200,255,0.35);
-    border-radius:6px;padding:6px 14px;color:#aaddff;font-family:'Courier New',monospace;
+    background:rgba(0,8,24,0.85);border:1px solid rgba(255,255,255,0.35);
+    border-radius:6px;padding:6px 14px;color:#ffffff;font-family:'Courier New',monospace;
     font-size:13px;width:220px;outline:none;letter-spacing:1px;transition:border-color 0.2s;
   }
-  #coord-input:focus{border-color:rgba(100,200,255,0.8);}
+  #coord-input:focus{border-color:rgba(255,255,255,0.8);}
   #btn-ir{
-    background:rgba(0,80,160,0.7);border:1px solid rgba(100,200,255,0.4);
-    border-radius:6px;padding:6px 14px;color:#aaddff;font-family:'Courier New',monospace;
+    background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.4);
+    border-radius:6px;padding:6px 14px;color:#ffffff;font-family:'Courier New',monospace;
     font-size:12px;cursor:pointer;pointer-events:all;transition:background 0.2s;
   }
-  #btn-ir:hover{background:rgba(0,120,220,0.8);}
+  #btn-ir:hover{background:rgba(255,255,255,0.15);}
 
   #pos-atual{
     position:absolute;bottom:24px;left:24px;
-    background:rgba(0,8,24,0.75);border:1px solid rgba(100,200,255,0.2);
+    background:rgba(0,8,24,0.75);border:1px solid rgba(255,255,255,0.2);
     border-radius:10px;padding:10px 16px;
   }
-  .pos-linha{font-size:10px;color:rgba(100,200,255,0.45);letter-spacing:1px;}
-  #txt-pos{font-size:13px;color:#aaddff;letter-spacing:1px;}
+  .pos-linha{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:1px;}
+  #txt-pos{font-size:13px;color:#ffffff;letter-spacing:1px;}
 
   #vel-info{
     position:absolute;bottom:24px;right:24px;
-    background:rgba(0,8,24,0.75);border:1px solid rgba(100,200,255,0.2);
+    background:rgba(0,8,24,0.75);border:1px solid rgba(255,255,255,0.2);
     border-radius:10px;padding:10px 16px;text-align:right;
   }
-  #vel-label{font-size:10px;color:rgba(100,200,255,0.45);letter-spacing:1px;}
-  #txt-vel{font-size:13px;color:#aaddff;}
+  #vel-label{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:1px;}
+  #txt-vel{font-size:13px;color:#ffffff;}
 
   #notif{
     position:absolute;top:72px;left:50%;transform:translateX(-50%);
-    background:rgba(0,40,100,0.92);border:1px solid rgba(100,200,255,0.4);
-    border-radius:8px;padding:8px 18px;font-size:10px;color:#aaddff;
+    background:rgba(12,12,18,0.95);border:1px solid rgba(255,255,255,0.4);
+    border-radius:8px;padding:8px 18px;font-size:10px;color:#ffffff;
     letter-spacing:1px;display:none;pointer-events:none;white-space:nowrap;
   }
 
@@ -56,30 +56,30 @@
     position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
     width:700px;height:460px;
     background:rgba(0,4,18,0.97);
-    border:1px solid rgba(100,200,255,0.28);
+    border:1px solid rgba(255,255,255,0.28);
     border-radius:12px;display:none;flex-direction:column;
     z-index:50;pointer-events:all;overflow:hidden;
-    box-shadow:0 0 60px rgba(0,80,255,0.12), 0 0 1px rgba(100,200,255,0.4);
+    box-shadow:0 0 60px rgba(255,255,255,0.04), 0 0 1px rgba(255,255,255,0.15);
   }
   #janela.visivel{display:flex;}
 
   #janela-topo{
     height:44px;flex-shrink:0;
-    border-bottom:1px solid rgba(100,200,255,0.12);
+    border-bottom:1px solid rgba(255,255,255,0.12);
     background:rgba(0,15,50,0.7);
     display:flex;align-items:center;padding:0 16px;gap:10px;
   }
   #janela-path{
-    flex:1;font-size:10px;color:rgba(100,200,255,0.5);letter-spacing:1.5px;
+    flex:1;font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:1.5px;
   }
   .jbtn{
-    background:none;border:1px solid rgba(100,200,255,0.18);border-radius:5px;
-    color:rgba(100,200,255,0.5);font-family:'Courier New',monospace;
+    background:none;border:1px solid rgba(255,255,255,0.18);border-radius:5px;
+    color:rgba(255,255,255,0.5);font-family:'Courier New',monospace;
     font-size:10px;padding:3px 9px;cursor:pointer;letter-spacing:1px;
     transition:all 0.15s;
   }
-  .jbtn:hover{background:rgba(0,80,200,0.3);color:#aaddff;border-color:rgba(100,200,255,0.45);}
-  .jbtn.ativo{background:rgba(0,80,200,0.4);color:#aaddff;border-color:rgba(100,200,255,0.45);}
+  .jbtn:hover{background:rgba(255,255,255,0.07);color:#ffffff;border-color:rgba(255,255,255,0.45);}
+  .jbtn.ativo{background:rgba(255,255,255,0.1);color:#ffffff;border-color:rgba(255,255,255,0.45);}
   #jbtn-fechar{border-color:rgba(255,80,80,0.25);color:rgba(255,100,100,0.5);}
   #jbtn-fechar:hover{background:rgba(180,30,30,0.4);color:#ffaaaa;border-color:rgba(255,80,80,0.5);}
 
@@ -87,29 +87,29 @@
 
   #janela-sidebar{
     width:148px;flex-shrink:0;
-    border-right:1px solid rgba(100,200,255,0.1);
+    border-right:1px solid rgba(255,255,255,0.1);
     background:rgba(0,8,28,0.6);
     padding:14px 10px;display:flex;flex-direction:column;gap:6px;
   }
   .sidebar-label{
-    font-size:8px;color:rgba(100,200,255,0.3);letter-spacing:2px;
+    font-size:8px;color:rgba(255,255,255,0.3);letter-spacing:2px;
     text-transform:uppercase;padding:0 4px;margin-top:4px;
   }
   .sbtn{
-    background:rgba(0,40,100,0.35);border:1px solid rgba(100,200,255,0.2);
-    border-radius:7px;padding:10px 10px;color:#9bcfee;
+    background:rgba(0,40,100,0.35);border:1px solid rgba(255,255,255,0.2);
+    border-radius:7px;padding:10px 10px;color:rgba(255,255,255,0.75);
     font-family:'Courier New',monospace;font-size:10px;
     cursor:pointer;text-align:left;letter-spacing:0.5px;
     transition:all 0.15s;display:flex;align-items:center;gap:7px;
   }
-  .sbtn:hover{background:rgba(0,80,200,0.45);border-color:rgba(100,200,255,0.45);color:#aaddff;}
+  .sbtn:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.45);color:#ffffff;}
   .sbtn-icone{font-size:14px;opacity:0.8;}
-  .sidebar-sep{height:1px;background:rgba(100,200,255,0.08);margin:4px 0;}
+  .sidebar-sep{height:1px;background:rgba(255,255,255,0.08);margin:4px 0;}
 
   #janela-area{flex:1;overflow-y:auto;padding:16px;scroll-behavior:smooth;}
   #janela-area::-webkit-scrollbar{width:4px;}
   #janela-area::-webkit-scrollbar-track{background:transparent;}
-  #janela-area::-webkit-scrollbar-thumb{background:rgba(100,200,255,0.2);border-radius:2px;}
+  #janela-area::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.2);border-radius:2px;}
 
   #janela-grid{
     display:grid;
@@ -122,12 +122,12 @@
   }
 
   .arq-card{
-    border:1px solid rgba(100,200,255,0.15);border-radius:8px;
+    border:1px solid rgba(255,255,255,0.15);border-radius:8px;
     padding:10px 8px 8px;cursor:pointer;
     display:flex;flex-direction:column;align-items:center;gap:7px;
     background:rgba(0,20,60,0.2);transition:all 0.15s;
   }
-  .arq-card:hover{background:rgba(0,60,160,0.3);border-color:rgba(100,200,255,0.38);}
+  .arq-card:hover{background:rgba(0,60,160,0.3);border-color:rgba(255,255,255,0.38);}
   .arq-thumb{
     width:100%;aspect-ratio:1;border-radius:5px;overflow:hidden;
     background:rgba(0,15,50,0.6);
@@ -135,27 +135,27 @@
   }
   .arq-thumb img{width:100%;height:100%;object-fit:cover;}
   .arq-nome{
-    font-size:9px;color:rgba(150,210,255,0.65);text-align:center;
+    font-size:9px;color:rgba(255,255,255,0.65);text-align:center;
     word-break:break-all;width:100%;
     overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
     line-height:1.4;
   }
-  .arq-size{font-size:8px;color:rgba(100,200,255,0.3);letter-spacing:0.5px;}
+  .arq-size{font-size:8px;color:rgba(255,255,255,0.3);letter-spacing:0.5px;}
 
   .janela-vazia{
     grid-column:1/-1;display:flex;flex-direction:column;
     align-items:center;justify-content:center;height:200px;gap:12px;
   }
   .janela-vazia-icone{font-size:36px;opacity:0.2;}
-  .janela-vazia-txt{font-size:10px;color:rgba(100,200,255,0.2);letter-spacing:2px;}
+  .janela-vazia-txt{font-size:10px;color:rgba(255,255,255,0.2);letter-spacing:2px;}
 
   /* ── MODAL ENVIAR PARA COORD ────────────────────────── */
   #modal-enviar{
     position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-    background:rgba(0,6,22,0.98);border:1px solid rgba(100,200,255,0.3);
+    background:rgba(0,6,22,0.98);border:1px solid rgba(255,255,255,0.3);
     border-radius:10px;padding:28px 28px;width:300px;
     display:none;flex-direction:column;gap:14px;z-index:100;pointer-events:all;
-    box-shadow:0 0 40px rgba(0,80,255,0.15);
+    box-shadow:0 0 40px rgba(255,255,255,0.05);
   }
   #modal-enviar.visivel{display:flex;}
 
@@ -167,22 +167,22 @@
   }
   #modal-id.visivel{display:flex;}
   #modal-id-box{
-    background:rgba(0,4,20,0.99);border:1px solid rgba(100,200,255,0.3);
+    background:rgba(0,4,20,0.99);border:1px solid rgba(255,255,255,0.3);
     border-radius:14px;padding:36px;max-width:460px;width:90%;
     display:flex;flex-direction:column;gap:20px;
     box-shadow:0 0 60px rgba(0,60,200,0.2);
   }
-  #modal-id-titulo{font-size:10px;letter-spacing:4px;color:rgba(100,200,255,0.5);text-transform:uppercase;}
+  #modal-id-titulo{font-size:10px;letter-spacing:4px;color:rgba(255,255,255,0.5);text-transform:uppercase;}
   #modal-id-desc{font-size:12px;color:rgba(200,220,255,0.7);line-height:1.9;}
   #modal-id-input{
-    background:rgba(0,8,28,0.9);border:1px solid rgba(100,200,255,0.3);
+    background:rgba(0,8,28,0.9);border:1px solid rgba(255,255,255,0.3);
     border-radius:8px;padding:12px 16px;color:#fff;font-family:'Courier New',monospace;
     font-size:13px;outline:none;letter-spacing:1px;transition:border-color 0.2s;
   }
-  #modal-id-input:focus{border-color:rgba(100,200,255,0.7);}
-  #modal-id-norm{font-size:10px;color:rgba(100,200,255,0.45);letter-spacing:1px;min-height:16px;}
+  #modal-id-input:focus{border-color:rgba(255,255,255,0.7);}
+  #modal-id-norm{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:1px;min-height:16px;}
   #modal-id-coord{
-    font-size:12px;color:#aaddff;letter-spacing:1px;
+    font-size:12px;color:#ffffff;letter-spacing:1px;
     background:rgba(0,20,60,0.5);border-radius:8px;padding:10px 14px;
     min-height:36px;font-family:'Courier New',monospace;
   }
@@ -192,31 +192,31 @@
   }
   #modal-id-btns{display:flex;gap:12px;justify-content:flex-end;}
   .mid-btn{
-    background:transparent;border:1px solid rgba(100,200,255,0.3);
-    border-radius:8px;padding:10px 20px;color:#aaddff;font-family:'Courier New',monospace;
+    background:transparent;border:1px solid rgba(255,255,255,0.3);
+    border-radius:8px;padding:10px 20px;color:#ffffff;font-family:'Courier New',monospace;
     font-size:11px;letter-spacing:1px;cursor:pointer;transition:all 0.2s;
   }
   .mid-btn:hover{background:rgba(0,60,140,0.4);}
   .mid-btn:disabled{opacity:0.3;cursor:default;}
-  #modal-id-confirmar{background:rgba(0,60,160,0.6);border-color:rgba(100,200,255,0.5);}
-  #modal-titulo{font-size:9px;letter-spacing:3px;color:rgba(100,200,255,0.45);text-transform:uppercase;}
-  #modal-desc{font-size:10px;color:rgba(100,200,255,0.4);line-height:1.6;}
+  #modal-id-confirmar{background:rgba(0,60,160,0.6);border-color:rgba(255,255,255,0.5);}
+  #modal-titulo{font-size:9px;letter-spacing:3px;color:rgba(255,255,255,0.45);text-transform:uppercase;}
+  #modal-desc{font-size:10px;color:rgba(255,255,255,0.4);line-height:1.6;}
   #modal-input{
-    background:rgba(0,10,30,0.9);border:1px solid rgba(100,200,255,0.3);
-    border-radius:6px;padding:8px 12px;color:#aaddff;
+    background:rgba(0,10,30,0.9);border:1px solid rgba(255,255,255,0.3);
+    border-radius:6px;padding:8px 12px;color:#ffffff;
     font-family:'Courier New',monospace;font-size:13px;outline:none;
     letter-spacing:1px;width:100%;
   }
-  #modal-input:focus{border-color:rgba(100,200,255,0.7);}
+  #modal-input:focus{border-color:rgba(255,255,255,0.7);}
   .modal-btns{display:flex;gap:8px;}
   .modal-btn{
-    flex:1;background:rgba(0,60,140,0.6);border:1px solid rgba(100,200,255,0.3);
-    border-radius:7px;padding:9px;color:#aaddff;font-family:'Courier New',monospace;
+    flex:1;background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.3);
+    border-radius:7px;padding:9px;color:#ffffff;font-family:'Courier New',monospace;
     font-size:10px;cursor:pointer;text-align:center;letter-spacing:1px;transition:background 0.15s;
   }
-  .modal-btn:hover{background:rgba(0,100,220,0.7);}
-  .modal-btn.cancelar{background:rgba(20,20,40,0.5);color:rgba(100,200,255,0.4);}
-  .modal-btn.cancelar:hover{background:rgba(40,40,80,0.5);color:#aaddff;}
+  .modal-btn:hover{background:rgba(255,255,255,0.18);}
+  .modal-btn.cancelar{background:rgba(20,20,40,0.5);color:rgba(255,255,255,0.4);}
+  .modal-btn.cancelar:hover{background:rgba(40,40,80,0.5);color:#ffffff;}
 
   /* ── PREVIEW ────────────────────────────────────────── */
   #preview{
@@ -225,18 +225,31 @@
     align-items:center;justify-content:center;gap:18px;z-index:200;pointer-events:all;
   }
   #preview img{max-width:88vw;max-height:78vh;object-fit:contain;
-    border:1px solid rgba(100,200,255,0.2);border-radius:4px;}
+    border:1px solid rgba(255,255,255,0.2);border-radius:4px;}
   #preview-doc{
-    border:1px solid rgba(100,200,255,0.2);border-radius:12px;
+    border:1px solid rgba(255,255,255,0.2);border-radius:12px;
     padding:36px 48px;text-align:center;
   }
   #preview-doc-icone{font-size:48px;margin-bottom:12px;}
-  #preview-doc-nome{font-size:15px;color:#aaddff;margin-bottom:6px;}
-  #preview-doc-info{font-size:10px;color:rgba(100,200,255,0.45);letter-spacing:1px;}
-  #preview-nome{font-size:10px;color:rgba(100,200,255,0.45);letter-spacing:2px;}
+  #preview-doc-nome{font-size:15px;color:#ffffff;margin-bottom:6px;}
+  #preview-doc-info{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:1px;}
+  #preview-texto{
+    max-width:680px;width:90%;max-height:65vh;overflow-y:auto;
+    background:rgba(8,8,14,0.98);border:1px solid rgba(255,255,255,0.12);
+    border-radius:12px;padding:36px 44px;text-align:left;
+    font-size:13px;line-height:2;color:rgba(255,255,255,0.8);letter-spacing:0.5px;
+    display:none;
+  }
+  #preview-texto::-webkit-scrollbar{width:3px;}
+  #preview-texto::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px;}
+  #preview-texto h2{font-size:14px;letter-spacing:4px;color:#fff;margin-bottom:20px;text-transform:uppercase;}
+  #preview-texto p{margin-bottom:14px;color:rgba(255,255,255,0.7);}
+  #preview-texto .dest{color:#fff;font-size:13px;}
+  #preview-texto .coord-tag{font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:2px;}
+  #preview-nome{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:2px;}
   #preview-fechar{
-    background:rgba(0,60,140,0.7);border:1px solid rgba(100,200,255,0.35);
-    border-radius:7px;padding:8px 28px;color:#aaddff;
+    background:rgba(0,60,140,0.7);border:1px solid rgba(255,255,255,0.35);
+    border-radius:7px;padding:8px 28px;color:#ffffff;
     font-family:'Courier New',monospace;font-size:11px;cursor:pointer;
     letter-spacing:2px;transition:background 0.2s;
   }
@@ -249,7 +262,7 @@
     align-items:center;justify-content:center;gap:24px;z-index:100;
   }
   #intro-titulo{display:flex;align-items:center;gap:20px;}
-  #intro h1{font-size:28px;letter-spacing:8px;color:#aaddff;margin:0;}
+  #intro h1{font-size:28px;letter-spacing:8px;color:#ffffff;margin:0;}
   #mc{display:block;opacity:0.9;}
   #intro p{font-size:12px;color:#fff;letter-spacing:2px;text-align:center;line-height:2;}
   #btn-entrar{
@@ -259,8 +272,8 @@
   }
   #btn-entrar:hover{background:#111;border-color:rgba(255,255,255,0.5);}
   .tecla{
-    display:inline-block;background:rgba(100,200,255,0.1);
-    border:1px solid rgba(100,200,255,0.25);border-radius:4px;padding:1px 6px;font-size:10px;
+    display:inline-block;background:rgba(255,255,255,0.1);
+    border:1px solid rgba(255,255,255,0.25);border-radius:4px;padding:1px 6px;font-size:10px;
   }
 </style>
 </head>
@@ -330,8 +343,9 @@
     <div id="preview-doc-nome"></div>
     <div id="preview-doc-info"></div>
   </div>
+  <div id="preview-texto"></div>
   <div id="preview-nome"></div>
-  <div id="preview-fechar" onclick="fecharPreview()">✕ FECHAR ARQUIVO</div>
+  <div id="preview-fechar" onclick="fecharPreview()">✕ FECHAR</div>
 </div>
 
 <!-- Modal: criação de identidade permanente -->
@@ -436,7 +450,7 @@ portalMesh.userData={tipo:'portal'};
 
 const portalLinhas=new THREE.LineSegments(
   new THREE.EdgesGeometry(new THREE.BoxGeometry(70,70,70)),
-  new THREE.LineBasicMaterial({color:0x4488ff,transparent:true,opacity:0.9})
+  new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.75})
 );
 portalMesh.add(portalLinhas);
 scene.add(portalMesh);
@@ -444,13 +458,17 @@ scene.add(portalMesh);
 // ── Destino do cubo (viaja ao confirmar identidade) ─────
 let portalDestino=new THREE.Vector3().copy(PORTAL_COORD);
 
+// ── Animação de clique no cubo ──────────────────────────
+let portalAnimProg=0; // 0=idle, >0=animando
+let portalAnimCb=null;
+
 // ── Textos do Marco Zero ────────────────────────────────
 (function(){
   const linhas=[
     {txt:'COSM://500:80:0',  dy:110, size:22, cor:'rgba(100,180,255,0.9)'},
     {txt:'MARCO ZERO',       dy: 88, size:13, cor:'rgba(100,180,255,0.5)'},
     {txt:'Explore o universo. Crie sua frase para começar.', dy:62, size:14, cor:'rgba(180,210,255,0.65)'},
-    {txt:'Atualizações COSM · Jun 2026', dy:40, size:12, cor:'rgba(100,200,255,0.4)'},
+    {txt:'Atualizações COSM · Jun 2026', dy:40, size:12, cor:'rgba(255,255,255,0.4)'},
   ];
   linhas.forEach(({txt,dy,size,cor})=>{
     const cv=document.createElement('canvas');
@@ -470,11 +488,11 @@ let portalDestino=new THREE.Vector3().copy(PORTAL_COORD);
 })();
 
 // ── Esfera de identidade ────────────────────────────────
-const esfMat=new THREE.MeshBasicMaterial({color:0x66bbff,transparent:true,opacity:0,wireframe:false});
+const esfMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,wireframe:false});
 const esfMesh=new THREE.Mesh(new THREE.SphereGeometry(6,20,20),esfMat);
 const esfHalo=new THREE.Mesh(
   new THREE.SphereGeometry(9,20,20),
-  new THREE.MeshBasicMaterial({color:0x4499ff,transparent:true,opacity:0,wireframe:true,depthWrite:false})
+  new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,wireframe:true,depthWrite:false})
 );
 esfMesh.add(esfHalo);
 esfMesh.visible=false;
@@ -598,7 +616,7 @@ canvas.addEventListener('mouseup',e=>{
   ray.setFromCamera(mouse,camera);
   const hits=ray.intersectObjects([portalMesh],true);
 
-  if(hits.length>0) abrirJanela();
+  if(hits.length>0) dispararAnimacaoCubo(()=>abrirJanela());
   else { velCruz=0; fecharJanela(); }
 });
 
@@ -663,7 +681,7 @@ canvas.addEventListener('touchend',e=>{
     const ray=new THREE.Raycaster();
     ray.setFromCamera(mouse,camera);
     const hits=ray.intersectObjects([portalMesh],true);
-    if(hits.length>0) abrirJanela();
+    if(hits.length>0) dispararAnimacaoCubo(()=>abrirJanela());
     else { velCruz=0; fecharJanela(); }
   }
 },{passive:false});
@@ -712,8 +730,62 @@ function irParaCoordenada(){
 // ═══════════════════════════════════════════════════════
 //  JANELA — gerenciador de arquivos
 // ═══════════════════════════════════════════════════════
+const MARCO_DOC={
+  nome:'COSM — Bem-vindo ao Universo',
+  tipo:'info',
+  tamanho:1024,
+  dataUrl:null,
+  conteudo:`<h2>BEM-VINDO AO COSM</h2>
+<p class="coord-tag">COSM://500:80:0 — MARCO ZERO</p>
+<br>
+<p class="dest">O que é o COSM?</p>
+<p>O COSM é um universo digital de coordenadas permanentes. Cada ponto no espaço pertence a alguém — ou a ninguém ainda. Você está agora no Marco Zero, o único ponto público do universo.</p>
+<p class="dest">Como funciona?</p>
+<p>Explore o espaço livremente. Quando quiser guardar algo — um arquivo, uma ideia, uma memória — crie sua frase secreta. Ela gera automaticamente uma coordenada única no universo, a anos-luz daqui. Só você sabe onde é.</p>
+<p class="dest">Privacidade real.</p>
+<p>Nenhum cadastro. Nenhum email. Nenhuma senha. Sua frase secreta é a única chave. Acentos são ignorados — "café" e "cafe" levam ao mesmo lugar.</p>
+<p class="dest">Este espaço — o Marco Zero — é bloqueado.</p>
+<p>Ninguém pode salvar nada aqui. É a praça pública do COSM. Novas atualizações e mensagens do universo aparecem neste arquivo.</p>
+<br>
+<p class="coord-tag">Versão 0.1 · Jun 2026 · cosm-production.up.railway.app</p>`
+};
+
+function dispararAnimacaoCubo(cb){
+  if(portalAnimProg>0) return;
+  portalAnimCb=cb;
+  portalAnimProg=0.001; // inicia animação
+}
+
 function abrirJanela(){
-  renderGrid();
+  const eMarco=portalMesh.position.distanceTo(PORTAL_COORD)<80
+    && camera.position.distanceTo(PORTAL_COORD)<400;
+
+  if(eMarco){
+    // Marco Zero — mostra apenas o documento público
+    const grid=document.getElementById('janela-grid');
+    grid.innerHTML='';
+    const card=document.createElement('div');
+    card.className='arq-card';
+    card.onclick=()=>abrirArquivo(MARCO_DOC);
+    const thumb=document.createElement('div');
+    thumb.className='arq-thumb';
+    thumb.textContent='📡';
+    const nome=document.createElement('div');
+    nome.className='arq-nome';
+    nome.textContent=MARCO_DOC.nome;
+    const size=document.createElement('div');
+    size.className='arq-size';
+    size.textContent='MARCO ZERO';
+    card.appendChild(thumb); card.appendChild(nome); card.appendChild(size);
+    grid.appendChild(card);
+    document.getElementById('janela-path').textContent='COSM://500:80:0';
+  } else {
+    renderGrid();
+    const p=camera.position;
+    const E=100;
+    document.getElementById('janela-path').textContent=
+      `COSM://${formatCoord(coordBase.x+p.x*E)}:${formatCoord(coordBase.y+p.y*E)}:${formatCoord(coordBase.z+p.z*E)}`;
+  }
   document.getElementById('janela').classList.add('visivel');
 }
 
@@ -930,25 +1002,36 @@ function abrirArquivo(a){
   const prev=document.getElementById('preview');
   const img=document.getElementById('preview-img');
   const doc=document.getElementById('preview-doc');
-  document.getElementById('preview-nome').textContent=
-    a.nome+' — '+(a.tamanho/1024).toFixed(1)+' KB';
+  const txt=document.getElementById('preview-texto');
 
-  if(a.tipo==='imagem' && a.dataUrl){
+  img.style.display='none';
+  doc.style.display='none';
+  txt.style.display='none';
+
+  if(a.tipo==='info'){
+    txt.innerHTML=a.conteudo;
+    txt.style.display='block';
+    document.getElementById('preview-nome').textContent=a.nome;
+  } else if(a.tipo==='imagem' && a.dataUrl){
     img.src=a.dataUrl;
     img.style.display='block';
-    doc.style.display='none';
+    document.getElementById('preview-nome').textContent=a.nome+' — '+(a.tamanho/1024).toFixed(1)+' KB';
   } else {
-    img.style.display='none';
     doc.style.display='block';
     document.getElementById('preview-doc-icone').textContent=a.tipo==='video'?'🎬':'📄';
     document.getElementById('preview-doc-nome').textContent=a.nome;
     document.getElementById('preview-doc-info').textContent=(a.tamanho/1024).toFixed(1)+' KB';
+    document.getElementById('preview-nome').textContent=a.nome+' — '+(a.tamanho/1024).toFixed(1)+' KB';
   }
   prev.style.display='flex';
 }
 
 function fecharPreview(){
-  document.getElementById('preview').style.display='none';
+  const prev=document.getElementById('preview');
+  prev.style.display='none';
+  document.getElementById('preview-texto').style.display='none';
+  document.getElementById('preview-img').style.display='none';
+  document.getElementById('preview-doc').style.display='none';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1032,6 +1115,28 @@ function loop(){
     esfMesh.scale.setScalar(emCasa?pulso:1);
   }
 
+  // Animação cubo ao clicar
+  if(portalAnimProg>0){
+    portalAnimProg+=0.06;
+    if(portalAnimProg<1){
+      // Fase 1: expande e clareia
+      const s=1+portalAnimProg*0.6;
+      portalMesh.scale.setScalar(s);
+      portalLinhas.material.opacity=Math.min(1,0.75+portalAnimProg*0.5);
+    } else if(portalAnimProg<2){
+      // Fase 2: encolhe e some
+      const p=portalAnimProg-1;
+      const s=Math.max(0.01,1.6-p*1.6);
+      portalMesh.scale.setScalar(s);
+      portalLinhas.material.opacity=Math.max(0,(1-p)*0.75);
+    } else {
+      // Fim: abre janela
+      portalMesh.scale.setScalar(1);
+      portalAnimProg=0;
+      if(portalAnimCb){ portalAnimCb(); portalAnimCb=null; }
+    }
+  }
+
   // Estrelas seguem câmera
   const est=scene.getObjectByName('estrelas');
   if(est) est.position.copy(camera.position);
@@ -1102,8 +1207,8 @@ loop();
   grp.rotation.z=0.12;
   MS.add(grp);
 
-  const fillMat=new THREE.MeshBasicMaterial({color:0x071428,transparent:true,opacity:0.22,side:THREE.DoubleSide});
-  const wireMat=new THREE.MeshBasicMaterial({color:0x55aaff,wireframe:true,transparent:true,opacity:0.85,side:THREE.DoubleSide});
+  const fillMat=new THREE.MeshBasicMaterial({color:0x080808,transparent:true,opacity:0.18,side:THREE.DoubleSide});
+  const wireMat=new THREE.MeshBasicMaterial({color:0xffffff,wireframe:true,transparent:true,opacity:0.8,side:THREE.DoubleSide});
   grp.add(new THREE.Mesh(geo,fillMat));
   grp.add(new THREE.Mesh(geo,wireMat));
 
