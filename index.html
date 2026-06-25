@@ -934,8 +934,8 @@ function snapEsferaParaCamera(){
   const _right=new THREE.Vector3().crossVectors(_fwd,new THREE.Vector3(0,1,0)).normalize();
   esfMesh.position.copy(
     camera.position.clone()
-      .addScaledVector(_fwd,120)
-      .addScaledVector(_right,150)
+      .addScaledVector(_fwd,500)
+      .addScaledVector(_right,100)
       .addScaledVector(new THREE.Vector3(0,1,0),20)
   );
 }
@@ -1134,8 +1134,8 @@ function loop(){
     const _right=new THREE.Vector3().crossVectors(_fwd,new THREE.Vector3(0,1,0)).normalize();
     const _up=new THREE.Vector3(0,1,0);
     const alvoEsf=camera.position.clone()
-      .addScaledVector(_fwd,120)
-      .addScaledVector(_right,150)
+      .addScaledVector(_fwd,500)
+      .addScaledVector(_right,100)
       .addScaledVector(_up,20);
     esfMesh.position.lerp(alvoEsf,0.10);
     esfMesh.rotation.y+=0.008;
