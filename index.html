@@ -324,6 +324,23 @@
   </div>
   <div id="janela-corpo">
     <div id="janela-sidebar">
+      <div class="sidebar-label">Filtrar</div>
+      <div id="sfiltro-todos" class="sbtn ativo" onclick="setFiltro('todos')">
+        <span class="sbtn-icone">📁</span> Todos
+      </div>
+      <div id="sfiltro-imagem" class="sbtn" onclick="setFiltro('imagem')">
+        <span class="sbtn-icone">🖼</span> Imagens
+      </div>
+      <div id="sfiltro-video" class="sbtn" onclick="setFiltro('video')">
+        <span class="sbtn-icone">🎬</span> Vídeos
+      </div>
+      <div id="sfiltro-html" class="sbtn" onclick="setFiltro('html')">
+        <span class="sbtn-icone">🌐</span> HTML
+      </div>
+      <div id="sfiltro-documento" class="sbtn" onclick="setFiltro('documento')">
+        <span class="sbtn-icone">📄</span> Documentos
+      </div>
+      <div class="sidebar-sep"></div>
       <div class="sidebar-label">Ações</div>
       <div class="sbtn" onclick="document.getElementById('file-input').click()">
         <span class="sbtn-icone">⬆</span> Enviar arquivo
@@ -516,6 +533,7 @@ let voando=false, alvoVoo=null;
 let displayAtivo=false, portalAlvo=null;
 let arquivos=[];
 let tamanhoGrid='p';
+let filtroAtual='todos';
 let db=null;
 
 // ── Posicionamento espacial por IP ──────────────────────
@@ -824,6 +842,14 @@ function fecharJanela(){
   fecharEnviarPara();
 }
 
+function setFiltro(cat){
+  filtroAtual=cat;
+  ['todos','imagem','video','html','documento'].forEach(c=>{
+    document.getElementById('sfiltro-'+c).classList.toggle('ativo',c===cat);
+  });
+  renderGrid();
+}
+
 function setTamanho(t){
   tamanhoGrid=t;
   document.getElementById('jbtn-p').classList.toggle('ativo',t==='p');
@@ -837,12 +863,15 @@ function renderGrid(){
   grid.innerHTML='';
   grid.className=tamanhoGrid==='g'?'grande':'';
 
-  if(arquivos.length===0){
-    grid.innerHTML='<div class="janela-vazia"><div class="janela-vazia-icone">📂</div><div class="janela-vazia-txt">PASTA VAZIA</div></div>';
+  const lista=filtroAtual==='todos'?arquivos:arquivos.filter(a=>a.tipo===filtroAtual);
+
+  if(lista.length===0){
+    const vazio=arquivos.length===0?'PASTA VAZIA':'NENHUM ARQUIVO AQUI';
+    grid.innerHTML=`<div class="janela-vazia"><div class="janela-vazia-icone">📂</div><div class="janela-vazia-txt">${vazio}</div></div>`;
     return;
   }
 
-  arquivos.forEach((a,i)=>{
+  lista.forEach((a,i)=>{
     const card=document.createElement('div');
     card.className='arq-card';
     card.onclick=()=>abrirArquivo(a);
