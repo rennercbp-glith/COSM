@@ -310,7 +310,16 @@
     padding:6px;display:none;flex-direction:column;gap:2px;z-index:200;min-width:130px;">
     <button class="mesf-btn" onclick="setEsferaVisivel(true)">● Visível</button>
     <button class="mesf-btn" onclick="setEsferaVisivel(false)">○ Oculto</button>
+    <button class="mesf-btn" onclick="ativarDragEsfera()">✦ Mover</button>
   </div>
+  <!-- Botão fixar esfera -->
+  <button id="btn-fixar-esfera" onclick="fixarEsfera()" style="display:none;position:absolute;
+    bottom:24px;left:50%;transform:translateX(-50%);
+    background:#0e0e14;border:1px solid rgba(255,255,255,0.35);border-radius:8px;
+    padding:10px 28px;color:#fff;font-family:'Courier New',monospace;font-size:11px;
+    letter-spacing:3px;cursor:pointer;z-index:200;pointer-events:all;">
+    FIXAR POSIÇÃO
+  </button>
 </div>
 
 <!-- Janela gerenciador de arquivos -->
@@ -486,10 +495,14 @@ const esfHalo=new THREE.Mesh(
   new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,wireframe:true,depthWrite:false})
 );
 let esfOculto=false;
+let esfFwd=500, esfRight=160, esfUp=90; // offset em unidades da câmera
+let esfDragAtivo=false;
+const esfDragPlane=new THREE.Plane();
+const esfDragRay=new THREE.Raycaster();
 esfMesh.add(esfHalo);
 esfMesh.visible=false;
 scene.add(esfMesh);
-let homeCoord3D=null; // posição Three.js do espaço pessoal
+let homeCoord3D=null;
 
 // ═══════════════════════════════════════════════════════
 //  ESTADOS
@@ -584,6 +597,17 @@ canvas.addEventListener('mousedown',e=>{
 });
 
 canvas.addEventListener('mousemove',e=>{
+  // Drag da esfera tem prioridade
+  if(esfDragAtivo){
+    const mx=(e.clientX/innerWidth)*2-1;
+    const my=-(e.clientY/innerHeight)*2+1;
+    esfDragRay.setFromCamera({x:mx,y:my},camera);
+    const hit=new THREE.Vector3();
+    if(esfDragRay.ray.intersectPlane(esfDragPlane,hit)){
+      esfMesh.position.copy(hit);
+    }
+    return;
+  }
   if(!arrastando) return;
   const dx=e.clientX-lastX, dy=e.clientY-lastY;
   if(Math.abs(dx)>2||Math.abs(dy)>2) mouseMoved=true;
@@ -934,9 +958,9 @@ function snapEsferaParaCamera(){
   const _right=new THREE.Vector3().crossVectors(_fwd,new THREE.Vector3(0,1,0)).normalize();
   esfMesh.position.copy(
     camera.position.clone()
-      .addScaledVector(_fwd,500)
-      .addScaledVector(_right,160)
-      .addScaledVector(new THREE.Vector3(0,1,0),90)
+      .addScaledVector(_fwd,esfFwd)
+      .addScaledVector(_right,esfRight)
+      .addScaledVector(new THREE.Vector3(0,1,0),esfUp)
   );
 }
 
@@ -954,6 +978,32 @@ function abrirMenuEsfera(screenX,screenY){
   m.style.display='flex';
   m.style.left=Math.min(screenX-65, innerWidth-150)+'px';
   m.style.top=Math.max(screenY-80, 10)+'px';
+}
+
+function ativarDragEsfera(){
+  fecharMenuEsfera();
+  esfDragAtivo=true;
+  // Plano de drag perpendicular à câmera passando pela esfera
+  const _fwd=new THREE.Vector3();
+  camera.getWorldDirection(_fwd);
+  esfDragPlane.setFromNormalAndCoplanarPoint(_fwd, esfMesh.position);
+  document.getElementById('btn-fixar-esfera').style.display='block';
+  document.body.style.cursor='move';
+}
+
+function fixarEsfera(){
+  // Calcula offset em espaço local da câmera
+  const _fwd=new THREE.Vector3();
+  camera.getWorldDirection(_fwd);
+  const _right=new THREE.Vector3().crossVectors(_fwd,new THREE.Vector3(0,1,0)).normalize();
+  const diff=esfMesh.position.clone().sub(camera.position);
+  esfFwd=diff.dot(_fwd);
+  esfRight=diff.dot(_right);
+  esfUp=diff.dot(new THREE.Vector3(0,1,0));
+  esfDragAtivo=false;
+  document.getElementById('btn-fixar-esfera').style.display='none';
+  document.body.style.cursor='';
+  notif('✓ Posição da esfera fixada');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1127,16 +1177,15 @@ function loop(){
   const fadePortal=1-Math.min(1,Math.max(0,(distPortal-800)/1700));
   portalLinhas.material.opacity=(0.6+Math.sin(t*1.8)*0.25)*fadePortal;
 
-  // Esfera — segue a câmera como companheira, lerp suave
-  if(esfMesh.visible){
+  // Esfera — segue câmera com offsets definidos pelo usuário
+  if(esfMesh.visible && !esfDragAtivo){
     const _fwd=new THREE.Vector3();
     camera.getWorldDirection(_fwd);
     const _right=new THREE.Vector3().crossVectors(_fwd,new THREE.Vector3(0,1,0)).normalize();
-    const _up=new THREE.Vector3(0,1,0);
     const alvoEsf=camera.position.clone()
-      .addScaledVector(_fwd,500)
-      .addScaledVector(_right,100)
-      .addScaledVector(_up,20);
+      .addScaledVector(_fwd,esfFwd)
+      .addScaledVector(_right,esfRight)
+      .addScaledVector(new THREE.Vector3(0,1,0),esfUp);
     esfMesh.position.lerp(alvoEsf,0.10);
     esfMesh.rotation.y+=0.008;
     const alvOp=esfOculto?0:0.15;
