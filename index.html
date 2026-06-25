@@ -480,9 +480,9 @@ let portalAnimCb=null;
 
 // ── Esfera de identidade ────────────────────────────────
 const esfMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,wireframe:false});
-const esfMesh=new THREE.Mesh(new THREE.SphereGeometry(3,20,20),esfMat);
+const esfMesh=new THREE.Mesh(new THREE.SphereGeometry(28,20,20),esfMat);
 const esfHalo=new THREE.Mesh(
-  new THREE.SphereGeometry(4.5,16,16),
+  new THREE.SphereGeometry(40,16,16),
   new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,wireframe:true,depthWrite:false})
 );
 let esfOculto=false;
