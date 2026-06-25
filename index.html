@@ -1109,12 +1109,11 @@ function abrirArquivo(a){
     txt.style.display='block';
     document.getElementById('preview-nome').textContent=a.nome;
   } else if(a.tipo==='html' && a.dataUrl){
-    const blob=new Blob([a.dataUrl],{type:'text/html;charset=utf-8'});
-    const blobUrl=URL.createObjectURL(blob);
-    if(iframe._blobUrl) URL.revokeObjectURL(iframe._blobUrl);
-    iframe._blobUrl=blobUrl;
-    iframe.src=blobUrl;
     iframe.style.display='block';
+    const doc=iframe.contentDocument||iframe.contentWindow.document;
+    doc.open();
+    doc.write(a.dataUrl);
+    doc.close();
     document.getElementById('preview-nome').textContent=a.nome;
     del.style.display='block';
     del._arquivo=a;
