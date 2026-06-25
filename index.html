@@ -531,9 +531,19 @@ function irParaCoordenada(){
     setTimeout(()=>document.getElementById('coord-input').style.borderColor='',1000);
     return;
   }
-  alvoVoo=new THREE.Vector3(partes[0],partes[1],partes[2]+200);
+  const [cx,cy,cz]=partes;
+  // Floating origin: reajusta coordBase para que a câmera exiba as coordenadas alvo
+  // A câmera permanece perto da origem Three.js — sem problemas de precisão de float
+  coordBase.x=cx-camera.position.x;
+  coordBase.y=cy-camera.position.y;
+  coordBase.z=cz-camera.position.z;
+  // Salto curto para frente — sensação de movimento sem mover bilhões de unidades
+  const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+  alvoVoo=camera.position.clone().addScaledVector(fwd,300);
   voando=true; velCruz=0;
+  displayAtivo=false; // portal não segue — fica na posição original
   fecharJanela();
+  notif(`Salto → COSM://${formatCoord(cx)} : ${formatCoord(cy)} : ${formatCoord(cz)}`);
 }
 
 // ═══════════════════════════════════════════════════════
