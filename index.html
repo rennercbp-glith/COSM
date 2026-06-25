@@ -354,8 +354,8 @@
 <!-- Visualização de arquivo -->
 <div id="preview">
   <img id="preview-img" src="" alt="" style="display:none"/>
-  <iframe id="preview-iframe" srcdoc="" sandbox="allow-scripts"
-    style="display:none;width:85vw;height:75vh;border:none;border-radius:12px;background:#fff;"></iframe>
+  <iframe id="preview-iframe" src="about:blank" sandbox="allow-scripts allow-same-origin"
+    style="display:none;width:85vw;height:75vh;border:none;border-radius:12px;"></iframe>
   <div id="preview-doc" style="display:none">
     <div id="preview-doc-icone">📄</div>
     <div id="preview-doc-nome"></div>
@@ -1109,7 +1109,11 @@ function abrirArquivo(a){
     txt.style.display='block';
     document.getElementById('preview-nome').textContent=a.nome;
   } else if(a.tipo==='html' && a.dataUrl){
-    iframe.srcdoc=a.dataUrl;
+    const blob=new Blob([a.dataUrl],{type:'text/html;charset=utf-8'});
+    const blobUrl=URL.createObjectURL(blob);
+    if(iframe._blobUrl) URL.revokeObjectURL(iframe._blobUrl);
+    iframe._blobUrl=blobUrl;
+    iframe.src=blobUrl;
     iframe.style.display='block';
     document.getElementById('preview-nome').textContent=a.nome;
     del.style.display='block';
@@ -1150,8 +1154,10 @@ function fecharPreview(){
   document.getElementById('preview-texto').style.display='none';
   document.getElementById('preview-img').style.display='none';
   document.getElementById('preview-doc').style.display='none';
-  document.getElementById('preview-iframe').style.display='none';
-  document.getElementById('preview-iframe').srcdoc='';
+  const _if=document.getElementById('preview-iframe');
+  _if.style.display='none';
+  if(_if._blobUrl){ URL.revokeObjectURL(_if._blobUrl); _if._blobUrl=null; }
+  _if.src='about:blank';
   document.getElementById('preview-deletar').style.display='none';
 }
 
