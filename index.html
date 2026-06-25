@@ -1127,6 +1127,15 @@ function confirmarEnviarPara(){
 // ═══════════════════════════════════════════════════════
 //  VISUALIZAÇÃO DE ARQUIVOS
 // ═══════════════════════════════════════════════════════
+function dataUrlParaBlobUrl(dataUrl){
+  const arr=dataUrl.split(',');
+  const mime=arr[0].match(/:(.*?);/)[1];
+  const bstr=atob(arr[1]);
+  const u8=new Uint8Array(bstr.length);
+  for(let i=0;i<bstr.length;i++) u8[i]=bstr.charCodeAt(i);
+  return URL.createObjectURL(new Blob([u8],{type:mime}));
+}
+
 function abrirArquivo(a){
   const prev=document.getElementById('preview');
   const img=document.getElementById('preview-img');
@@ -1155,7 +1164,10 @@ function abrirArquivo(a){
     document.getElementById('preview-nome').textContent=a.nome+' — '+kb;
     del.style.display='block'; del._arquivo=a;
   } else if(a.tipo==='video' && a.dataUrl){
-    vid.src=a.dataUrl;
+    const burl=dataUrlParaBlobUrl(a.dataUrl);
+    vid._blobUrl=burl;
+    vid.src=burl;
+    vid.load();
     vid.style.display='block';
     document.getElementById('preview-nome').textContent=a.nome+' — '+kb;
     del.style.display='block'; del._arquivo=a;
@@ -1205,7 +1217,9 @@ function fecharPreview(){
   document.getElementById('preview-texto').style.display='none';
   document.getElementById('preview-img').style.display='none';
   const _vid=document.getElementById('preview-video');
-  _vid.pause(); _vid.src=''; _vid.style.display='none';
+  _vid.pause();
+  if(_vid._blobUrl){ URL.revokeObjectURL(_vid._blobUrl); _vid._blobUrl=null; }
+  _vid.src=''; _vid.style.display='none';
   document.getElementById('preview-doc').style.display='none';
   const _if=document.getElementById('preview-iframe');
   _if.style.display='none';
