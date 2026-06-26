@@ -955,18 +955,28 @@ function removeYoutubeNoEspaco(){
 
 function updateYoutubeNoEspaco(){
   if(!ytSpaceEl||!ytActiveGroup) return;
-  const p=ytActiveGroup.position.clone().project(camera);
-  if(p.z>1){ ytSpaceEl.style.display='none'; return; }
+  ytActiveGroup.updateMatrixWorld(true);
+  const corners=[
+    new THREE.Vector3(-160,-90,0),
+    new THREE.Vector3( 160,-90,0),
+    new THREE.Vector3( 160, 90,0),
+    new THREE.Vector3(-160, 90,0),
+  ];
+  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+  for(const c of corners){
+    const w=c.clone().applyMatrix4(ytActiveGroup.matrixWorld);
+    const p=w.project(camera);
+    if(p.z>1){ ytSpaceEl.style.display='none'; return; }
+    const sx=(p.x+1)/2*innerWidth;
+    const sy=(-p.y+1)/2*innerHeight;
+    minX=Math.min(minX,sx); maxX=Math.max(maxX,sx);
+    minY=Math.min(minY,sy); maxY=Math.max(maxY,sy);
+  }
   ytSpaceEl.style.display='block';
-  const sx=(p.x+1)/2*innerWidth;
-  const sy=(-p.y+1)/2*innerHeight;
-  const dist=camera.position.distanceTo(ytActiveGroup.position);
-  const w=Math.max(160,Math.min(1100,320*280/Math.max(1,dist)));
-  const h=w*9/16;
-  ytSpaceEl.style.width=w+'px';
-  ytSpaceEl.style.height=h+'px';
-  ytSpaceEl.style.left=(sx-w/2)+'px';
-  ytSpaceEl.style.top=(sy-h/2)+'px';
+  ytSpaceEl.style.left=minX+'px';
+  ytSpaceEl.style.top=minY+'px';
+  ytSpaceEl.style.width=(maxX-minX)+'px';
+  ytSpaceEl.style.height=(maxY-minY)+'px';
 }
 
 function abrirYoutube(videoId){
@@ -1817,8 +1827,8 @@ function loop(){
   document.getElementById('txt-vel').textContent=
     Math.abs(Math.round(velCruz))+(velCruz<-1?' ◀':velCruz>1?' ▶':' —');
 
-  updateYoutubeNoEspaco();
   renderer.render(scene,camera);
+  updateYoutubeNoEspaco();
 }
 
 initDB().then(carregarDB);
