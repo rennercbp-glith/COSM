@@ -614,7 +614,7 @@ const fileDragRay=new THREE.Raycaster();
 let modoEspacial=JSON.parse(localStorage.getItem('cosmModoEsp')||'true');
 
 // ── YouTube no espaço ───────────────────────────────────
-let ytActiveGroup=null, ytSpaceEl=null;
+let ytActiveGroup=null, ytSpaceEl=null, ytBarEl=null, ytIframeEl=null, ytModoInteragir=false;
 let db=null;
 
 // ── Posicionamento espacial por IP ──────────────────────
@@ -928,29 +928,83 @@ function confirmarModalYt(){
   });
 }
 
+function _ytBtnStyle(cor){
+  return 'background:'+cor+';color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:5px;padding:4px 12px;cursor:pointer;font-size:12px;font-family:monospace;white-space:nowrap;';
+}
+
 function playYoutubeNoEspaco(group){
   removeYoutubeNoEspaco();
   const videoId=group.userData.arquivo.dataUrl;
+
+  // Wrapper do iframe — cobre exatamente o plano 3D
   const wrapper=document.createElement('div');
-  wrapper.style.cssText='position:fixed;z-index:50;border-radius:10px;overflow:hidden;pointer-events:all;box-shadow:0 0 60px rgba(0,0,0,0.9);';
+  wrapper.style.cssText='position:fixed;z-index:50;overflow:hidden;border-radius:8px 8px 0 0;box-shadow:0 0 40px rgba(0,0,0,0.85);pointer-events:none;';
+
   const iframe=document.createElement('iframe');
-  iframe.src='https://www.youtube.com/embed/'+videoId+'?autoplay=1&rel=0';
-  iframe.style.cssText='width:100%;height:100%;border:none;display:block;';
+  iframe.src='https://www.youtube.com/embed/'+videoId+'?autoplay=1&rel=0&enablejsapi=1';
+  iframe.style.cssText='width:100%;height:100%;border:none;display:block;pointer-events:none;';
   iframe.setAttribute('allowfullscreen','');
   iframe.setAttribute('allow','autoplay; encrypted-media');
   wrapper.appendChild(iframe);
   document.body.appendChild(wrapper);
-  ytSpaceEl=wrapper;
-  ytActiveGroup=group;
+
+  // Barra de controle — abaixo do iframe, sempre clicável
+  const bar=document.createElement('div');
+  bar.style.cssText='position:fixed;z-index:51;display:flex;gap:6px;align-items:center;background:rgba(0,0,0,0.9);border-radius:0 0 8px 8px;padding:5px 8px;pointer-events:all;box-sizing:border-box;';
+
+  const btnInt=document.createElement('button');
+  btnInt.id='yt-btn-interagir';
+  btnInt.textContent='🖱 Interagir';
+  btnInt.style.cssText=_ytBtnStyle('rgba(255,255,255,0.1)');
+  btnInt.onclick=toggleYtInteragir;
+
+  const btnMais=document.createElement('button');
+  btnMais.textContent='⊕ Maior';
+  btnMais.style.cssText=_ytBtnStyle('rgba(255,255,255,0.08)');
+  btnMais.onclick=()=>redimYt(1.3);
+
+  const btnMenos=document.createElement('button');
+  btnMenos.textContent='⊖ Menor';
+  btnMenos.style.cssText=_ytBtnStyle('rgba(255,255,255,0.08)');
+  btnMenos.onclick=()=>redimYt(0.77);
+
+  const btnFechar=document.createElement('button');
+  btnFechar.textContent='✕ Fechar';
+  btnFechar.style.cssText=_ytBtnStyle('rgba(180,40,40,0.4)')+'margin-left:auto;';
+  btnFechar.onclick=()=>{ removeYoutubeNoEspaco(); sairOrbita(); };
+
+  bar.append(btnInt,btnMais,btnMenos,btnFechar);
+  document.body.appendChild(bar);
+
+  ytSpaceEl=wrapper; ytBarEl=bar; ytIframeEl=iframe;
+  ytActiveGroup=group; ytModoInteragir=false;
   entrarOrbita(group.position,400);
 }
 
 function removeYoutubeNoEspaco(){
   if(!ytSpaceEl) return;
-  const iframe=ytSpaceEl.querySelector('iframe');
-  if(iframe) iframe.src='';
+  if(ytIframeEl) ytIframeEl.src='';
   ytSpaceEl.remove();
-  ytSpaceEl=null; ytActiveGroup=null;
+  if(ytBarEl) ytBarEl.remove();
+  ytSpaceEl=null; ytBarEl=null; ytIframeEl=null;
+  ytActiveGroup=null; ytModoInteragir=false;
+}
+
+function toggleYtInteragir(){
+  ytModoInteragir=!ytModoInteragir;
+  if(ytIframeEl) ytIframeEl.style.pointerEvents=ytModoInteragir?'all':'none';
+  if(ytSpaceEl)  ytSpaceEl.style.pointerEvents =ytModoInteragir?'all':'none';
+  const btn=document.getElementById('yt-btn-interagir');
+  if(!btn) return;
+  btn.textContent=ytModoInteragir?'🌐 Espaço':'🖱 Interagir';
+  btn.style.background=ytModoInteragir?'rgba(80,200,80,0.25)':'rgba(255,255,255,0.1)';
+}
+
+function redimYt(fator){
+  if(!ytActiveGroup) return;
+  const s=ytActiveGroup.scale.x*fator;
+  if(s<0.15||s>6) return;
+  ytActiveGroup.scale.set(s,s,s);
 }
 
 function updateYoutubeNoEspaco(){
@@ -966,17 +1020,29 @@ function updateYoutubeNoEspaco(){
   for(const c of corners){
     const w=c.clone().applyMatrix4(ytActiveGroup.matrixWorld);
     const p=w.project(camera);
-    if(p.z>1){ ytSpaceEl.style.display='none'; return; }
+    if(p.z>1){
+      ytSpaceEl.style.display='none';
+      if(ytBarEl) ytBarEl.style.display='none';
+      return;
+    }
     const sx=(p.x+1)/2*innerWidth;
     const sy=(-p.y+1)/2*innerHeight;
     minX=Math.min(minX,sx); maxX=Math.max(maxX,sx);
     minY=Math.min(minY,sy); maxY=Math.max(maxY,sy);
   }
+  const pw=maxX-minX, ph=maxY-minY;
+  ytSpaceEl.style.cssText=ytSpaceEl.style.cssText; // no-op flush
   ytSpaceEl.style.display='block';
   ytSpaceEl.style.left=minX+'px';
   ytSpaceEl.style.top=minY+'px';
-  ytSpaceEl.style.width=(maxX-minX)+'px';
-  ytSpaceEl.style.height=(maxY-minY)+'px';
+  ytSpaceEl.style.width=pw+'px';
+  ytSpaceEl.style.height=ph+'px';
+  if(ytBarEl){
+    ytBarEl.style.display='flex';
+    ytBarEl.style.left=minX+'px';
+    ytBarEl.style.top=maxY+'px';
+    ytBarEl.style.width=pw+'px';
+  }
 }
 
 function abrirYoutube(videoId){
@@ -1834,7 +1900,6 @@ function loop(){
 initDB().then(carregarDB);
 iniciarPosicaoPorIP();
 ativarEsferaSeIdentidade();
-criarDemoMarcoZero();
 loop();
 
 // ═══════════════════════════════════════════════════════
