@@ -61,8 +61,9 @@
   #modal-reg.ativo{opacity:1;pointer-events:all;}
   #painel-reg{
     background:#08080f;border:1px solid rgba(255,255,255,0.1);
-    border-radius:14px;padding:36px;width:360px;max-width:92vw;
-    font-family:'Courier New',monospace;
+    border-radius:14px;padding:36px;width:460px;max-width:94vw;
+    max-height:90vh;overflow-y:auto;font-family:'Courier New',monospace;
+    scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.08) transparent;
   }
   .reg-label{font-size:9px;letter-spacing:5px;color:rgba(255,255,255,0.25);margin-bottom:20px;}
   .reg-input{
@@ -330,19 +331,61 @@
       </div>
     </div>
 
-    <!-- Step 1: carteira -->
+    <!-- Step 1: resumo do produto + carteira -->
     <div id="reg-s1" style="display:none;">
-      <div id="reg-s1-label" class="reg-label">REGISTRAR COORDENADA</div>
-      <p style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:16px;">Sua carteira Solana (chave pública):</p>
-      <input id="reg-carteira" class="reg-input" type="text" placeholder="Ex: 5FHwkXz3...abc" spellcheck="false"/>
-      <p class="reg-hint">Chave pública da sua carteira Phantom, Solflare ou similar.<br>Nunca compartilhe sua chave privada.</p>
-      <div id="reg-empresa-campos" style="display:none;margin-top:14px;">
-        <input id="reg-nome-empresa" class="reg-input" type="text" placeholder="Nome da empresa / organização" spellcheck="false" style="margin-top:0;"/>
-        <p class="reg-hint">Nome público que aparecerá no universo para identificar sua empresa.</p>
+      <div id="reg-s1-label" class="reg-label">VOCÊ ESTÁ COMPRANDO</div>
+
+      <!-- Card resumo dinâmico -->
+      <div id="reg-resumo-card" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:18px 20px;margin-bottom:18px;">
+        <div id="reg-resumo-titulo" style="font-size:13px;color:#fff;letter-spacing:2px;margin-bottom:6px;"></div>
+        <div id="reg-resumo-sub" style="font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:2px;margin-bottom:14px;"></div>
+        <div id="reg-resumo-desc" style="font-size:11px;color:rgba(255,255,255,0.55);line-height:2;"></div>
       </div>
-      <div style="display:flex;gap:10px;margin-top:24px;justify-content:flex-end;">
-        <button class="reg-btn" onclick="voltarParaS0()">← VOLTAR</button>
-        <button class="reg-btn reg-btn-destaque" onclick="iniciarPagamento()">CONTINUAR →</button>
+
+      <!-- O que você pode fazer -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.22);margin-bottom:10px;">O QUE VOCÊ PODE FAZER</div>
+        <div id="reg-pode-fazer" style="font-size:11px;color:rgba(255,255,255,0.55);line-height:2.2;"></div>
+      </div>
+
+      <!-- Box investimento (só permanente) -->
+      <div id="reg-box-invest" style="display:none;background:rgba(255,200,80,0.04);border:1px solid rgba(255,200,80,0.15);border-radius:8px;padding:14px 16px;margin-bottom:16px;">
+        <div style="font-size:9px;letter-spacing:4px;color:rgba(255,200,80,0.5);margin-bottom:8px;">POTENCIAL DE VALORIZAÇÃO</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.55);line-height:2;">
+          Você compra hoje por <span id="reg-preco-invest" style="color:rgba(255,200,80,0.8);"></span>.<br>
+          Conforme o COSM cresce e empresas como Meta, PlayStation ou Apple
+          enxergam o valor deste universo, seu espaço pode valer muito mais.<br>
+          <span style="color:rgba(255,200,80,0.6);">Você decide se vende — e por quanto.</span>
+        </div>
+      </div>
+
+      <!-- Box anual (só anual) -->
+      <div id="reg-box-anual" style="display:none;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px 16px;margin-bottom:16px;">
+        <div style="font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.22);margin-bottom:8px;">SOBRE O PLANO ANUAL</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:2;">
+          Este é um plano de assinatura. A coordenada fica ativa enquanto você renovar.<br>
+          Não inclui direito de revenda — o espaço volta ao universo se não renovado.<br>
+          <span style="color:rgba(255,255,255,0.25);">Quer garantir para sempre? Escolha o plano Permanente.</span>
+        </div>
+      </div>
+
+      <!-- Pagamento -->
+      <div style="font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.22);margin-bottom:10px;">PAGAMENTO VIA SOLANA</div>
+      <div id="reg-empresa-campos-nome" style="display:none;margin-bottom:12px;">
+        <input id="reg-nome-empresa" class="reg-input" type="text" placeholder="Nome da empresa / organização" spellcheck="false"/>
+        <p class="reg-hint">Nome público que aparecerá no universo.</p>
+      </div>
+      <input id="reg-carteira" class="reg-input" type="text" placeholder="Sua chave pública Solana (Ex: 5FHwk...)" spellcheck="false"/>
+      <p class="reg-hint">Carteira Phantom, Solflare ou similar. Nunca sua chave privada.<br>
+        Após confirmar, você recebe um QR code para pagar com sua carteira.<br>
+        O registro é automático assim que o pagamento for detectado na blockchain.</p>
+
+      <div style="display:flex;gap:10px;margin-top:20px;justify-content:space-between;align-items:center;">
+        <div id="reg-s1-preco" style="font-size:13px;color:rgba(100,200,255,0.7);letter-spacing:1px;"></div>
+        <div style="display:flex;gap:10px;">
+          <button class="reg-btn" onclick="voltarParaS0()">← VOLTAR</button>
+          <button class="reg-btn reg-btn-destaque" onclick="iniciarPagamento()">PAGAR →</button>
+        </div>
       </div>
     </div>
 
@@ -957,15 +1000,60 @@ window.selecionarPlano = function(plano) {
 window.irParaS1 = function() {
   document.getElementById('reg-s0').style.display = 'none';
   document.getElementById('reg-s1').style.display = 'block';
-  const label = document.getElementById('reg-s1-label');
-  const camposEmpresa = document.getElementById('reg-empresa-campos');
-  if (regTipo === 'empresa') {
-    label.textContent = 'REGISTRAR EMPRESA';
-    camposEmpresa.style.display = 'block';
-  } else {
-    label.textContent = 'REGISTRAR COORDENADA';
-    camposEmpresa.style.display = 'none';
-  }
+
+  const preco = PRECOS[regTipo][regPlano];
+  const isPerm = regPlano === 'permanente';
+  const isEmp  = regTipo  === 'empresa';
+
+  // Label topo
+  document.getElementById('reg-s1-label').textContent =
+    isEmp ? 'VOCÊ ESTÁ COMPRANDO — EMPRESA' : 'VOCÊ ESTÁ COMPRANDO';
+
+  // Card resumo
+  document.getElementById('reg-resumo-titulo').textContent =
+    isEmp ? 'PREFIXO EXCLUSIVO NO UNIVERSO COSM'
+          : 'COORDENADA NO UNIVERSO COSM';
+
+  document.getElementById('reg-resumo-sub').textContent =
+    (isEmp ? 'EMPRESA · ' : 'PESSOA · ') +
+    (isPerm ? 'PLANO PERMANENTE — para sempre' : 'PLANO ANUAL — renovável');
+
+  document.getElementById('reg-resumo-desc').innerHTML = isEmp
+    ? `Um bloco exclusivo de coordenadas no eixo X do universo —
+       funciona como uma agência bancária. Você controla todo o espaço
+       interno: showrooms, lojas, mundos, experiências imersivas.
+       Endereço fixo e permanente que qualquer pessoa chega navegando.`
+    : isPerm
+      ? `Uma coordenada tridimensional permanente no universo COSM.
+         Endereço único que nunca some, não depende de nenhum servidor externo.
+         Guarde o que quiser, compartilhe com quem quiser, construa o que quiser.`
+      : `Uma coordenada tridimensional no universo COSM por 1 ano.
+         Endereço ativo enquanto a assinatura estiver em dia.
+         Ideal para experimentar o universo antes de comprar permanente.`;
+
+  // O que pode fazer
+  const acoes = isPerm
+    ? `✓ &nbsp;Guardar arquivos, senhas e conteúdo privado<br>
+       ✓ &nbsp;Compartilhar seu endereço COSM:// com qualquer pessoa<br>
+       ✓ &nbsp;Construir experiências, mundos ou conteúdo no seu espaço<br>
+       ✓ &nbsp;${isEmp ? 'Alocar sub-coordenadas para clientes ou projetos' : 'Listar no marketplace e vender para quem quiser'}<br>
+       ✓ &nbsp;Receber ofertas de empresas que queiram seu espaço`
+    : `✓ &nbsp;Guardar arquivos, senhas e conteúdo privado<br>
+       ✓ &nbsp;Compartilhar seu endereço COSM:// com qualquer pessoa<br>
+       ✓ &nbsp;Construir experiências no seu espaço<br>
+       ✗ &nbsp;<span style="color:rgba(255,255,255,0.25)">Revenda não disponível no plano anual</span>`;
+  document.getElementById('reg-pode-fazer').innerHTML = acoes;
+
+  // Boxes condicionais
+  document.getElementById('reg-box-invest').style.display = isPerm ? 'block' : 'none';
+  document.getElementById('reg-box-anual').style.display  = isPerm ? 'none'  : 'block';
+  document.getElementById('reg-preco-invest').textContent = preco + ' SOL';
+
+  // Campo nome empresa
+  document.getElementById('reg-empresa-campos-nome').style.display = isEmp ? 'block' : 'none';
+
+  // Preço no rodapé
+  document.getElementById('reg-s1-preco').textContent = preco + ' SOL';
 };
 
 window.voltarParaS0 = function() {
@@ -976,8 +1064,9 @@ window.voltarParaS0 = function() {
 window.iniciarPagamento = async function() {
   const carteira = document.getElementById('reg-carteira').value.trim();
   if (!carteira) return;
-  const nomeEmpresa = regTipo === 'empresa'
-    ? (document.getElementById('reg-nome-empresa').value.trim() || null)
+  const nomeEmpresaEl = document.getElementById('reg-nome-empresa');
+  const nomeEmpresa = regTipo === 'empresa' && nomeEmpresaEl
+    ? (nomeEmpresaEl.value.trim() || null)
     : null;
   if (regTipo === 'empresa' && !nomeEmpresa) {
     alert('Informe o nome da empresa.');
