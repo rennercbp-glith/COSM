@@ -48,6 +48,16 @@
     font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.35);
     pointer-events:none;z-index:20;opacity:0;transition:opacity 0.4s;white-space:nowrap;
   }
+  #prox-overlay{
+    position:fixed;inset:0;pointer-events:none;z-index:5;
+    background:radial-gradient(ellipse at center,
+      transparent 20%, rgba(0,40,160,0.22) 60%, rgba(0,80,255,0.55) 100%);
+    opacity:0;transition:opacity 0.15s;
+  }
+  #flash{
+    position:fixed;inset:0;pointer-events:none;z-index:50;
+    background:#ffffff;opacity:0;
+  }
 </style>
 </head>
 <body>
@@ -71,6 +81,8 @@
 </div>
 
 <div id="notif"></div>
+<div id="prox-overlay"></div>
+<div id="flash"></div>
 
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
@@ -147,65 +159,92 @@ const WORMHOLE_FS = `
   varying vec2 vUv;
   uniform float uTime;
   uniform vec3  uCamPos;
+  uniform float uProx;
 
-  float hash(vec3 p) {
-    p = fract(p * vec3(443.8975, 397.2973, 491.1871));
-    p += dot(p.zxy, p.yxz + 19.19);
-    return fract(p.x * p.y * p.z);
+  float hash2(vec2 p) {
+    p = fract(p * vec2(234.34, 435.345));
+    p += dot(p, p + 34.23);
+    return fract(p.x * p.y);
   }
-  float estrelas(vec3 d) {
-    float s = 0.0;
-    for (float i = 1.0; i <= 4.0; i++) {
-      float sc  = 60.0 * i;
-      vec3  id  = floor(d * sc);
-      vec3  fr  = fract(d * sc) - 0.5;
-      float h   = hash(id);
-      s += smoothstep(0.05 - h*0.03, 0.0, length(fr)) * (h*0.8 + 0.2);
-    }
-    return s;
+  float noise2(vec2 p) {
+    vec2 i = floor(p), f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(
+      mix(hash2(i), hash2(i + vec2(1,0)), f.x),
+      mix(hash2(i + vec2(0,1)), hash2(i + vec2(1,1)), f.x), f.y);
   }
 
   void main() {
     vec3  viewDir = normalize(uCamPos - vWorldPos);
     float fr      = 1.0 - max(0.0, dot(vNormal, viewDir));
-    float fr2     = pow(fr, 2.0);
-    float fr4     = pow(fr, 4.0);
+    float fr2     = fr * fr;
+    float fr4     = fr2 * fr2;
 
-    // Anel de lensing: brilho intenso na borda da esfera
-    float ringSharp = smoothstep(0.68, 0.80, fr) * smoothstep(1.0, 0.86, fr);
-    float ringBroad = pow(fr4, 0.5) * 0.6;
+    // == GALAXIA INTERIOR ==
+    vec3  n     = normalize(vNormal);
+    float theta = atan(n.z, n.x) + uTime * 0.04;
+    float rGal  = length(n.xz);
 
-    // Interior: estrelas do outro universo refletidas
-    vec3  refDir    = reflect(-viewDir, vNormal);
-    float otherStars = estrelas(normalize(refDir + vec3(0.5, 0.2, 0.8))) * 0.8;
-    vec3  starColor  = vec3(0.55, 0.75, 1.0) * otherStars * (1.0 - fr2) * 0.35;
+    float nA = noise2(vec2(theta * 2.5 + rGal * 10.0, rGal * 4.0) + uTime * 0.02);
+    float nB = noise2(vec2(theta * 4.0 - rGal * 6.0,  rGal * 3.0) - uTime * 0.015);
+    float nC = noise2(vec2(theta * 1.2 + rGal * 14.0, rGal * 5.0) + uTime * 0.008);
 
-    // Nebulosa interna — azul pulsante
-    float pulse  = sin(uTime * 0.25 + fr * 8.0) * 0.5 + 0.5;
-    vec3  nebula = mix(vec3(0.01, 0.03, 0.12), vec3(0.05, 0.10, 0.35),
-                       (1.0 - fr2) * pulse * 0.6) * (1.0 - fr2) * 0.9;
+    float core = exp(-rGal * 5.5);
 
-    // Anel branco-azulado
-    vec3 ringColor = vec3(0.75, 0.88, 1.0) * ringSharp * 5.0
-                   + vec3(0.50, 0.70, 1.0) * ringBroad;
+    // Estrelas pontuais da outra galáxia
+    float starSeed   = hash2(floor(n.xz * 130.0));
+    float starMask   = step(0.965, starSeed);
+    float starBright = hash2(floor(n.xz * 55.0 + 7.3)) * 0.6 + 0.4;
 
-    // Iridescência sutil na borda
-    float iri     = sin(fr * 14.0 + uTime * 0.35) * 0.5 + 0.5;
-    vec3  iridesc = vec3(sin(iri*3.14)*0.4, sin(iri*3.14+2.09)*0.35, sin(iri*3.14+4.18)*0.5)
-                  * fr4 * 2.0;
+    vec3 cCore   = vec3(1.00, 0.82, 0.35);  // amarelo-laranja
+    vec3 cArm1   = vec3(0.80, 0.22, 0.90);  // roxo
+    vec3 cArm2   = vec3(0.20, 0.42, 1.00);  // azul
+    vec3 cNebula = vec3(0.95, 0.38, 0.12);  // laranja nebulosa
+    vec3 cDark   = vec3(0.02, 0.01, 0.08);
 
-    vec3  color = nebula + starColor + ringColor + iridesc;
-    float alpha = 0.96 * (1.0 - smoothstep(0.0, 0.15, fr))
-                + ringSharp * 0.9 + ringBroad * 0.7 + fr4 * 0.5;
+    vec3 arms = mix(cArm2, cArm1, nA);
+    arms = mix(arms, cNebula, nB * 0.45);
+    arms = mix(arms, cArm1 * 1.2, nC * 0.3);
+    vec3 galaxy = mix(cDark, arms, smoothstep(0.0, 0.65, nA * 0.55 + nB * 0.35 + nC * 0.1));
+    galaxy = mix(galaxy, cCore, core * 0.65);
+    galaxy += cCore * core * 1.9;
+    galaxy += vec3(1.0, 0.97, 0.90) * starMask * starBright * 2.5;
+    galaxy *= 1.6;
 
-    gl_FragColor = vec4(color, min(1.0, alpha));
+    // Galáxia visível no centro, some suavemente na borda
+    float interiorMask = smoothstep(0.58, 0.0, fr);
+    vec3  interior     = galaxy * interiorMask;
+
+    // == EINSTEIN RING ==
+    float ringSharp = smoothstep(0.70, 0.80, fr) * smoothstep(1.00, 0.83, fr);
+    float ringBroad = pow(fr, 5.0);
+
+    // Cor do anel intensifica com proximidade (branco -> azul-violeta)
+    vec3 rCol = mix(vec3(0.90, 0.95, 1.00), vec3(0.55, 0.65, 1.00), uProx);
+    vec3 ring = rCol * ringSharp * (10.0 + uProx * 18.0)
+              + vec3(0.40, 0.62, 1.00) * ringBroad * (1.8 + uProx * 2.5);
+
+    // Pulso no anel quando perto
+    float pulse = sin(uTime * 3.0) * 0.5 + 0.5;
+    ring += rCol * ringSharp * pulse * uProx * 8.0;
+
+    // Glow azul na borda ao aproximar
+    vec3 proxGlow = vec3(0.25, 0.55, 1.00) * fr4 * uProx * 5.0;
+
+    vec3  color = interior + ring + proxGlow;
+    float alpha = interiorMask * 0.97
+                + ringSharp * 1.0
+                + ringBroad * 0.65
+                + fr4 * (0.15 + uProx * 0.5);
+
+    gl_FragColor = vec4(color, clamp(alpha, 0.0, 1.0));
   }
 `;
 
 const wMat = new THREE.ShaderMaterial({
   vertexShader:   WORMHOLE_VS,
   fragmentShader: WORMHOLE_FS,
-  uniforms: { uTime: {value:0}, uCamPos: {value: new THREE.Vector3()} },
+  uniforms: { uTime: {value:0}, uCamPos: {value: new THREE.Vector3()}, uProx: {value:0} },
   transparent: true, side: THREE.FrontSide, depthWrite: false
 });
 
@@ -291,6 +330,11 @@ const _qRot = new THREE.Quaternion();
 const _axY  = new THREE.Vector3(0, 1, 0);
 const _axX  = new THREE.Vector3(1, 0, 0);
 const _fwd  = new THREE.Vector3();
+
+const proxOverlay = document.getElementById('prox-overlay');
+const flashEl     = document.getElementById('flash');
+let ejetando      = false;
+let warnedHorizon = false;
 
 // ═══════════════════════════════════════════════════════
 //  EVENTOS DE ENTRADA
@@ -465,6 +509,56 @@ function loop() {
   wMat.uniforms.uCamPos.value.copy(camera.position);
   anelEquatorial.rotation.y =  t * 0.08;
   anelInclinado.rotation.y  = -t * 0.055;
+
+  // Proximidade ao wormhole — campo gravitacional
+  if (!ejetando) {
+    const distWH = camera.position.distanceTo(wormholeGroup.position);
+    const ZONA   = 1400;
+    const RAIO   = 150;
+    const prox   = Math.max(0, 1 - Math.max(0, distWH - RAIO) / (ZONA - RAIO));
+
+    wMat.uniforms.uProx.value = prox;
+
+    if (prox > 0.02) {
+      const p2 = prox * prox;
+      canvas.style.filter = `blur(${p2 * 5}px) saturate(${1 + prox * 2}) hue-rotate(${prox * 25}deg)`;
+      proxOverlay.style.opacity = Math.pow(prox, 1.5) * 0.85;
+      if (prox > 0.88 && !warnedHorizon) {
+        warnedHorizon = true;
+        notif('HORIZONTE DE EVENTOS DETECTADO');
+      }
+    } else {
+      canvas.style.filter = '';
+      proxOverlay.style.opacity = 0;
+      warnedHorizon = false;
+    }
+
+    // Ejeção — atravessa o buraco de minhoca
+    if (distWH < RAIO + 5 && !voando) {
+      ejetando = true;
+      velCruz = 0; alvoVoo = null;
+      flashEl.style.transition = 'opacity 0.18s';
+      flashEl.style.opacity = '1';
+      setTimeout(() => {
+        const mag = 5e7 + Math.random() * 4e8;
+        const nx  = (Math.random() - 0.5) * 2 * mag;
+        const ny  = (Math.random() - 0.5) * 0.5 * mag;
+        const nz  = (Math.random() - 0.5) * 2 * mag;
+        coordBase.x = nx; coordBase.y = ny; coordBase.z = nz;
+        camera.position.set(0, 0, 1800);
+        camera.quaternion.set(
+          Math.random()-0.5, Math.random()-0.5, Math.random()-0.5, Math.random()
+        ).normalize();
+        canvas.style.filter = '';
+        proxOverlay.style.opacity = 0;
+        wMat.uniforms.uProx.value = 0;
+        flashEl.style.transition = 'opacity 1.4s';
+        flashEl.style.opacity = '0';
+        notif(`UNIVERSO PARALELO — ${formatCoord(nx)} : ${formatCoord(ny)} : ${formatCoord(nz)}`);
+        setTimeout(() => { ejetando = false; warnedHorizon = false; }, 2500);
+      }, 420);
+    }
+  }
 
   atualizarHUD();
   renderer.render(scene, camera);
