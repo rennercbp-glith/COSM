@@ -117,11 +117,14 @@ function gerarEstrelas(qtd, raioMin, raioMax, tamanho, opacidade) {
   }));
 }
 
-scene.add(gerarEstrelas(7000,  2e6,   80e6,  1.0, 0.55)); // fundo distante
-scene.add(gerarEstrelas(2000,  500e3, 2e6,   0.8, 0.35)); // médio-distante
-scene.add(gerarEstrelas(1200,  20e3,  500e3, 1.1, 0.60)); // médio
-scene.add(gerarEstrelas(600,   2000,  20e3,  1.4, 0.70)); // próximo
-scene.add(gerarEstrelas(150,   400,   2000,  1.8, 0.80)); // muito próximo
+const camadas = [
+  gerarEstrelas(7000,  2e6,   80e6,  1.0, 0.55),
+  gerarEstrelas(2000,  500e3, 2e6,   0.8, 0.35),
+  gerarEstrelas(1200,  20e3,  500e3, 1.1, 0.60),
+  gerarEstrelas(600,   2000,  20e3,  1.4, 0.70),
+  gerarEstrelas(150,   400,   2000,  1.8, 0.80),
+];
+camadas.forEach(c => scene.add(c));
 
 // ═══════════════════════════════════════════════════════
 //  WORMHOLE — fixo em COSM 0:0:0
@@ -427,6 +430,9 @@ function loop() {
       camera.position.addScaledVector(dir, spd);
     }
   }
+
+  // Estrelas seguem a câmera — sem aglomeração em nenhum ponto do espaço
+  camadas.forEach(c => c.position.copy(camera.position));
 
   // Wormhole — reposiciona para manter em COSM 0:0:0
   const t = clock.getElapsedTime();
