@@ -858,6 +858,17 @@ function atualizarHUD() {
 }
 
 // ═══════════════════════════════════════════════════════
+//  BEACONS — declarações antecipadas (usadas no loop)
+// ═══════════════════════════════════════════════════════
+const beacons    = [];
+let   beaconAtivo = null;
+const beaconGeo  = new THREE.SphereGeometry(80, 12, 12);
+const beaconMats = {
+  pessoa:  new THREE.MeshBasicMaterial({ color: 0x44ccff, transparent: true, opacity: 0.55 }),
+  empresa: new THREE.MeshBasicMaterial({ color: 0xcc88ff, transparent: true, opacity: 0.55 })
+};
+
+// ═══════════════════════════════════════════════════════
 //  LOOP PRINCIPAL
 // ═══════════════════════════════════════════════════════
 function loop() {
@@ -1220,16 +1231,8 @@ window.irParaMeuEspaco = function() {
 };
 
 // ═══════════════════════════════════════════════════════
-//  BEACONS — coordenadas públicas com conteúdo
+//  BEACONS — lógica de carregamento e interação
 // ═══════════════════════════════════════════════════════
-const beacons = [];           // { mesh, cx, cy, cz, nome, url, tipo }
-let beaconAtivo = null;       // beacon mais próximo com conteúdo
-
-const beaconGeo  = new THREE.SphereGeometry(80, 12, 12);
-const beaconMats = {
-  pessoa:  new THREE.MeshBasicMaterial({ color: 0x44ccff, transparent: true, opacity: 0.55 }),
-  empresa: new THREE.MeshBasicMaterial({ color: 0xcc88ff, transparent: true, opacity: 0.55 })
-};
 
 async function carregarCoordenadas() {
   try {
