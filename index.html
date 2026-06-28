@@ -6,1098 +6,169 @@
 <title>COSM</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:#000;overflow:hidden;font-family:'Courier New',monospace;color:#aaccff;}
-  #c{display:block;cursor:crosshair;}
-  #hud{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;}
+  body{background:#000;overflow:hidden;font-family:'Courier New',monospace;}
+  canvas{display:block;cursor:crosshair;}
 
-  #barra-coord{
-    position:absolute;top:24px;left:50%;transform:translateX(-50%);
-    display:flex;align-items:center;gap:10px;pointer-events:all;
+  /* ── DESTINO ──────────────────────────────────── */
+  #barra-destino{
+    position:fixed;top:20px;left:50%;transform:translateX(-50%);
+    display:flex;align-items:center;gap:8px;z-index:10;
+    background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.1);
+    border-radius:8px;padding:8px 14px;pointer-events:all;
+    backdrop-filter:blur(6px);
   }
-  #coord-label{font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.5);}
+  #coord-label{
+    font-size:10px;letter-spacing:4px;color:rgba(255,255,255,0.25);
+  }
   #coord-input{
-    background:rgba(0,8,24,0.85);border:1px solid rgba(255,255,255,0.35);
-    border-radius:6px;padding:6px 14px;color:#ffffff;font-family:'Courier New',monospace;
-    font-size:13px;width:220px;outline:none;letter-spacing:1px;transition:border-color 0.2s;
+    background:transparent;border:none;outline:none;
+    color:rgba(255,255,255,0.75);font-family:'Courier New',monospace;
+    font-size:13px;letter-spacing:2px;width:170px;
+    transition:border-color 0.2s;
   }
-  #coord-input:focus{border-color:rgba(255,255,255,0.8);}
+  #coord-input::placeholder{color:rgba(255,255,255,0.18);}
   #btn-ir{
-    background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.4);
-    border-radius:6px;padding:6px 14px;color:#ffffff;font-family:'Courier New',monospace;
-    font-size:12px;cursor:pointer;pointer-events:all;transition:background 0.2s;
+    background:transparent;border:1px solid rgba(255,255,255,0.18);
+    border-radius:5px;color:rgba(255,255,255,0.5);cursor:pointer;
+    font-family:'Courier New',monospace;font-size:10px;
+    letter-spacing:3px;padding:4px 12px;pointer-events:all;
+    transition:all 0.2s;
   }
-  #btn-ir:hover{background:rgba(255,255,255,0.15);}
+  #btn-ir:hover{border-color:rgba(255,255,255,0.45);color:#fff;}
 
-  #pos-atual{
-    position:absolute;bottom:24px;left:24px;
-    background:rgba(0,8,24,0.75);border:1px solid rgba(255,255,255,0.2);
-    border-radius:10px;padding:10px 16px;
+  /* ── PAINÉIS INFERIORES ───────────────────────── */
+  #hud-bottom{
+    position:fixed;bottom:20px;left:0;right:0;
+    display:flex;justify-content:space-between;
+    padding:0 24px;pointer-events:none;z-index:10;
   }
-  .pos-linha{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:1px;}
-  #txt-pos{font-size:13px;color:#ffffff;letter-spacing:1px;}
-
-  #vel-info{
-    position:absolute;bottom:24px;right:24px;
-    background:rgba(0,8,24,0.75);border:1px solid rgba(255,255,255,0.2);
-    border-radius:10px;padding:10px 16px;text-align:right;
+  .painel{
+    background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.07);
+    border-radius:8px;padding:10px 16px;
   }
-  #vel-label{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:1px;}
-  #txt-vel{font-size:13px;color:#ffffff;}
+  .painel-label{
+    font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.22);
+    margin-bottom:5px;
+  }
+  .painel-valor{
+    font-size:13px;color:rgba(255,255,255,0.65);letter-spacing:1px;
+  }
 
+  /* ── NOTIFICAÇÃO ──────────────────────────────── */
   #notif{
-    position:absolute;top:72px;left:50%;transform:translateX(-50%);
-    background:rgba(12,12,18,0.95);border:1px solid rgba(255,255,255,0.4);
-    border-radius:8px;padding:8px 18px;font-size:10px;color:#ffffff;
-    letter-spacing:1px;display:none;pointer-events:none;white-space:nowrap;
-  }
-
-  /* ── JANELA ─────────────────────────────────────────── */
-  #janela{
-    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-    width:740px;height:500px;
-    background:#0d0d11;
-    border:1px solid rgba(255,255,255,0.22);
-    border-radius:12px;display:none;flex-direction:column;
-    z-index:50;pointer-events:all;overflow:hidden;
-    box-shadow:0 8px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.06);
-  }
-  #janela.visivel{display:flex;}
-
-  #janela-topo{
-    height:46px;flex-shrink:0;
-    border-bottom:1px solid rgba(255,255,255,0.1);
-    background:#161619;
-    display:flex;align-items:center;padding:0 16px;gap:10px;
-  }
-  #janela-path{
-    flex:1;font-size:11px;color:rgba(255,255,255,0.7);letter-spacing:1px;
-  }
-  .jbtn{
-    background:none;border:1px solid rgba(255,255,255,0.15);border-radius:5px;
-    color:rgba(255,255,255,0.55);font-family:'Courier New',monospace;
-    font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:1px;
-    transition:all 0.15s;
-  }
-  .jbtn:hover{background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.4);}
-  .jbtn.ativo{background:rgba(255,255,255,0.12);color:#fff;border-color:rgba(255,255,255,0.4);}
-  #jbtn-fechar{border-color:rgba(255,80,80,0.3);color:rgba(255,100,100,0.6);}
-  #jbtn-fechar:hover{background:rgba(180,30,30,0.5);color:#ffaaaa;border-color:rgba(255,80,80,0.6);}
-
-  #janela-corpo{display:flex;flex:1;overflow:hidden;}
-
-  #janela-sidebar{
-    width:160px;flex-shrink:0;
-    border-right:1px solid rgba(255,255,255,0.08);
-    background:#111114;
-    padding:16px 10px;display:flex;flex-direction:column;gap:4px;
-  }
-  .sidebar-label{
-    font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:2px;
-    text-transform:uppercase;padding:0 6px;margin:10px 0 4px;
-  }
-  .sbtn{
-    background:transparent;border:none;border-radius:7px;
-    padding:9px 10px;color:rgba(255,255,255,0.8);
-    font-family:'Courier New',monospace;font-size:11px;
-    cursor:pointer;text-align:left;letter-spacing:0.3px;
-    transition:all 0.12s;display:flex;align-items:center;gap:9px;
-  }
-  .sbtn:hover{background:rgba(255,255,255,0.08);color:#fff;}
-  .sbtn.ativo{background:rgba(255,255,255,0.1);color:#fff;}
-  .sbtn-icone{font-size:15px;}
-  .sidebar-sep{height:1px;background:rgba(255,255,255,0.07);margin:6px 0;}
-
-  #janela-area{flex:1;overflow-y:auto;padding:18px;scroll-behavior:smooth;background:#0d0d11;}
-  #janela-area::-webkit-scrollbar{width:4px;}
-  #janela-area::-webkit-scrollbar-track{background:transparent;}
-  #janela-area::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px;}
-
-  #janela-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
-    gap:12px;
-  }
-  #janela-grid.grande{
-    grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
-    gap:16px;
-  }
-
-  .arq-card{
-    border:1px solid rgba(255,255,255,0.1);border-radius:10px;
-    padding:12px 8px 10px;cursor:pointer;
-    display:flex;flex-direction:column;align-items:center;gap:8px;
-    background:rgba(255,255,255,0.03);transition:all 0.15s;
-  }
-  .arq-card:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.3);}
-  .arq-thumb{
-    width:100%;aspect-ratio:1;border-radius:7px;overflow:hidden;
-    background:rgba(255,255,255,0.05);
-    display:flex;align-items:center;justify-content:center;font-size:30px;
-  }
-  .arq-thumb img{width:100%;height:100%;object-fit:cover;}
-  .arq-nome{
-    font-size:10px;color:rgba(255,255,255,0.85);text-align:center;
-    word-break:break-all;width:100%;
-    overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
-    line-height:1.5;
-  }
-  .arq-size{font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:0.5px;}
-
-  .janela-vazia{
-    grid-column:1/-1;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;height:260px;gap:14px;
-  }
-  .janela-vazia-icone{font-size:40px;opacity:0.25;}
-  .janela-vazia-txt{font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:3px;}
-
-  /* ── MODAL ENVIAR PARA COORD ────────────────────────── */
-  #modal-enviar{
-    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-    background:rgba(0,6,22,0.98);border:1px solid rgba(255,255,255,0.3);
-    border-radius:10px;padding:28px 28px;width:300px;
-    display:none;flex-direction:column;gap:14px;z-index:100;pointer-events:all;
-    box-shadow:0 0 40px rgba(255,255,255,0.05);
-  }
-  #modal-enviar.visivel{display:flex;}
-
-  /* ── Modal identidade ──────────────────────────────── */
-  #modal-id{
-    position:fixed;top:0;left:0;width:100%;height:100%;
-    background:rgba(0,0,0,0.88);display:none;align-items:center;
-    justify-content:center;z-index:300;pointer-events:all;
-    backdrop-filter:blur(4px);
-  }
-  #modal-id.visivel{display:flex;}
-  #modal-id-box{
-    background:#0e0e14;border:1px solid rgba(255,255,255,0.2);
-    border-radius:14px;padding:40px;max-width:480px;width:92%;
-    display:flex;flex-direction:column;gap:22px;
-    box-shadow:0 20px 80px rgba(0,0,0,0.9);
-  }
-  .mesf-btn{background:transparent;border:none;border-radius:7px;padding:9px 14px;
-    color:rgba(255,255,255,0.8);font-family:'Courier New',monospace;font-size:11px;
-    letter-spacing:1px;cursor:pointer;text-align:left;transition:background 0.12s;}
-  .mesf-btn:hover{background:rgba(255,255,255,0.08);color:#fff;}
-  #modal-id-titulo{font-size:11px;letter-spacing:5px;color:rgba(255,255,255,0.45);text-transform:uppercase;}
-  #modal-id-desc{font-size:13px;color:rgba(255,255,255,0.8);line-height:2;}
-  #modal-id-input{
-    background:#18181f;border:1px solid rgba(255,255,255,0.25);
-    border-radius:8px;padding:14px 18px;color:#fff;font-family:'Courier New',monospace;
-    font-size:14px;outline:none;letter-spacing:1px;transition:border-color 0.2s;
-  }
-  #modal-id-input::placeholder{color:rgba(255,255,255,0.25);}
-  #modal-id-input:focus{border-color:rgba(255,255,255,0.6);}
-  #modal-id-norm{font-size:11px;color:rgba(255,255,255,0.55);letter-spacing:1px;min-height:18px;}
-  #modal-id-coord{
-    font-size:13px;color:#fff;letter-spacing:1px;
-    background:#18181f;border:1px solid rgba(255,255,255,0.12);
-    border-radius:8px;padding:14px 18px;
-    min-height:44px;font-family:'Courier New',monospace;
-  }
-  #modal-id-aviso{
-    font-size:11px;color:rgba(255,210,80,0.85);letter-spacing:0.5px;line-height:1.8;
-    border-left:2px solid rgba(255,210,80,0.4);padding-left:14px;
-  }
-  #modal-id-btns{display:flex;gap:12px;justify-content:flex-end;}
-  .mid-btn{
-    background:transparent;border:1px solid rgba(255,255,255,0.22);
-    border-radius:8px;padding:11px 22px;color:#fff;font-family:'Courier New',monospace;
-    font-size:11px;letter-spacing:1px;cursor:pointer;transition:all 0.2s;
-  }
-  .mid-btn:hover{background:rgba(255,255,255,0.08);}
-  .mid-btn:disabled{opacity:0.25;cursor:default;}
-  #modal-id-confirmar{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.4);}
-  #modal-titulo{font-size:9px;letter-spacing:3px;color:rgba(255,255,255,0.45);text-transform:uppercase;}
-  #modal-desc{font-size:10px;color:rgba(255,255,255,0.4);line-height:1.6;}
-  #modal-input{
-    background:rgba(0,10,30,0.9);border:1px solid rgba(255,255,255,0.3);
-    border-radius:6px;padding:8px 12px;color:#ffffff;
-    font-family:'Courier New',monospace;font-size:13px;outline:none;
-    letter-spacing:1px;width:100%;
-  }
-  #modal-input:focus{border-color:rgba(255,255,255,0.7);}
-  .modal-btns{display:flex;gap:8px;}
-  .modal-btn{
-    flex:1;background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.3);
-    border-radius:7px;padding:9px;color:#ffffff;font-family:'Courier New',monospace;
-    font-size:10px;cursor:pointer;text-align:center;letter-spacing:1px;transition:background 0.15s;
-  }
-  .modal-btn:hover{background:rgba(255,255,255,0.18);}
-  .modal-btn.cancelar{background:rgba(20,20,40,0.5);color:rgba(255,255,255,0.4);}
-  .modal-btn.cancelar:hover{background:rgba(40,40,80,0.5);color:#ffffff;}
-
-  /* ── PREVIEW ────────────────────────────────────────── */
-  #preview{
-    position:fixed;top:0;left:0;width:100%;height:100%;
-    background:rgba(0,0,8,0.97);display:none;flex-direction:column;
-    align-items:center;justify-content:center;gap:18px;z-index:200;pointer-events:all;
-  }
-  #preview img{max-width:88vw;max-height:78vh;object-fit:contain;
-    border:1px solid rgba(255,255,255,0.2);border-radius:4px;}
-  #preview-doc{
-    border:1px solid rgba(255,255,255,0.2);border-radius:12px;
-    padding:36px 48px;text-align:center;
-  }
-  #preview-doc-icone{font-size:48px;margin-bottom:12px;}
-  #preview-doc-nome{font-size:15px;color:#ffffff;margin-bottom:6px;}
-  #preview-doc-info{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:1px;}
-  #preview-texto{
-    max-width:680px;width:90%;max-height:65vh;overflow-y:auto;
-    background:rgba(8,8,14,0.98);border:1px solid rgba(255,255,255,0.12);
-    border-radius:12px;padding:36px 44px;text-align:left;
-    font-size:13px;line-height:2;color:rgba(255,255,255,0.8);letter-spacing:0.5px;
-    white-space:pre-wrap;word-break:break-word;
-    display:none;
-  }
-  #preview-texto::-webkit-scrollbar{width:3px;}
-  #preview-texto::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px;}
-  #preview-texto h2{font-size:14px;letter-spacing:4px;color:#fff;margin-bottom:20px;text-transform:uppercase;}
-  #preview-texto p{margin-bottom:14px;color:rgba(255,255,255,0.7);}
-  #preview-texto .dest{color:#fff;font-size:13px;}
-  #preview-texto .coord-tag{font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:2px;}
-  #preview-nome{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:2px;}
-  #preview-fechar{
-    background:rgba(0,60,140,0.7);border:1px solid rgba(255,255,255,0.35);
-    border-radius:7px;padding:8px 28px;color:#ffffff;
-    font-family:'Courier New',monospace;font-size:11px;cursor:pointer;
-    letter-spacing:2px;transition:background 0.2s;
-  }
-  #preview-fechar:hover{background:rgba(0,100,200,0.8);}
-
-  /* ── YOUTUBE OVERLAY ───────────────────────────────── */
-  #youtube-overlay{
-    position:fixed;top:0;left:0;width:100%;height:100%;
-    background:rgba(0,0,8,0.94);display:none;align-items:center;
-    justify-content:center;flex-direction:column;gap:14px;z-index:260;pointer-events:all;
-  }
-  #youtube-overlay.visivel{display:flex;}
-  #youtube-iframe{
-    width:min(90vw,1120px);height:min(80vh,630px);
-    border:none;border-radius:10px;
-    box-shadow:0 0 80px rgba(255,255,255,0.06);
-  }
-  #yt-fechar{
-    background:rgba(0,60,140,0.7);border:1px solid rgba(255,255,255,0.35);
-    border-radius:7px;padding:8px 28px;color:#ffffff;
-    font-family:'Courier New',monospace;font-size:11px;cursor:pointer;
-    letter-spacing:2px;transition:background 0.2s;
-  }
-  #yt-fechar:hover{background:rgba(0,100,200,0.8);}
-
-  /* ── MODAL YOUTUBE ──────────────────────────────────── */
-  #modal-yt{
-    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-    background:rgba(0,6,22,0.98);border:1px solid rgba(255,255,255,0.3);
-    border-radius:10px;padding:28px;width:340px;
-    display:none;flex-direction:column;gap:14px;z-index:100;pointer-events:all;
-    box-shadow:0 0 40px rgba(255,255,255,0.05);
-  }
-  #modal-yt.visivel{display:flex;}
-
-  /* ── INTRO ──────────────────────────────────────────── */
-  #intro{
-    position:fixed;top:0;left:0;width:100%;height:100%;
-    background:rgba(0,0,8,0.97);display:flex;flex-direction:column;
-    align-items:center;justify-content:center;gap:24px;z-index:100;
-  }
-  #intro-titulo{display:flex;align-items:center;gap:20px;}
-  #intro h1{font-size:28px;letter-spacing:8px;color:#ffffff;margin:0;}
-  #mc{display:block;opacity:0.9;}
-  #intro p{font-size:12px;color:#fff;letter-spacing:2px;text-align:center;line-height:2;}
-  #btn-entrar{
-    background:#000;border:1px solid rgba(255,255,255,0.25);
-    border-radius:8px;padding:12px 32px;color:#fff;font-family:'Courier New',monospace;
-    font-size:13px;cursor:pointer;letter-spacing:2px;transition:background 0.2s,border-color 0.2s;
-  }
-  #btn-entrar:hover{background:#111;border-color:rgba(255,255,255,0.5);}
-  .tecla{
-    display:inline-block;background:rgba(255,255,255,0.1);
-    border:1px solid rgba(255,255,255,0.25);border-radius:4px;padding:1px 6px;font-size:10px;
+    position:fixed;top:68px;left:50%;transform:translateX(-50%);
+    font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.35);
+    pointer-events:none;z-index:20;opacity:0;transition:opacity 0.4s;
+    white-space:nowrap;
   }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 
-<div id="hud">
-  <div id="barra-coord">
-    <span id="coord-label">COSM://</span>
-    <input id="coord-input" type="text" placeholder="X:Y:Z" spellcheck="false"/>
-    <button id="btn-ir" onclick="irParaCoordenada()">IR</button>
+<!-- Destino -->
+<div id="barra-destino">
+  <span id="coord-label">COSM://</span>
+  <input id="coord-input" type="text" placeholder="X : Y : Z" spellcheck="false"/>
+  <button id="btn-ir" onclick="irParaCoordenada()">IR</button>
+</div>
+
+<!-- HUD inferior -->
+<div id="hud-bottom">
+  <div class="painel">
+    <div class="painel-label">COORDENADA ATUAL</div>
+    <div id="txt-pos" class="painel-valor">0 : 0 : 0</div>
   </div>
-  <div id="pos-atual">
-    <div class="pos-linha">COORDENADA ATUAL</div>
-    <div id="txt-pos">0:0:0</div>
-  </div>
-  <div id="vel-info">
-    <div id="vel-label">VELOCIDADE</div>
-    <div id="txt-vel">0 —</div>
-  </div>
-  <input id="file-input" type="file" style="display:none" onchange="registrarArquivo(this)"/>
-  <div id="notif"></div>
-  <!-- Menu do arquivo 3D -->
-  <div id="menu-arquivo" style="display:none;position:fixed;pointer-events:all;
-    background:#0e0e14;border:1px solid rgba(255,255,255,0.18);border-radius:10px;
-    padding:6px;flex-direction:column;gap:2px;z-index:200;min-width:140px;">
-    <button class="mesf-btn" onclick="entrarOrbitaArquivo()">🔭 Orbitar</button>
-    <button id="btn-mover-arquivo" class="mesf-btn" onclick="toggleDragArquivo()">✦ Mover</button>
-    <button class="mesf-btn" onclick="abrirArquivoDoMenu()">📂 Abrir</button>
-  </div>
-  <!-- Menu da esfera -->
-  <div id="menu-esfera" style="display:none;position:absolute;pointer-events:all;
-    background:#0e0e14;border:1px solid rgba(255,255,255,0.18);border-radius:10px;
-    padding:6px;display:none;flex-direction:column;gap:2px;z-index:200;min-width:130px;">
-    <button class="mesf-btn" onclick="setEsferaVisivel(true)">● Visível</button>
-    <button class="mesf-btn" onclick="setEsferaVisivel(false)">○ Oculto</button>
-    <button id="btn-mover-esfera" class="mesf-btn" onclick="toggleDragEsfera()">✦ Mover</button>
+  <div class="painel">
+    <div class="painel-label">VELOCIDADE</div>
+    <div id="txt-vel" class="painel-valor">0 —</div>
   </div>
 </div>
 
-<!-- Janela gerenciador de arquivos -->
-<div id="janela">
-  <div id="janela-topo">
-    <div id="janela-path">COSM://500:80:0</div>
-    <button class="jbtn ativo" id="jbtn-p" onclick="setTamanho('p')">▪▪▪</button>
-    <button class="jbtn" id="jbtn-g" onclick="setTamanho('g')">▬▬</button>
-    <button class="jbtn" id="jbtn-fechar" onclick="fecharJanela()">✕</button>
-  </div>
-  <div id="janela-corpo">
-    <div id="janela-sidebar">
-      <div class="sidebar-label">Filtrar</div>
-      <div id="sfiltro-todos" class="sbtn ativo" onclick="setFiltro('todos')">
-        <span class="sbtn-icone">📁</span> Todos
-      </div>
-      <div id="sfiltro-imagem" class="sbtn" onclick="setFiltro('imagem')">
-        <span class="sbtn-icone">🖼</span> Imagens
-      </div>
-      <div id="sfiltro-video" class="sbtn" onclick="setFiltro('video')">
-        <span class="sbtn-icone">🎬</span> Vídeos
-      </div>
-      <div id="sfiltro-html" class="sbtn" onclick="setFiltro('html')">
-        <span class="sbtn-icone">🌐</span> HTML
-      </div>
-      <div id="sfiltro-documento" class="sbtn" onclick="setFiltro('documento')">
-        <span class="sbtn-icone">📄</span> Documentos
-      </div>
-      <div class="sidebar-sep"></div>
-      <div class="sidebar-label">Ações</div>
-      <div class="sbtn" onclick="document.getElementById('file-input').click()">
-        <span class="sbtn-icone">⬆</span> Enviar arquivo
-      </div>
-      <div class="sbtn" onclick="abrirModalYt()">
-        <span class="sbtn-icone">▶</span> YouTube
-      </div>
-      <div class="sidebar-sep"></div>
-      <div class="sidebar-label">Visualização</div>
-      <div id="sbtn-modo" class="sbtn" onclick="setModo(!modoEspacial)">
-        <span class="sbtn-icone">🌐</span> Espacial
-      </div>
-      <div class="sidebar-sep"></div>
-      <div class="sidebar-label">Compartilhar</div>
-      <div class="sbtn" onclick="abrirEnviarPara()">
-        <span class="sbtn-icone">⇗</span> Enviar para coord
-      </div>
-    </div>
-    <div id="janela-area">
-      <div id="janela-grid"></div>
-    </div>
-  </div>
-</div>
+<div id="notif"></div>
 
-<!-- Modal enviar para coordenada -->
-<div id="modal-enviar">
-  <div id="modal-titulo">Enviar para coordenada</div>
-  <div id="modal-desc">Digite a coordenada COSM de destino.<br/>O arquivo selecionado será enviado.</div>
-  <input id="modal-input" type="text" placeholder="X:Y:Z" spellcheck="false"/>
-  <div class="modal-btns">
-    <div class="modal-btn" onclick="confirmarEnviarPara()">ENVIAR</div>
-    <div class="modal-btn cancelar" onclick="fecharEnviarPara()">CANCELAR</div>
-  </div>
-</div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
 
-<!-- YouTube overlay -->
-<div id="youtube-overlay">
-  <iframe id="youtube-iframe" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
-  <div id="yt-fechar" onclick="fecharYoutube()">✕ FECHAR</div>
-</div>
-
-<!-- Modal: adicionar YouTube -->
-<div id="modal-yt">
-  <div id="modal-titulo">TELA YOUTUBE</div>
-  <div id="modal-desc">Cole o link do vídeo do YouTube.</div>
-  <input id="yt-input" class="modal-btn" type="text" placeholder="https://youtu.be/..." spellcheck="false"
-    style="text-align:left;cursor:text;padding:8px 12px;font-size:12px;"/>
-  <div class="modal-btns">
-    <div class="modal-btn" onclick="confirmarModalYt()">CRIAR TELA</div>
-    <div class="modal-btn cancelar" onclick="fecharModalYt()">CANCELAR</div>
-  </div>
-</div>
-
-<!-- Visualização de arquivo -->
-<div id="preview">
-  <img id="preview-img" src="" alt="" style="display:none"/>
-  <video id="preview-video" controls style="display:none;max-width:88vw;max-height:75vh;border-radius:12px;background:#000;"></video>
-  <iframe id="preview-iframe" src="about:blank" sandbox="allow-scripts allow-same-origin"
-    style="display:none;width:85vw;height:75vh;border:none;border-radius:12px;"></iframe>
-  <div id="preview-doc" style="display:none">
-    <div id="preview-doc-icone">📄</div>
-    <div id="preview-doc-nome"></div>
-    <div id="preview-doc-info"></div>
-  </div>
-  <div id="preview-texto"></div>
-  <div id="preview-nome"></div>
-  <div style="display:flex;gap:12px;align-items:center;">
-    <div id="preview-fechar" onclick="fecharPreview()">✕ FECHAR</div>
-    <div id="preview-deletar" onclick="deletarArquivoPreview()" style="display:none;
-      background:rgba(180,30,30,0.3);border:1px solid rgba(255,80,80,0.4);
-      border-radius:7px;padding:8px 20px;color:rgba(255,120,120,0.9);
-      font-family:'Courier New',monospace;font-size:11px;cursor:pointer;letter-spacing:2px;">
-      🗑 APAGAR
-    </div>
-  </div>
-</div>
-
-<!-- Modal: criação de identidade permanente -->
-<div id="modal-id">
-  <div id="modal-id-box">
-    <div id="modal-id-titulo">IDENTIDADE PERMANENTE</div>
-    <div id="modal-id-desc">
-      Você está prestes a registrar algo no universo.<br>
-      Escolha uma frase secreta — ela será a única chave do seu espaço.<br>
-      Não precisa de conta, email ou senha.
-    </div>
-    <input id="modal-id-input" type="text" placeholder="Digite sua frase secreta..." autocomplete="off" spellcheck="false" oninput="aoDigitarFrase()"/>
-    <div id="modal-id-norm"></div>
-    <div id="modal-id-coord">—</div>
-    <div id="modal-id-aviso">
-      Anote esta frase. Se a esquecer, perde acesso permanente ao seu espaço.<br>
-      Acentos são ignorados — "café" = "cafe".
-    </div>
-    <div id="modal-id-btns">
-      <button class="mid-btn" onclick="fecharModalIdentidade()">CANCELAR</button>
-      <button class="mid-btn" id="modal-id-confirmar" onclick="confirmarIdentidade()" disabled>CRIAR MEU ESPAÇO</button>
-    </div>
-  </div>
-</div>
-
-<div id="intro">
-  <div id="intro-titulo">
-    <h1>COSM</h1>
-    <canvas id="mc" width="160" height="100"></canvas>
-  </div>
-  <p>Cada coordenada no universo é sua.<br>Guarde, crie, explore — para sempre.</p>
-  <button id="btn-entrar" onclick="entrar()">▶ ENTRAR NO UNIVERSO</button>
-  <p style="font-size:10px;">
-    <span class="tecla">Scroll ↑↓</span> voar &nbsp;
-    <span class="tecla">Arrastar</span> girar &nbsp;
-    <span class="tecla">COSM://X:Y:Z</span> teletransporte
-  </p>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-<script>
 // ═══════════════════════════════════════════════════════
-//  SETUP
+//  RENDERER
 // ═══════════════════════════════════════════════════════
 const canvas=document.getElementById('c');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
-renderer.setPixelRatio(devicePixelRatio);
 renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,100000000);
+camera.position.set(0,0,0);
+
 window.addEventListener('resize',()=>{
-  renderer.setSize(innerWidth,innerHeight);
   camera.aspect=innerWidth/innerHeight;
   camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
 });
-const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,50000000);
-camera.position.set(0,0,800);
 
 // ═══════════════════════════════════════════════════════
-//  ESTRELAS
+//  ESTRELAS — três camadas de profundidade
 // ═══════════════════════════════════════════════════════
-(function(){
-  const N=20000;
-  const pos=new Float32Array(N*3), col=new Float32Array(N*3);
-  for(let i=0;i<N;i++){
-    const r=3000+Math.random()*120000;
-    const theta=Math.random()*Math.PI*2, phi=Math.acos(2*Math.random()-1);
-    pos[i*3]=r*Math.sin(phi)*Math.cos(theta);
+function gerarEstrelas(qtd, raioMin, raioMax, tamanho, opacidade){
+  const geo=new THREE.BufferGeometry();
+  const pos=new Float32Array(qtd*3);
+  for(let i=0;i<qtd;i++){
+    const theta=Math.random()*Math.PI*2;
+    const phi=Math.acos(2*Math.random()-1);
+    const r=raioMin+(raioMax-raioMin)*Math.random();
+    pos[i*3]  =r*Math.sin(phi)*Math.cos(theta);
     pos[i*3+1]=r*Math.sin(phi)*Math.sin(theta);
     pos[i*3+2]=r*Math.cos(phi);
-    const t=Math.random();
-    if(t<0.6){col[i*3]=0.85+Math.random()*0.15;col[i*3+1]=0.85+Math.random()*0.15;col[i*3+2]=0.9+Math.random()*0.1;}
-    else if(t<0.8){col[i*3]=0.7+Math.random()*0.2;col[i*3+1]=0.8+Math.random()*0.15;col[i*3+2]=1.0;}
-    else{col[i*3]=1.0;col[i*3+1]=0.7+Math.random()*0.2;col[i*3+2]=0.5+Math.random()*0.2;}
   }
-  const cv=document.createElement('canvas');cv.width=16;cv.height=16;
-  const cx=cv.getContext('2d');
-  const g=cx.createRadialGradient(8,8,0,8,8,7);
-  g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(1,'rgba(255,255,255,0)');
-  cx.fillStyle=g;cx.fillRect(0,0,16,16);
-  const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
-  geo.setAttribute('color',new THREE.BufferAttribute(col,3));
-  const est=new THREE.Points(geo,new THREE.PointsMaterial({
-    size:1.8,map:new THREE.CanvasTexture(cv),
-    vertexColors:true,transparent:true,depthWrite:false,alphaTest:0.01,sizeAttenuation:true,
-  }));
-  est.name='estrelas';
-  scene.add(est);
-})();
-
-// ═══════════════════════════════════════════════════════
-//  PORTAL — cubo wireframe em COSM://500:80:0
-// ═══════════════════════════════════════════════════════
-const PORTAL_COORD=new THREE.Vector3(500,80,0);
-
-const portalMesh=new THREE.Mesh(
-  new THREE.BoxGeometry(70,70,70),
-  new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,colorWrite:false})
-);
-portalMesh.position.copy(PORTAL_COORD);
-portalMesh.userData={tipo:'portal'};
-
-const portalLinhas=new THREE.LineSegments(
-  new THREE.EdgesGeometry(new THREE.BoxGeometry(70,70,70)),
-  new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.75})
-);
-portalMesh.add(portalLinhas);
-scene.add(portalMesh);
-
-// ── Destino do cubo (viaja ao confirmar identidade) ─────
-let portalDestino=new THREE.Vector3().copy(PORTAL_COORD);
-
-// ── Animação de clique no cubo ──────────────────────────
-let portalAnimProg=0; // 0=idle, >0=animando
-let portalAnimCb=null;
-
-
-// ── Esfera de identidade ────────────────────────────────
-const esfMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,wireframe:false});
-const esfMesh=new THREE.Mesh(new THREE.SphereGeometry(28,20,20),esfMat);
-const esfHalo=new THREE.Mesh(
-  new THREE.SphereGeometry(40,16,16),
-  new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,wireframe:true,depthWrite:false})
-);
-let esfOculto=false;
-let esfFwd=500, esfRight=160, esfUp=90; // offset em unidades da câmera
-let esfDragAtivo=false;
-const esfDragPlane=new THREE.Plane();
-const esfDragRay=new THREE.Raycaster();
-esfMesh.add(esfHalo);
-esfMesh.visible=false;
-scene.add(esfMesh);
-let homeCoord3D=null;
-
-// ═══════════════════════════════════════════════════════
-//  ESTADOS
-// ═══════════════════════════════════════════════════════
-let velCruz=0;
-const VEL_MAX=800;
-let arrastando=false, mouseMoved=false, lastX=0, lastY=0;
-let voando=false, alvoVoo=null;
-let displayAtivo=false, portalAlvo=null;
-let arquivos=[];
-let tamanhoGrid='p';
-let filtroAtual='todos';
-
-// ── Objetos 3D no espaço ────────────────────────────────
-const ficheiros3D=[]; // THREE.Group por arquivo
-let orbitMode=false;
-const orbitTarget=new THREE.Vector3();
-let orbitDist=400, orbitTheta=0, orbitPhi=Math.PI/2;
-
-let menuArquivoGroup=null;
-let fileDragAtivo=false, fileDragGroup=null;
-const fileDragPlane=new THREE.Plane();
-const fileDragRay=new THREE.Raycaster();
-let modoEspacial=JSON.parse(localStorage.getItem('cosmModoEsp')||'true');
-
-// ── YouTube no espaço ───────────────────────────────────
-let ytActiveGroup=null, ytSpaceEl=null, ytBarEl=null, ytIframeEl=null, ytModoInteragir=false;
-let db=null;
-
-// ── Posicionamento espacial por IP ──────────────────────
-let coordBase={x:0,y:0,z:0};
-let coordDisplayTimer=null;
-
-function hashStr(s){
-  let h=5381;
-  for(let i=0;i<s.length;i++) h=((h<<5)+h)+s.charCodeAt(i);
-  return Math.abs(h);
+  const mat=new THREE.PointsMaterial({
+    color:0xffffff,size:tamanho,
+    sizeAttenuation:false,transparent:true,opacity:opacidade
+  });
+  return new THREE.Points(geo,mat);
 }
+scene.add(gerarEstrelas(12000, 2e6,  80e6, 1.2, 0.8));
+scene.add(gerarEstrelas(4000,  500e3, 2e6, 1.0, 0.5));
+scene.add(gerarEstrelas(800,   50e3,  500e3, 1.5, 0.9));
 
-function ipParaCoordenadas(ip){
-  const p=ip.split('.').map(Number);
-  const E=1000000000; // 1 bilhão = escala de anos-luz
-  return {
-    x: p[0]*E + p[1]*3921568,
-    y: p[2]*E + p[3]*3921568,
-    z: ((p[0]^p[2])*Math.floor(E/2)) + ((p[1]^p[3])*1960784)
-  };
-}
-
-function seedParaCoordenadas(seed){
-  const E=1000000000;
-  const a=(seed%256), b=Math.floor(seed/256)%256;
-  const c=Math.floor(seed/65536)%256, d=Math.floor(seed/16777216)%256;
-  return {x:a*E+b*3921568, y:c*E+d*3921568, z:((a^c)*Math.floor(E/2))};
-}
+// ═══════════════════════════════════════════════════════
+//  COORDENADAS — floating origin
+//  COSM(X,Y,Z) = coordBase + camera.position
+//  0:0:0 = centro do universo
+// ═══════════════════════════════════════════════════════
+const coordBase={x:0,y:0,z:0};
 
 function formatCoord(v){
-  const s=v<0?'-':'', a=Math.abs(v);
-  if(a>=1e9) return s+(a/1e9).toFixed(2)+'A';
-  if(a>=1e6) return s+(a/1e6).toFixed(2)+'S';
-  if(a>=1e3) return s+(a/1e3).toFixed(1)+'k';
-  return s+Math.round(a)+'m';
+  const neg=v<0; const a=Math.abs(v);
+  const s=neg?'-':'';
+  if(a>=1e12) return s+(a/1e12).toFixed(2)+'T';
+  if(a>=1e9)  return s+(a/1e9 ).toFixed(2)+'G';
+  if(a>=1e6)  return s+(a/1e6 ).toFixed(2)+'M';
+  if(a>=1e3)  return s+(a/1e3 ).toFixed(2)+'k';
+  return s+Math.round(a)+'';
 }
 
-async function iniciarPosicaoPorIP(){
-  try{
-    const r=await fetch('https://api.ipify.org?format=json');
-    const {ip}=await r.json();
-    coordBase=ipParaCoordenadas(ip);
-  }catch{
-    const seed=hashStr(navigator.userAgent+screen.width+screen.colorDepth+
-      Intl.DateTimeFormat().resolvedOptions().timeZone);
-    coordBase=seedParaCoordenadas(seed);
-  }
-}
-
-function initDB(){
-  return new Promise(resolve=>{
-    const req=indexedDB.open('CosmicLedger',1);
-    req.onupgradeneeded=e=>{
-      e.target.result.createObjectStore('arquivos',{keyPath:'id',autoIncrement:true});
-    };
-    req.onsuccess=e=>{ db=e.target.result; resolve(); };
-    req.onerror=()=>resolve();
-  });
-}
-
-function carregarDB(){
-  if(!db) return;
-  const req=db.transaction('arquivos','readonly').objectStore('arquivos').getAll();
-  req.onsuccess=()=>{
-    arquivos=req.result||[];
-    criarMeshesTodosArquivos();
-    setModo(modoEspacial);
-  };
-}
-
-function salvarDB(arquivo){
-  if(!db) return;
-  const req=db.transaction('arquivos','readwrite').objectStore('arquivos').add(arquivo);
-  req.onsuccess=()=>{ arquivo.id=req.result; };
-}
-
-function apagarDB(id){
-  if(!db) return;
-  db.transaction('arquivos','readwrite').objectStore('arquivos').delete(id);
-}
-
-function atualizarDB(arquivo){
-  if(!db||!arquivo.id) return;
-  db.transaction('arquivos','readwrite').objectStore('arquivos').put(arquivo);
-}
-
-// ═══════════════════════════════════════════════════════
-//  ARQUIVOS 3D NO ESPAÇO
-// ═══════════════════════════════════════════════════════
-function posAleatoria(){
+function coordAtual(){
   const p=camera.position;
-  const fwd=new THREE.Vector3(); camera.getWorldDirection(fwd);
-  const dist=200+Math.random()*200;
   return {
-    x:p.x+fwd.x*dist+(Math.random()-0.5)*150,
-    y:p.y+(Math.random()-0.5)*80,
-    z:p.z+fwd.z*dist+(Math.random()-0.5)*150
+    x: coordBase.x+p.x,
+    y: coordBase.y+p.y,
+    z: coordBase.z+p.z
   };
 }
-
-function criarLabel(nome){
-  const cv=document.createElement('canvas');
-  cv.width=512; cv.height=64;
-  const ctx=cv.getContext('2d');
-  ctx.fillStyle='rgba(0,0,0,0.55)';
-  ctx.roundRect(0,4,512,56,10); ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,0.8)';
-  ctx.font='20px monospace'; ctx.textAlign='center';
-  ctx.fillText(nome.length>38?nome.substring(0,35)+'…':nome,256,38);
-  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthTest:false}));
-  spr.scale.set(220,28,1);
-  return spr;
-}
-
-function criarMesh3D(arquivo){
-  const group=new THREE.Group();
-  const pos=arquivo.pos||{x:camera.position.x,y:camera.position.y,z:camera.position.z};
-  group.position.set(pos.x,pos.y,pos.z);
-  group.userData.arquivo=arquivo;
-  group.quaternion.copy(camera.quaternion);
-
-  let mesh, blobUrl=null;
-
-  if(arquivo.tipo==='video' && arquivo.dataUrl){
-    const vidEl=document.createElement('video');
-    blobUrl=dataUrlParaBlobUrl(arquivo.dataUrl);
-    vidEl.src=blobUrl; vidEl.loop=true; vidEl.muted=true; vidEl.playsInline=true;
-    vidEl.play().catch(()=>{});
-    const tex=new THREE.VideoTexture(vidEl);
-    mesh=new THREE.Mesh(new THREE.PlaneGeometry(320,180),
-      new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));
-    group._videoEl=vidEl;
-  } else if(arquivo.tipo==='youtube'){
-    const tex=new THREE.TextureLoader().load(
-      'https://img.youtube.com/vi/'+arquivo.dataUrl+'/hqdefault.jpg');
-    tex.colorSpace=THREE.SRGBColorSpace;
-    mesh=new THREE.Mesh(new THREE.PlaneGeometry(320,180),
-      new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));
-  } else if(arquivo.tipo==='imagem' && arquivo.dataUrl){
-    const tex=new THREE.TextureLoader().load(arquivo.dataUrl);
-    tex.colorSpace=THREE.SRGBColorSpace;
-    mesh=new THREE.Mesh(new THREE.PlaneGeometry(200,200),
-      new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));
-  } else {
-    const cv=document.createElement('canvas'); cv.width=256; cv.height=256;
-    const ctx=cv.getContext('2d');
-    ctx.fillStyle='rgba(12,12,22,0.92)'; ctx.roundRect(4,4,248,248,20); ctx.fill();
-    ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.lineWidth=2; ctx.roundRect(4,4,248,248,20); ctx.stroke();
-    const ics={video:'🎬',html:'🌐',pdf:'📕',texto:'📝',documento:'📄'};
-    ctx.font='88px serif'; ctx.textAlign='center'; ctx.fillText(ics[arquivo.tipo]||'📄',128,158);
-    mesh=new THREE.Mesh(new THREE.PlaneGeometry(140,140),
-      new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),transparent:true,side:THREE.DoubleSide}));
-  }
-
-  group._mesh=mesh; group._blobUrl=blobUrl;
-  const border=new THREE.LineSegments(
-    new THREE.EdgesGeometry(mesh.geometry),
-    new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.2}));
-  group.add(mesh); group.add(border);
-
-  const label=criarLabel(arquivo.nome);
-  const h=(mesh.geometry.parameters.height||140)/2+22;
-  label.position.set(0,h,0);
-  group.add(label);
-
-  scene.add(group);
-  ficheiros3D.push(group);
-  return group;
-}
-
-function criarMeshesTodosArquivos(){
-  arquivos.forEach(a=>{
-    if(!a.pos){ a.pos=posAleatoria(); atualizarDB(a); }
-    criarMesh3D(a);
-  });
-}
-
-function removerMesh3D(arquivo){
-  const idx=ficheiros3D.findIndex(g=>g.userData.arquivo===arquivo);
-  if(idx<0) return;
-  const g=ficheiros3D.splice(idx,1)[0];
-  if(g._videoEl){ g._videoEl.pause(); g._videoEl.src=''; }
-  if(g._blobUrl) URL.revokeObjectURL(g._blobUrl);
-  scene.remove(g);
-  g.traverse(o=>{
-    if(o.geometry) o.geometry.dispose();
-    if(o.material){ if(o.material.map) o.material.map.dispose(); o.material.dispose(); }
-  });
-}
-
-function abrirMenuArquivo(sx,sy,group){
-  menuArquivoGroup=group;
-  document.getElementById('btn-mover-arquivo').textContent='✦ Mover';
-  const m=document.getElementById('menu-arquivo');
-  m.style.display='flex';
-  m.style.left=Math.min(sx-70,innerWidth-160)+'px';
-  m.style.top=Math.max(sy-100,10)+'px';
-}
-
-function fecharMenuArquivo(){
-  document.getElementById('menu-arquivo').style.display='none';
-  menuArquivoGroup=null;
-}
-
-function entrarOrbitaArquivo(){
-  if(!menuArquivoGroup) return;
-  entrarOrbita(menuArquivoGroup.position,400);
-  fecharMenuArquivo();
-}
-
-function abrirArquivoDoMenu(){
-  if(!menuArquivoGroup) return;
-  abrirArquivo(menuArquivoGroup.userData.arquivo);
-  fecharMenuArquivo();
-}
-
-function toggleDragArquivo(){
-  if(!fileDragAtivo){
-    fileDragGroup=menuArquivoGroup;
-    const fwd=new THREE.Vector3(); camera.getWorldDirection(fwd);
-    fileDragPlane.setFromNormalAndCoplanarPoint(fwd,fileDragGroup.position);
-    fileDragAtivo=true;
-    document.getElementById('btn-mover-arquivo').textContent='● FIXAR';
-    document.body.style.cursor='move';
-  } else {
-    const a=fileDragGroup.userData.arquivo;
-    a.pos={x:fileDragGroup.position.x,y:fileDragGroup.position.y,z:fileDragGroup.position.z};
-    atualizarDB(a);
-    fileDragAtivo=false; fileDragGroup=null;
-    document.getElementById('btn-mover-arquivo').textContent='✦ Mover';
-    document.body.style.cursor='';
-    fecharMenuArquivo();
-    notif('✓ Posição fixada');
-  }
-}
-
-function setModo(espacial){
-  modoEspacial=espacial;
-  localStorage.setItem('cosmModoEsp',JSON.stringify(espacial));
-  const btn=document.getElementById('sbtn-modo');
-  if(btn) btn.innerHTML=espacial?
-    '<span class="sbtn-icone">🌐</span> Espacial':
-    '<span class="sbtn-icone">📦</span> No cubo';
-  if(espacial){
-    ficheiros3D.forEach(g=>{
-      const a=g.userData.arquivo;
-      if(a.pos) g._targetPos=new THREE.Vector3(a.pos.x,a.pos.y,a.pos.z);
-    });
-  } else {
-    const base=portalMesh.position;
-    ficheiros3D.forEach((g,i)=>{
-      const col=i%4, row=Math.floor(i/4);
-      g._targetPos=new THREE.Vector3(
-        base.x-285+col*190,
-        base.y+80-row*200,
-        base.z+80
-      );
-      g.quaternion.copy(camera.quaternion);
-    });
-  }
-}
-
-function entrarOrbita(posAlvo, distInicial){
-  orbitTarget.copy(posAlvo);
-  const rel=camera.position.clone().sub(posAlvo);
-  const len=rel.length();
-  orbitDist=Math.max(150, len>10?len:distInicial);
-  orbitTheta=Math.atan2(rel.x,rel.z);
-  orbitPhi=Math.max(0.1,Math.min(Math.PI-0.1, len>10?Math.acos(rel.y/len):Math.PI/2));
-  orbitMode=true; velCruz=0;
-  notif('MODO ÓRBITA · arraste para girar · scroll para zoom · ESC para sair');
-}
-
-function sairOrbita(){
-  if(!orbitMode) return;
-  orbitMode=false;
-  notif('');
-  fecharMenuArquivo();
-}
-
-// ═══════════════════════════════════════════════════════
-//  YOUTUBE
-// ═══════════════════════════════════════════════════════
-function extrairVideoId(url){
-  const m=url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/))([^&?\/\s]{11})/);
-  return m?m[1]:null;
-}
-
-function abrirModalYt(){
-  document.getElementById('yt-input').value='';
-  document.getElementById('modal-yt').classList.add('visivel');
-  setTimeout(()=>document.getElementById('yt-input').focus(),80);
-}
-
-function fecharModalYt(){
-  document.getElementById('modal-yt').classList.remove('visivel');
-}
-
-function confirmarModalYt(){
-  const url=document.getElementById('yt-input').value.trim();
-  const vid=extrairVideoId(url);
-  if(!vid){ notif('⚠ Link inválido'); return; }
-  fecharModalYt();
-  verificarIdentidade(()=>{
-    const novoArq={nome:'YouTube: '+vid,tipo:'youtube',dataUrl:vid,tamanho:0,pos:posAleatoria()};
-    arquivos.push(novoArq);
-    salvarDB(novoArq);
-    criarMesh3D(novoArq);
-    renderGrid();
-    notif('✓ Tela YouTube criada no espaço');
-  });
-}
-
-function _ytBtnStyle(cor){
-  return 'background:'+cor+';color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:5px;padding:4px 12px;cursor:pointer;font-size:12px;font-family:monospace;white-space:nowrap;';
-}
-
-function playYoutubeNoEspaco(group){
-  removeYoutubeNoEspaco();
-  const videoId=group.userData.arquivo.dataUrl;
-
-  // Wrapper do iframe — cobre exatamente o plano 3D
-  const wrapper=document.createElement('div');
-  wrapper.style.cssText='position:fixed;z-index:50;overflow:hidden;border-radius:8px 8px 0 0;box-shadow:0 0 40px rgba(0,0,0,0.85);pointer-events:none;';
-
-  const iframe=document.createElement('iframe');
-  iframe.src='https://www.youtube.com/embed/'+videoId+'?autoplay=1&rel=0&enablejsapi=1';
-  iframe.style.cssText='width:100%;height:100%;border:none;display:block;pointer-events:none;';
-  iframe.setAttribute('allowfullscreen','');
-  iframe.setAttribute('allow','autoplay; encrypted-media');
-  wrapper.appendChild(iframe);
-  document.body.appendChild(wrapper);
-
-  // Barra de controle — abaixo do iframe, sempre clicável
-  const bar=document.createElement('div');
-  bar.style.cssText='position:fixed;z-index:51;display:flex;gap:6px;align-items:center;background:rgba(0,0,0,0.9);border-radius:0 0 8px 8px;padding:5px 8px;pointer-events:all;box-sizing:border-box;';
-
-  const btnInt=document.createElement('button');
-  btnInt.id='yt-btn-interagir';
-  btnInt.textContent='🖱 Interagir';
-  btnInt.style.cssText=_ytBtnStyle('rgba(255,255,255,0.1)');
-  btnInt.onclick=toggleYtInteragir;
-
-  const btnMais=document.createElement('button');
-  btnMais.textContent='⊕ Maior';
-  btnMais.style.cssText=_ytBtnStyle('rgba(255,255,255,0.08)');
-  btnMais.onclick=()=>redimYt(1.3);
-
-  const btnMenos=document.createElement('button');
-  btnMenos.textContent='⊖ Menor';
-  btnMenos.style.cssText=_ytBtnStyle('rgba(255,255,255,0.08)');
-  btnMenos.onclick=()=>redimYt(0.77);
-
-  const btnFechar=document.createElement('button');
-  btnFechar.textContent='✕ Fechar';
-  btnFechar.style.cssText=_ytBtnStyle('rgba(180,40,40,0.4)')+'margin-left:auto;';
-  btnFechar.onclick=()=>{ removeYoutubeNoEspaco(); sairOrbita(); };
-
-  bar.append(btnInt,btnMais,btnMenos,btnFechar);
-  document.body.appendChild(bar);
-
-  ytSpaceEl=wrapper; ytBarEl=bar; ytIframeEl=iframe;
-  ytActiveGroup=group; ytModoInteragir=false;
-  entrarOrbita(group.position,400);
-}
-
-function removeYoutubeNoEspaco(){
-  if(!ytSpaceEl) return;
-  if(ytIframeEl) ytIframeEl.src='';
-  ytSpaceEl.remove();
-  if(ytBarEl) ytBarEl.remove();
-  ytSpaceEl=null; ytBarEl=null; ytIframeEl=null;
-  ytActiveGroup=null; ytModoInteragir=false;
-}
-
-function toggleYtInteragir(){
-  ytModoInteragir=!ytModoInteragir;
-  if(ytIframeEl) ytIframeEl.style.pointerEvents=ytModoInteragir?'all':'none';
-  if(ytSpaceEl)  ytSpaceEl.style.pointerEvents =ytModoInteragir?'all':'none';
-  const btn=document.getElementById('yt-btn-interagir');
-  if(!btn) return;
-  btn.textContent=ytModoInteragir?'🌐 Espaço':'🖱 Interagir';
-  btn.style.background=ytModoInteragir?'rgba(80,200,80,0.25)':'rgba(255,255,255,0.1)';
-}
-
-function redimYt(fator){
-  if(!ytActiveGroup) return;
-  const s=ytActiveGroup.scale.x*fator;
-  if(s<0.15||s>6) return;
-  ytActiveGroup.scale.set(s,s,s);
-}
-
-function updateYoutubeNoEspaco(){
-  if(!ytSpaceEl||!ytActiveGroup) return;
-  ytActiveGroup.updateMatrixWorld(true);
-  const corners=[
-    new THREE.Vector3(-160,-90,0),
-    new THREE.Vector3( 160,-90,0),
-    new THREE.Vector3( 160, 90,0),
-    new THREE.Vector3(-160, 90,0),
-  ];
-  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
-  for(const c of corners){
-    const w=c.clone().applyMatrix4(ytActiveGroup.matrixWorld);
-    const p=w.project(camera);
-    if(p.z>1){
-      ytSpaceEl.style.display='none';
-      if(ytBarEl) ytBarEl.style.display='none';
-      return;
-    }
-    const sx=(p.x+1)/2*innerWidth;
-    const sy=(-p.y+1)/2*innerHeight;
-    minX=Math.min(minX,sx); maxX=Math.max(maxX,sx);
-    minY=Math.min(minY,sy); maxY=Math.max(maxY,sy);
-  }
-  const pw=maxX-minX, ph=maxY-minY;
-  ytSpaceEl.style.cssText=ytSpaceEl.style.cssText; // no-op flush
-  ytSpaceEl.style.display='block';
-  ytSpaceEl.style.left=minX+'px';
-  ytSpaceEl.style.top=minY+'px';
-  ytSpaceEl.style.width=pw+'px';
-  ytSpaceEl.style.height=ph+'px';
-  if(ytBarEl){
-    ytBarEl.style.display='flex';
-    ytBarEl.style.left=minX+'px';
-    ytBarEl.style.top=maxY+'px';
-    ytBarEl.style.width=pw+'px';
-  }
-}
-
-function abrirYoutube(videoId){
-  document.getElementById('youtube-iframe').src=
-    'https://www.youtube.com/embed/'+videoId+'?autoplay=1&rel=0';
-  document.getElementById('youtube-overlay').classList.add('visivel');
-}
-
-function fecharYoutube(){
-  document.getElementById('youtube-iframe').src='';
-  document.getElementById('youtube-overlay').classList.remove('visivel');
-}
-
-function criarDemoMarcoZero(){
-  const P=PORTAL_COORD;
-
-  // Painel principal — o que é o COSM
-  const cv1=document.createElement('canvas'); cv1.width=512; cv1.height=280;
-  const c1=cv1.getContext('2d');
-  c1.fillStyle='rgba(8,8,20,0.96)'; c1.roundRect(0,0,512,280,14); c1.fill();
-  c1.strokeStyle='rgba(255,255,255,0.12)'; c1.lineWidth=1.5; c1.roundRect(0,0,512,280,14); c1.stroke();
-  c1.fillStyle='rgba(255,255,255,0.9)'; c1.font='bold 26px monospace'; c1.textAlign='center';
-  c1.fillText('COSM', 256, 52);
-  c1.fillStyle='rgba(255,255,255,0.38)'; c1.font='12px monospace';
-  c1.fillText('UNIVERSO DIGITAL PERMANENTE', 256, 80);
-  c1.textAlign='left'; c1.fillStyle='rgba(255,255,255,0.65)'; c1.font='13px monospace';
-  ['📁  Arquivos flutuam no espaço 3D','🎬  Vídeos viram tela de cinema','🖼  Imagens viram quadros','🔒  Sem cadastro — coordenada = identidade'].forEach((t,i)=>c1.fillText(t,44,130+i*36));
-  const m1=new THREE.Mesh(new THREE.PlaneGeometry(256,140),
-    new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv1),transparent:true,side:THREE.DoubleSide}));
-  m1.position.set(P.x-300,P.y+120,P.z); m1.rotation.y=0.35;
-  scene.add(m1);
-
-  // Painel Marco Zero
-  const cv2=document.createElement('canvas'); cv2.width=400; cv2.height=200;
-  const c2=cv2.getContext('2d');
-  c2.fillStyle='rgba(8,8,20,0.96)'; c2.roundRect(0,0,400,200,14); c2.fill();
-  c2.strokeStyle='rgba(255,255,255,0.12)'; c2.lineWidth=1.5; c2.roundRect(0,0,400,200,14); c2.stroke();
-  c2.fillStyle='rgba(255,255,255,0.32)'; c2.font='11px monospace'; c2.textAlign='center';
-  c2.fillText('MARCO ZERO', 200, 42);
-  c2.fillStyle='rgba(255,255,255,0.85)'; c2.font='17px monospace';
-  c2.fillText('COSM://500:80:0', 200, 82);
-  c2.fillStyle='rgba(255,255,255,0.4)'; c2.font='12px monospace';
-  c2.fillText('Ponto de referência público do universo', 200, 118);
-  c2.fillStyle='rgba(255,200,80,0.65)'; c2.font='11px monospace';
-  c2.fillText('Clique no cubo para explorar', 200, 162);
-  const m2=new THREE.Mesh(new THREE.PlaneGeometry(200,100),
-    new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv2),transparent:true,side:THREE.DoubleSide}));
-  m2.position.set(P.x+300,P.y+100,P.z); m2.rotation.y=-0.35;
-  scene.add(m2);
-}
-
 
 // ═══════════════════════════════════════════════════════
 //  NAVEGAÇÃO
 // ═══════════════════════════════════════════════════════
+const VEL_MAX=1200;
+let velCruz=0;
+let voando=false, alvoVoo=null;
+let arrastando=false, mouseMoved=false, lastX=0, lastY=0;
+const teclas={};
+
 canvas.addEventListener('mousedown',e=>{
   if(e.button!==0) return;
   arrastando=true; mouseMoved=false;
@@ -1106,163 +177,34 @@ canvas.addEventListener('mousedown',e=>{
 });
 
 canvas.addEventListener('mousemove',e=>{
-  // Drag de arquivo tem prioridade máxima
-  if(fileDragAtivo && fileDragGroup){
-    const mx=(e.clientX/innerWidth)*2-1, my=-(e.clientY/innerHeight)*2+1;
-    fileDragRay.setFromCamera({x:mx,y:my},camera);
-    const hit=new THREE.Vector3();
-    if(fileDragRay.ray.intersectPlane(fileDragPlane,hit)) fileDragGroup.position.copy(hit);
-    return;
-  }
-  // Drag da esfera
-  if(esfDragAtivo){
-    const mx=(e.clientX/innerWidth)*2-1;
-    const my=-(e.clientY/innerHeight)*2+1;
-    esfDragRay.setFromCamera({x:mx,y:my},camera);
-    const hit=new THREE.Vector3();
-    if(esfDragRay.ray.intersectPlane(esfDragPlane,hit)){
-      esfMesh.position.copy(hit);
-    }
-    return;
-  }
   if(!arrastando) return;
   const dx=e.clientX-lastX, dy=e.clientY-lastY;
-  if(Math.abs(dx)>2||Math.abs(dy)>2) mouseMoved=true;
+  if(Math.abs(dx)+Math.abs(dy)>2) mouseMoved=true;
   lastX=e.clientX; lastY=e.clientY;
-  if(orbitMode){
-    orbitTheta-=dx*0.005;
-    orbitPhi=Math.max(0.1,Math.min(Math.PI-0.1,orbitPhi+dy*0.005));
-    return;
-  }
-  const s=0.003;
-  camera.quaternion
-    .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),dx*s))
-    .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),dy*s))
-    .normalize();
+  camera.rotation.order='YXZ';
+  camera.rotation.y-=dx*0.003;
+  camera.rotation.x-=dy*0.003;
+  camera.rotation.x=Math.max(-Math.PI/2,Math.min(Math.PI/2,camera.rotation.x));
 });
 
-canvas.addEventListener('mouseup',e=>{
+canvas.addEventListener('mouseup',()=>{
   arrastando=false;
   canvas.style.cursor='crosshair';
-  if(mouseMoved) return;
-
-  const mouse=new THREE.Vector2(
-    (e.clientX/innerWidth)*2-1,
-    -(e.clientY/innerHeight)*2+1
-  );
-  const ray=new THREE.Raycaster();
-  ray.setFromCamera(mouse,camera);
-  const fileMeshes=ficheiros3D.map(g=>g._mesh);
-  const hits=ray.intersectObjects([portalMesh,esfMesh,...fileMeshes],false);
-
-  if(hits.length>0){
-    const obj=hits[0].object;
-    const fileGroup=ficheiros3D.find(g=>g._mesh===obj);
-    if(fileGroup){
-      fecharMenuEsfera();
-      if(fileGroup.userData.arquivo.tipo==='youtube'){
-        playYoutubeNoEspaco(fileGroup);
-      } else {
-        abrirMenuArquivo(e.clientX,e.clientY,fileGroup);
-      }
-    } else if(obj===esfMesh||obj.parent===esfMesh){
-      fecharMenuArquivo();
-      abrirMenuEsfera(e.clientX,e.clientY);
-    } else {
-      fecharMenuEsfera(); fecharMenuArquivo();
-      dispararAnimacaoCubo(()=>abrirJanela());
-    }
-  } else {
-    fecharMenuArquivo();
-    if(orbitMode) sairOrbita();
-    else { velCruz=0; fecharJanela(); fecharMenuEsfera(); }
-  }
 });
 
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
 document.addEventListener('wheel',e=>{
   e.preventDefault();
-  if(orbitMode){
-    orbitDist=Math.max(80,Math.min(3000,orbitDist+e.deltaY*0.4));
-    return;
-  }
-  velCruz=Math.max(-VEL_MAX,Math.min(VEL_MAX,velCruz-e.deltaY*0.8));
-  fecharJanela();
+  velCruz=Math.max(-VEL_MAX,Math.min(VEL_MAX,velCruz-e.deltaY*0.6));
 },{passive:false});
 
-// ── Controles de toque (mobile) ─────────────────────────
-let touchPrevX=0, touchPrevY=0, touchPrevDist=0, touchMoved=false;
-
-canvas.addEventListener('touchstart',e=>{
-  e.preventDefault();
-  if(e.touches.length===1){
-    arrastando=true; touchMoved=false;
-    touchPrevX=e.touches[0].clientX;
-    touchPrevY=e.touches[0].clientY;
-  } else if(e.touches.length===2){
-    arrastando=false;
-    const dx=e.touches[0].clientX-e.touches[1].clientX;
-    const dy=e.touches[0].clientY-e.touches[1].clientY;
-    touchPrevDist=Math.sqrt(dx*dx+dy*dy);
-  }
-},{passive:false});
-
-canvas.addEventListener('touchmove',e=>{
-  e.preventDefault();
-  if(e.touches.length===1 && arrastando){
-    const dx=e.touches[0].clientX-touchPrevX;
-    const dy=e.touches[0].clientY-touchPrevY;
-    if(Math.abs(dx)>2||Math.abs(dy)>2) touchMoved=true;
-    touchPrevX=e.touches[0].clientX;
-    touchPrevY=e.touches[0].clientY;
-    const s=0.004;
-    camera.quaternion
-      .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),dx*s))
-      .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),dy*s))
-      .normalize();
-  } else if(e.touches.length===2){
-    const dx=e.touches[0].clientX-e.touches[1].clientX;
-    const dy=e.touches[0].clientY-e.touches[1].clientY;
-    const dist=Math.sqrt(dx*dx+dy*dy);
-    const delta=touchPrevDist-dist;
-    velCruz=Math.max(-VEL_MAX,Math.min(VEL_MAX,velCruz+delta*0.5));
-    touchPrevDist=dist;
-    fecharJanela();
-  }
-},{passive:false});
-
-canvas.addEventListener('touchend',e=>{
-  e.preventDefault();
-  arrastando=false;
-  if(e.touches.length===0 && !touchMoved && e.changedTouches.length===1){
-    const t=e.changedTouches[0];
-    const mouse=new THREE.Vector2(
-      (t.clientX/innerWidth)*2-1,
-      -(t.clientY/innerHeight)*2+1
-    );
-    const ray=new THREE.Raycaster();
-    ray.setFromCamera(mouse,camera);
-    const hits=ray.intersectObjects([portalMesh],true);
-    if(hits.length>0) dispararAnimacaoCubo(()=>abrirJanela());
-    else { velCruz=0; fecharJanela(); }
-  }
-},{passive:false});
-
-const teclas={};
 document.addEventListener('keydown',e=>{
   teclas[e.code]=true;
-  if(e.code==='Escape'){
-    if(document.getElementById('youtube-overlay').classList.contains('visivel')){ fecharYoutube(); return; }
-    if(ytSpaceEl){ removeYoutubeNoEspaco(); sairOrbita(); return; }
-    if(orbitMode){ sairOrbita(); return; }
-    const prev=document.getElementById('preview');
-    if(prev.style.display==='flex') fecharPreview();
-    else fecharJanela();
-  }
-  if(['KeyW','KeyS','KeyA','KeyD','Space','KeyC'].includes(e.code)) fecharJanela();
+  if(e.code==='Escape'){ velCruz=0; voando=false; alvoVoo=null; }
 });
 document.addEventListener('keyup',e=>delete teclas[e.code]);
+
 document.getElementById('coord-input').addEventListener('keydown',e=>{
   if(e.key==='Enter') irParaCoordenada();
 });
@@ -1270,715 +212,105 @@ document.getElementById('coord-input').addEventListener('keydown',e=>{
 // ═══════════════════════════════════════════════════════
 //  TELETRANSPORTE
 // ═══════════════════════════════════════════════════════
-function irParaCoordenada(){
+window.irParaCoordenada=function(){
   const val=document.getElementById('coord-input').value.trim();
-  const partes=val.split(':').map(Number);
+  const partes=val.split(':').map(v=>parseFloat(v.trim()));
   if(partes.length!==3||partes.some(isNaN)){
-    document.getElementById('coord-input').style.borderColor='rgba(255,80,80,0.8)';
-    setTimeout(()=>document.getElementById('coord-input').style.borderColor='',1000);
+    const inp=document.getElementById('coord-input');
+    inp.style.color='rgba(255,80,80,0.9)';
+    setTimeout(()=>inp.style.color='',800);
     return;
   }
   const [cx,cy,cz]=partes;
-  // Floating origin: reajusta coordBase para que a câmera exiba as coordenadas alvo
-  // A câmera permanece perto da origem Three.js — sem problemas de precisão de float
+  // Reajusta floating origin — câmera permanece perto de (0,0,0) do Three.js
   coordBase.x=cx-camera.position.x;
   coordBase.y=cy-camera.position.y;
   coordBase.z=cz-camera.position.z;
-  // Salto curto para frente — sensação de movimento sem mover bilhões de unidades
+  // Salto curto para dar sensação de movimento
   const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
-  alvoVoo=camera.position.clone().addScaledVector(fwd,300);
+  alvoVoo=camera.position.clone().addScaledVector(fwd,400);
   voando=true; velCruz=0;
-  displayAtivo=false; // portal não segue — fica na posição original
-  fecharJanela();
-  notif(`Salto → COSM://${formatCoord(cx)} : ${formatCoord(cy)} : ${formatCoord(cz)}`);
-}
-
-// ═══════════════════════════════════════════════════════
-//  JANELA — gerenciador de arquivos
-// ═══════════════════════════════════════════════════════
-const MARCO_DOC={
-  nome:'COSM — Bem-vindo ao Universo',
-  tipo:'info',
-  tamanho:1024,
-  dataUrl:null,
-  conteudo:`<h2>BEM-VINDO AO COSM</h2>
-<p class="coord-tag">COSM://500:80:0 — MARCO ZERO</p>
-<br>
-<p class="dest">O que é o COSM?</p>
-<p>O COSM é um universo digital de coordenadas permanentes. Cada ponto no espaço pertence a alguém — ou a ninguém ainda. Você está agora no Marco Zero, o único ponto público do universo.</p>
-<p class="dest">Como funciona?</p>
-<p>Explore o espaço livremente. Quando quiser guardar algo — um arquivo, uma ideia, uma memória — crie sua frase secreta. Ela gera automaticamente uma coordenada única no universo, a anos-luz daqui. Só você sabe onde é.</p>
-<p class="dest">Privacidade real.</p>
-<p>Nenhum cadastro. Nenhum email. Nenhuma senha. Sua frase secreta é a única chave. Acentos são ignorados — "café" e "cafe" levam ao mesmo lugar.</p>
-<p class="dest">Este espaço — o Marco Zero — é bloqueado.</p>
-<p>Ninguém pode salvar nada aqui. É a praça pública do COSM. Novas atualizações e mensagens do universo aparecem neste arquivo.</p>
-<br>
-<p class="coord-tag">Versão 0.1 · Jun 2026 · cosm-production.up.railway.app</p>`
+  notif(`SALTANDO → ${formatCoord(cx)} : ${formatCoord(cy)} : ${formatCoord(cz)}`);
 };
 
-function dispararAnimacaoCubo(cb){
-  if(portalAnimProg>0) return;
-  portalAnimCb=cb;
-  portalAnimProg=0.001; // inicia animação
+// ═══════════════════════════════════════════════════════
+//  NOTIFICAÇÃO
+// ═══════════════════════════════════════════════════════
+let notifTimer=null;
+function notif(msg){
+  const el=document.getElementById('notif');
+  el.textContent=msg; el.style.opacity='1';
+  clearTimeout(notifTimer);
+  notifTimer=setTimeout(()=>el.style.opacity='0',2800);
 }
 
-function abrirJanela(){
-  const eMarco=portalMesh.position.distanceTo(PORTAL_COORD)<80
-    && camera.position.distanceTo(PORTAL_COORD)<400;
-
-  if(eMarco){
-    // Marco Zero — mostra apenas o documento público
-    const grid=document.getElementById('janela-grid');
-    grid.innerHTML='';
-    const card=document.createElement('div');
-    card.className='arq-card';
-    card.onclick=()=>abrirArquivo(MARCO_DOC);
-    const thumb=document.createElement('div');
-    thumb.className='arq-thumb';
-    thumb.textContent='📡';
-    const nome=document.createElement('div');
-    nome.className='arq-nome';
-    nome.textContent=MARCO_DOC.nome;
-    const size=document.createElement('div');
-    size.className='arq-size';
-    size.textContent='MARCO ZERO';
-    card.appendChild(thumb); card.appendChild(nome); card.appendChild(size);
-    grid.appendChild(card);
-    document.getElementById('janela-path').textContent='COSM://500:80:0';
-  } else {
-    renderGrid();
-    const p=camera.position;
-    const E=100;
-    document.getElementById('janela-path').textContent=
-      `COSM://${formatCoord(coordBase.x+p.x*E)}:${formatCoord(coordBase.y+p.y*E)}:${formatCoord(coordBase.z+p.z*E)}`;
+// ═══════════════════════════════════════════════════════
+//  HUD
+// ═══════════════════════════════════════════════════════
+let hudTimer=null;
+function atualizarHUD(){
+  if(!hudTimer){
+    hudTimer=setTimeout(()=>{
+      const c=coordAtual();
+      document.getElementById('txt-pos').textContent=
+        `${formatCoord(c.x)} : ${formatCoord(c.y)} : ${formatCoord(c.z)}`;
+      hudTimer=null;
+    },80);
   }
-  document.getElementById('janela').classList.add('visivel');
-}
-
-function fecharJanela(){
-  document.getElementById('janela').classList.remove('visivel');
-  fecharEnviarPara();
-}
-
-function setFiltro(cat){
-  filtroAtual=cat;
-  ['todos','imagem','video','html','documento'].forEach(c=>{
-    document.getElementById('sfiltro-'+c).classList.toggle('ativo',c===cat);
-  });
-  renderGrid();
-}
-
-function setTamanho(t){
-  tamanhoGrid=t;
-  document.getElementById('jbtn-p').classList.toggle('ativo',t==='p');
-  document.getElementById('jbtn-g').classList.toggle('ativo',t==='g');
-  const grid=document.getElementById('janela-grid');
-  grid.classList.toggle('grande',t==='g');
-}
-
-function renderGrid(){
-  const grid=document.getElementById('janela-grid');
-  grid.innerHTML='';
-  grid.className=tamanhoGrid==='g'?'grande':'';
-
-  const lista=filtroAtual==='todos'?arquivos:
-    filtroAtual==='documento'?arquivos.filter(a=>['documento','pdf','texto'].includes(a.tipo)):
-    filtroAtual==='video'?arquivos.filter(a=>['video','youtube'].includes(a.tipo)):
-    arquivos.filter(a=>a.tipo===filtroAtual);
-
-  if(lista.length===0){
-    const vazio=arquivos.length===0?'PASTA VAZIA':'NENHUM ARQUIVO AQUI';
-    grid.innerHTML=`<div class="janela-vazia"><div class="janela-vazia-icone">📂</div><div class="janela-vazia-txt">${vazio}</div></div>`;
-    return;
-  }
-
-  lista.forEach((a,i)=>{
-    const card=document.createElement('div');
-    card.className='arq-card';
-    card.onclick=()=>abrirArquivo(a);
-
-    const thumb=document.createElement('div');
-    thumb.className='arq-thumb';
-    if(a.tipo==='imagem' && a.dataUrl){
-      const img=document.createElement('img');
-      img.src=a.dataUrl;
-      thumb.appendChild(img);
-    } else {
-      const _ic={video:'🎬',html:'🌐',pdf:'📕',texto:'📝',documento:'📄',youtube:'▶'};
-      thumb.textContent=_ic[a.tipo]||'📄';
-    }
-
-    const nome=document.createElement('div');
-    nome.className='arq-nome';
-    nome.textContent=a.nome;
-
-    const size=document.createElement('div');
-    size.className='arq-size';
-    size.textContent=(a.tamanho/1024).toFixed(0)+' KB';
-
-    card.appendChild(thumb);
-    card.appendChild(nome);
-    card.appendChild(size);
-    grid.appendChild(card);
-  });
+  const v=Math.abs(Math.round(velCruz));
+  document.getElementById('txt-vel').textContent=
+    v+(velCruz<-1?' ◀':velCruz>1?' ▶':' —');
 }
 
 // ═══════════════════════════════════════════════════════
-//  IDENTIDADE — FRASE SECRETA
+//  LOOP
 // ═══════════════════════════════════════════════════════
-function normalizarFrase(f){
-  return f.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
-}
-
-async function fraseParaCoordenadas(frase){
-  const norm=normalizarFrase(frase);
-  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(norm));
-  const b=new Uint8Array(buf);
-  const E=1000000000;
-  const x=((b[0]<<24)|(b[1]<<16)|(b[2]<<8)|b[3]);
-  const y=((b[4]<<24)|(b[5]<<16)|(b[6]<<8)|b[7]);
-  const z=((b[8]<<24)|(b[9]<<16)|(b[10]<<8)|b[11]);
-  return {x:x*1.0,y:y*1.0,z:z*1.0};
-}
-
-let _idCallback=null;
-
-function verificarIdentidade(callback){
-  const salvo=localStorage.getItem('cosm_identidade');
-  if(salvo){
-    const {coord}=JSON.parse(salvo);
-    coordBase=coord;
-    callback();
-    return;
-  }
-  _idCallback=callback;
-  document.getElementById('modal-id-input').value='';
-  document.getElementById('modal-id-norm').textContent='';
-  document.getElementById('modal-id-coord').textContent='—';
-  document.getElementById('modal-id-confirmar').disabled=true;
-  document.getElementById('modal-id').classList.add('visivel');
-}
-
-function fecharModalIdentidade(){
-  document.getElementById('modal-id').classList.remove('visivel');
-  _idCallback=null;
-}
-
-async function aoDigitarFrase(){
-  const val=document.getElementById('modal-id-input').value;
-  const norm=normalizarFrase(val);
-  document.getElementById('modal-id-norm').textContent=norm?`Sua frase: ${norm}`:'';
-  const btn=document.getElementById('modal-id-confirmar');
-  if(norm.length>=6){
-    const c=await fraseParaCoordenadas(val);
-    document.getElementById('modal-id-coord').textContent=
-      `${formatCoord(c.x)} : ${formatCoord(c.y)} : ${formatCoord(c.z)}`;
-    btn.disabled=false;
-    btn._coord=c;
-  } else {
-    document.getElementById('modal-id-coord').textContent='—';
-    btn.disabled=true;
-    btn._coord=null;
-  }
-}
-
-async function confirmarIdentidade(){
-  const btn=document.getElementById('modal-id-confirmar');
-  if(!btn._coord) return;
-  const coord=btn._coord;
-  const frase=normalizarFrase(document.getElementById('modal-id-input').value);
-  localStorage.setItem('cosm_identidade',JSON.stringify({frase,coord}));
-  coordBase=coord;
-  fecharModalIdentidade();
-
-  // Cubo viaja até a posição atual da câmera (espaço pessoal)
-  homeCoord3D=camera.position.clone();
-  portalDestino=homeCoord3D.clone();
-
-  // Esfera aparece já na posição correta (sem lerp do zero)
-  snapEsferaParaCamera();
-  esfMesh.visible=true;
-
-  notif('✓ Espaço criado — o cubo está a caminho das suas coordenadas');
-  if(_idCallback){ _idCallback(); _idCallback=null; }
-}
-
-function ativarEsferaSeIdentidade(){
-  const salvo=localStorage.getItem('cosm_identidade');
-  if(!salvo) return;
-  homeCoord3D=camera.position.clone();
-  snapEsferaParaCamera();
-  esfMesh.visible=true;
-}
-
-function snapEsferaParaCamera(){
-  const _fwd=new THREE.Vector3();
-  camera.getWorldDirection(_fwd);
-  const _right=new THREE.Vector3().crossVectors(_fwd,new THREE.Vector3(0,1,0)).normalize();
-  esfMesh.position.copy(
-    camera.position.clone()
-      .addScaledVector(_fwd,esfFwd)
-      .addScaledVector(_right,esfRight)
-      .addScaledVector(new THREE.Vector3(0,1,0),esfUp)
-  );
-}
-
-function setEsferaVisivel(v){
-  esfOculto=!v;
-  fecharMenuEsfera();
-}
-
-function fecharMenuEsfera(){
-  document.getElementById('menu-esfera').style.display='none';
-}
-
-function abrirMenuEsfera(screenX,screenY){
-  const m=document.getElementById('menu-esfera');
-  m.style.display='flex';
-  m.style.left=Math.min(screenX-65, innerWidth-150)+'px';
-  m.style.top=Math.max(screenY-80, 10)+'px';
-}
-
-function toggleDragEsfera(){
-  if(!esfDragAtivo){
-    // Ativa modo mover
-    esfDragAtivo=true;
-    const _fwd=new THREE.Vector3();
-    camera.getWorldDirection(_fwd);
-    esfDragPlane.setFromNormalAndCoplanarPoint(_fwd, esfMesh.position);
-    document.getElementById('btn-mover-esfera').textContent='● FIXAR';
-    document.body.style.cursor='move';
-  } else {
-    // Fixa posição atual
-    const _fwd=new THREE.Vector3();
-    camera.getWorldDirection(_fwd);
-    const _right=new THREE.Vector3().crossVectors(_fwd,new THREE.Vector3(0,1,0)).normalize();
-    const diff=esfMesh.position.clone().sub(camera.position);
-    esfFwd=diff.dot(_fwd);
-    esfRight=diff.dot(_right);
-    esfUp=diff.dot(new THREE.Vector3(0,1,0));
-    esfDragAtivo=false;
-    document.getElementById('btn-mover-esfera').textContent='✦ Mover';
-    document.body.style.cursor='';
-    fecharMenuEsfera();
-    notif('✓ Posição fixada');
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  UPLOAD
-// ═══════════════════════════════════════════════════════
-function notif(txt){
-  const n=document.getElementById('notif');
-  n.textContent=txt; n.style.display='block';
-  clearTimeout(notif._t);
-  notif._t=setTimeout(()=>n.style.display='none',4000);
-}
-
-function registrarArquivo(input){
-  const file=input.files[0];
-  if(!file) return;
-  input.value='';
-
-  if(camera.position.distanceTo(PORTAL_COORD)<220){
-    notif('Marco Zero é público — explore o universo e crie sua coordenada pessoal');
-    return;
-  }
-
-  verificarIdentidade(()=>{
-    const ext=file.name.split('.').pop().toLowerCase();
-    const tipo=
-      ['jpg','jpeg','png','gif','webp','bmp','svg','avif','ico','tiff','tif'].includes(ext)?'imagem':
-      ['mp4','webm','mov','m4v','3gp','ogv','ogg'].includes(ext)?'video':
-      ['html','htm'].includes(ext)?'html':
-      ext==='pdf'?'pdf':
-      ['txt','csv','md','json','log','xml','yaml','yml'].includes(ext)?'texto':
-      'documento';
-
-    const finalizar=dataUrl=>{
-      const novoArq={nome:file.name,tipo,dataUrl,tamanho:file.size,pos:posAleatoria()};
-      arquivos.push(novoArq);
-      salvarDB(novoArq);
-      criarMesh3D(novoArq);
-      renderGrid();
-      notif(`✓ ${file.name} adicionado`);
-    };
-
-    if(['imagem','video','pdf'].includes(tipo)){
-      const reader=new FileReader();
-      reader.onload=e=>finalizar(e.target.result);
-      reader.readAsDataURL(file);
-    } else if(['html','texto'].includes(tipo)){
-      const reader=new FileReader();
-      reader.onload=e=>finalizar(e.target.result);
-      reader.readAsText(file);
-    } else {
-      finalizar(null);
-    }
-  });
-}
-
-// ═══════════════════════════════════════════════════════
-//  ENVIAR PARA COORDENADA
-// ═══════════════════════════════════════════════════════
-function abrirEnviarPara(){
-  document.getElementById('modal-input').value='';
-  document.getElementById('modal-enviar').classList.add('visivel');
-}
-
-function fecharEnviarPara(){
-  document.getElementById('modal-enviar').classList.remove('visivel');
-}
-
-function confirmarEnviarPara(){
-  const val=document.getElementById('modal-input').value.trim();
-  const partes=val.split(':').map(Number);
-  if(partes.length!==3||partes.some(isNaN)){
-    document.getElementById('modal-input').style.borderColor='rgba(255,80,80,0.8)';
-    setTimeout(()=>document.getElementById('modal-input').style.borderColor='',1000);
-    return;
-  }
-  fecharEnviarPara();
-  notif(`⇗ Enviado para COSM://${val}`);
-}
-
-// ═══════════════════════════════════════════════════════
-//  VISUALIZAÇÃO DE ARQUIVOS
-// ═══════════════════════════════════════════════════════
-function dataUrlParaBlobUrl(dataUrl){
-  const arr=dataUrl.split(',');
-  const mime=arr[0].match(/:(.*?);/)[1];
-  const bstr=atob(arr[1]);
-  const u8=new Uint8Array(bstr.length);
-  for(let i=0;i<bstr.length;i++) u8[i]=bstr.charCodeAt(i);
-  return URL.createObjectURL(new Blob([u8],{type:mime}));
-}
-
-function abrirArquivo(a){
-  const prev=document.getElementById('preview');
-  const img=document.getElementById('preview-img');
-  const vid=document.getElementById('preview-video');
-  const doc=document.getElementById('preview-doc');
-  const txt=document.getElementById('preview-texto');
-  const iframe=document.getElementById('preview-iframe');
-  const del=document.getElementById('preview-deletar');
-
-  img.style.display='none';
-  vid.style.display='none'; vid.src='';
-  doc.style.display='none';
-  txt.style.display='none'; txt.textContent='';
-  iframe.style.display='none';
-  del.style.display='none';
-
-  const kb=(a.tamanho/1024).toFixed(1)+' KB';
-
-  if(a.tipo==='info'){
-    txt.innerHTML=a.conteudo;
-    txt.style.display='block';
-    document.getElementById('preview-nome').textContent=a.nome;
-  } else if(a.tipo==='imagem' && a.dataUrl){
-    img.src=a.dataUrl;
-    img.style.display='block';
-    document.getElementById('preview-nome').textContent=a.nome+' — '+kb;
-    del.style.display='block'; del._arquivo=a;
-  } else if(a.tipo==='video' && a.dataUrl){
-    const burl=dataUrlParaBlobUrl(a.dataUrl);
-    vid._blobUrl=burl;
-    vid.src=burl;
-    vid.load();
-    vid.style.display='block';
-    document.getElementById('preview-nome').textContent=a.nome+' — '+kb;
-    del.style.display='block'; del._arquivo=a;
-  } else if(a.tipo==='html' && a.dataUrl){
-    iframe.style.display='block';
-    const iDoc=iframe.contentDocument||iframe.contentWindow.document;
-    iDoc.open(); iDoc.write(a.dataUrl); iDoc.close();
-    document.getElementById('preview-nome').textContent=a.nome;
-    del.style.display='block'; del._arquivo=a;
-  } else if(a.tipo==='pdf' && a.dataUrl){
-    iframe.src=a.dataUrl;
-    iframe.style.display='block';
-    document.getElementById('preview-nome').textContent=a.nome+' — '+kb;
-    del.style.display='block'; del._arquivo=a;
-  } else if(a.tipo==='youtube'){
-    abrirYoutube(a.dataUrl);
-    prev.style.display='none';
-    return;
-  } else if(a.tipo==='texto' && a.dataUrl){
-    txt.textContent=a.dataUrl;
-    txt.style.display='block';
-    document.getElementById('preview-nome').textContent=a.nome+' — '+kb;
-    del.style.display='block'; del._arquivo=a;
-  } else {
-    const icones={video:'🎬',pdf:'📕',documento:'📄',html:'🌐'};
-    doc.style.display='block';
-    document.getElementById('preview-doc-icone').textContent=icones[a.tipo]||'📄';
-    document.getElementById('preview-doc-nome').textContent=a.nome;
-    document.getElementById('preview-doc-info').textContent=kb+' — não visualizável no navegador';
-    document.getElementById('preview-nome').textContent=a.nome+' — '+kb;
-    del.style.display='block'; del._arquivo=a;
-  }
-  prev.style.display='flex';
-}
-
-let _arquivoAtualPreview=null;
-function deletarArquivoPreview(){
-  const del=document.getElementById('preview-deletar');
-  const a=del._arquivo;
-  if(!a) return;
-  arquivos=arquivos.filter(x=>x!==a);
-  apagarDB(a.id);
-  removerMesh3D(a);
-  sairOrbita();
-  fecharPreview();
-  renderGrid();
-  notif(`🗑 ${a.nome} apagado`);
-}
-
-function fecharPreview(){
-  const prev=document.getElementById('preview');
-  prev.style.display='none';
-  document.getElementById('preview-texto').style.display='none';
-  document.getElementById('preview-img').style.display='none';
-  const _vid=document.getElementById('preview-video');
-  _vid.pause();
-  if(_vid._blobUrl){ URL.revokeObjectURL(_vid._blobUrl); _vid._blobUrl=null; }
-  _vid.src=''; _vid.style.display='none';
-  document.getElementById('preview-doc').style.display='none';
-  const _if=document.getElementById('preview-iframe');
-  _if.style.display='none';
-  if(_if._blobUrl){ URL.revokeObjectURL(_if._blobUrl); _if._blobUrl=null; }
-  _if.src='about:blank';
-  document.getElementById('preview-deletar').style.display='none';
-}
-
-// ═══════════════════════════════════════════════════════
-//  INTRO
-// ═══════════════════════════════════════════════════════
-function entrar(){document.getElementById('intro').style.display='none';}
-
-// ═══════════════════════════════════════════════════════
-//  LOOP PRINCIPAL
-// ═══════════════════════════════════════════════════════
-const clock=new THREE.Clock();
-
 function loop(){
   requestAnimationFrame(loop);
-  const t=clock.getElapsedTime();
 
-  // Voo automático para coordenada
-  if(voando && alvoVoo){
+  // Voo de teletransporte
+  if(voando&&alvoVoo){
     const dist=camera.position.distanceTo(alvoVoo);
-    if(dist<80){
+    if(dist<60){
       voando=false; alvoVoo=null;
-      displayAtivo=true;
-      const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
-      portalAlvo=camera.position.clone().addScaledVector(fwd,200);
     } else {
       camera.position.addScaledVector(
         alvoVoo.clone().sub(camera.position).normalize(),
-        Math.min(dist*0.06,VEL_MAX)
+        Math.min(dist*0.07,VEL_MAX)
       );
-      camera.lookAt(alvoVoo);
     }
   }
 
-  // Cruzeiro
-  if(!voando && Math.abs(velCruz)>0.5){
+  // Cruzeiro (scroll)
+  if(!voando&&Math.abs(velCruz)>0.5){
     camera.position.addScaledVector(
-      new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion),velCruz
+      new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion),
+      velCruz
     );
     velCruz*=0.96;
   }
 
-  // WASD
+  // WASD / setas
   if(!voando){
-    const spd=teclas['ShiftLeft']?120:40;
+    const spd=teclas['ShiftLeft']?200:60;
     const dir=new THREE.Vector3();
     if(teclas['KeyW']||teclas['ArrowUp'])    dir.z-=1;
     if(teclas['KeyS']||teclas['ArrowDown'])  dir.z+=1;
     if(teclas['KeyA']||teclas['ArrowLeft'])  dir.x-=1;
     if(teclas['KeyD']||teclas['ArrowRight']) dir.x+=1;
-    if(teclas['Space']) dir.y+=1;
-    if(teclas['KeyC'])  dir.y-=1;
-    if(dir.length()>0){
+    if(teclas['KeyQ'])                        dir.y+=1;
+    if(teclas['KeyE'])                        dir.y-=1;
+    if(dir.lengthSq()>0){
       dir.normalize().applyQuaternion(camera.quaternion);
       camera.position.addScaledVector(dir,spd);
     }
   }
 
-  // Lerp de arquivos para posição alvo (modo cubo / modo espacial)
-  ficheiros3D.forEach(g=>{
-    if(g._targetPos){
-      g.position.lerp(g._targetPos,0.05);
-      if(g.position.distanceTo(g._targetPos)<2) g._targetPos=null;
-    }
-  });
-
-  // Órbita — câmera circula o objeto selecionado
-  if(orbitMode){
-    const ox=orbitTarget.x+orbitDist*Math.sin(orbitPhi)*Math.sin(orbitTheta);
-    const oy=orbitTarget.y+orbitDist*Math.cos(orbitPhi);
-    const oz=orbitTarget.z+orbitDist*Math.sin(orbitPhi)*Math.cos(orbitTheta);
-    camera.position.lerp(new THREE.Vector3(ox,oy,oz),0.08);
-    camera.lookAt(orbitTarget);
-  }
-
-  // Portal — lerp para destino (PORTAL_COORD ou espaço pessoal após identidade)
-  portalMesh.position.lerp(portalDestino,0.018);
-  portalMesh.rotation.y+=0.008;
-  portalMesh.rotation.x+=0.003;
-
-  // Fade do portal por distância
-  const distPortal=camera.position.distanceTo(portalMesh.position);
-  const fadePortal=1-Math.min(1,Math.max(0,(distPortal-800)/1700));
-  portalLinhas.material.opacity=(0.6+Math.sin(t*1.8)*0.25)*fadePortal;
-
-  // Esfera — segue câmera com offsets definidos pelo usuário
-  if(esfMesh.visible && !esfDragAtivo){
-    const _fwd=new THREE.Vector3();
-    camera.getWorldDirection(_fwd);
-    const _right=new THREE.Vector3().crossVectors(_fwd,new THREE.Vector3(0,1,0)).normalize();
-    const alvoEsf=camera.position.clone()
-      .addScaledVector(_fwd,esfFwd)
-      .addScaledVector(_right,esfRight)
-      .addScaledVector(new THREE.Vector3(0,1,0),esfUp);
-    esfMesh.position.lerp(alvoEsf,0.10);
-    esfMesh.rotation.y+=0.008;
-    const alvOp=esfOculto?0:0.15;
-    esfMat.opacity+=(alvOp-esfMat.opacity)*0.05;
-    const haloAlv=esfOculto?0:0.6;
-    esfHalo.material.opacity+=(haloAlv-esfHalo.material.opacity)*0.05;
-    const pulso=1+Math.sin(t*2.2)*0.06;
-    esfMesh.scale.setScalar(pulso);
-  }
-
-  // Animação cubo ao clicar
-  if(portalAnimProg>0){
-    portalAnimProg+=0.06;
-    if(portalAnimProg<1){
-      // Fase 1: expande e clareia
-      const s=1+portalAnimProg*0.6;
-      portalMesh.scale.setScalar(s);
-      portalLinhas.material.opacity=Math.min(1,0.75+portalAnimProg*0.5);
-    } else if(portalAnimProg<2){
-      // Fase 2: encolhe e some
-      const p=portalAnimProg-1;
-      const s=Math.max(0.01,1.6-p*1.6);
-      portalMesh.scale.setScalar(s);
-      portalLinhas.material.opacity=Math.max(0,(1-p)*0.75);
-    } else {
-      // Fim: abre janela
-      portalMesh.scale.setScalar(1);
-      portalAnimProg=0;
-      if(portalAnimCb){ portalAnimCb(); portalAnimCb=null; }
-    }
-  }
-
-  // Estrelas seguem câmera
-  const est=scene.getObjectByName('estrelas');
-  if(est) est.position.copy(camera.position);
-
-  // HUD
-  // Coordenada de navegação: posição local da câmera em metros (1 unit = 100m)
-  const p=camera.position;
-  if(!coordDisplayTimer){
-    coordDisplayTimer=setTimeout(()=>{
-      const E=100;
-      document.getElementById('txt-pos').textContent=
-        `${formatCoord(p.x*E)} : ${formatCoord(p.y*E)} : ${formatCoord(p.z*E)}`;
-      coordDisplayTimer=null;
-    },80);
-  }
-  document.getElementById('txt-vel').textContent=
-    Math.abs(Math.round(velCruz))+(velCruz<-1?' ◀':velCruz>1?' ▶':' —');
-
+  atualizarHUD();
   renderer.render(scene,camera);
-  updateYoutubeNoEspaco();
 }
 
-initDB().then(carregarDB);
-iniciarPosicaoPorIP();
-ativarEsferaSeIdentidade();
 loop();
-
-// ═══════════════════════════════════════════════════════
-//  FITA DE MÖBIUS — se forma sozinha, parece infinito
-// ═══════════════════════════════════════════════════════
-(function(){
-  const mc=document.getElementById('mc');
-  if(!mc) return;
-  const MR=new THREE.WebGLRenderer({canvas:mc,alpha:true,antialias:true});
-  MR.setPixelRatio(Math.min(devicePixelRatio,2));
-  MR.setSize(160,100);
-  MR.setClearColor(0x000000,0);
-
-  const MS=new THREE.Scene();
-  const MC=new THREE.PerspectiveCamera(46,160/100,0.1,100);
-  MC.position.z=4.6;
-
-  const SEG=280, W=0.44;
-  const verts=[], idx=[];
-  for(let i=0;i<=SEG;i++){
-    const u=i/SEG*Math.PI*2;
-    for(const v of [-W,W]){
-      verts.push(
-        (1+v*Math.cos(u/2))*Math.cos(u),
-        (1+v*Math.cos(u/2))*Math.sin(u),
-        v*Math.sin(u/2)
-      );
-    }
-  }
-  for(let i=0;i<SEG;i++){
-    const a=i*2;
-    idx.push(a,a+1,a+2, a+1,a+3,a+2);
-  }
-  const geo=new THREE.BufferGeometry();
-  geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
-  geo.setIndex(idx);
-  geo.computeVertexNormals();
-  geo.setDrawRange(0,0);
-
-  const grp=new THREE.Group();
-  grp.scale.setScalar(0.88);
-  // Inclinação que faz parecer o símbolo ∞
-  grp.rotation.x=1.15;
-  grp.rotation.z=0.12;
-  MS.add(grp);
-
-  const fillMat=new THREE.MeshBasicMaterial({color:0x080808,transparent:true,opacity:0.18,side:THREE.DoubleSide});
-  const wireMat=new THREE.MeshBasicMaterial({color:0xffffff,wireframe:true,transparent:true,opacity:0.8,side:THREE.DoubleSide});
-  grp.add(new THREE.Mesh(geo,fillMat));
-  grp.add(new THREE.Mesh(geo,wireMat));
-
-  const TOTAL=idx.length;
-  const BUILD=150; // frames para formar a fita
-  let prog=0, fase='forming', fTimer=0, op=1;
-
-  function loopM(){
-    requestAnimationFrame(loopM);
-    grp.rotation.y+=0.007;
-
-    if(fase==='forming'){
-      prog=Math.min(1,prog+1/BUILD);
-      geo.setDrawRange(0,Math.floor(prog*TOTAL));
-      if(prog>=1){ fase='hold'; fTimer=0; }
-    } else if(fase==='hold'){
-      if(++fTimer>90){ fase='fade'; fTimer=0; }
-    } else if(fase==='fade'){
-      op=Math.max(0,1-(++fTimer/50));
-      fillMat.opacity=0.22*op;
-      wireMat.opacity=0.85*op;
-      if(fTimer>=50){
-        fase='forming'; prog=0; op=1;
-        fillMat.opacity=0.22; wireMat.opacity=0.85;
-        geo.setDrawRange(0,0);
-      }
-    }
-    MR.render(MS,MC);
-  }
-  loopM();
-})();
 </script>
 </body>
 </html>
