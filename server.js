@@ -14,10 +14,11 @@ const pool = new Pool({
 });
 
 // ─── Solana ──────────────────────────────────────────────────
-const SOLANA_RPC    = process.env.SOLANA_RPC || 'https://api.mainnet-beta.solana.com';
-const WALLET_RENNER = process.env.WALLET_RENNER || '';
-const PRECO_SOL     = parseFloat(process.env.PRECO_SOL || '0.1');
-const connection    = new Connection(SOLANA_RPC, 'confirmed');
+const SOLANA_RPC         = process.env.SOLANA_RPC || 'https://api.mainnet-beta.solana.com';
+const WALLET_RENNER      = process.env.WALLET_RENNER || '';
+const PRECO_SOL          = parseFloat(process.env.PRECO_SOL || '0.1');
+const PRECO_SOL_EMPRESA  = parseFloat(process.env.PRECO_SOL_EMPRESA || '1.0');
+const connection         = new Connection(SOLANA_RPC, 'confirmed');
 
 async function initDB() {
   await pool.query(`
@@ -29,33 +30,52 @@ async function initDB() {
       coord_z   BIGINT NOT NULL,
       publico   BOOLEAN DEFAULT true,
       nome      TEXT,
+      tipo      TEXT DEFAULT 'pessoa',
       criado_em TIMESTAMPTZ DEFAULT NOW()
     )
   `);
+  // Adiciona coluna tipo se tabela já existe sem ela
+  await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS tipo TEXT DEFAULT 'pessoa'`);
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS pagamentos (
       id         SERIAL PRIMARY KEY,
       referencia TEXT UNIQUE NOT NULL,
       carteira   TEXT NOT NULL,
+      tipo       TEXT DEFAULT 'pessoa',
+      nome       TEXT,
       status     TEXT DEFAULT 'pendente',
       criado_em  TIMESTAMPTZ DEFAULT NOW()
     )
   `);
+  await pool.query(`ALTER TABLE pagamentos ADD COLUMN IF NOT EXISTS tipo TEXT DEFAULT 'pessoa'`);
+  await pool.query(`ALTER TABLE pagamentos ADD COLUMN IF NOT EXISTS nome TEXT`);
   console.log('DB pronto');
 }
 
 // ─── Alocação de coordenadas ─────────────────────────────────
-// Espiral áurea no plano XZ — máxima separação entre vizinhos.
-// Cada espaço fica ~10 milhões de unidades do anterior.
 const GAP = 10_000_000;
 
-function alocarCoordenada(totalExistentes) {
-  const theta = totalExistentes * 2.39996322972; // ângulo áureo
-  const r     = GAP * Math.sqrt(totalExistentes + 1);
+// Espiral áurea — para pessoas físicas
+function alocarCoordenada(totalPessoas) {
+  const theta = totalPessoas * 2.39996322972;
+  const r     = GAP * Math.sqrt(totalPessoas + 1);
   return {
     x: Math.round(r * Math.cos(theta)),
     y: 0,
     z: Math.round(r * Math.sin(theta))
+  };
+}
+
+// Prefixo exclusivo no eixo X — para empresas
+// Empresa 0 → 1.000.000 : 0 : 0
+// Empresa 1 → 2.000.000 : 0 : 0  etc.
+const BLOCO_EMPRESA = 1_000_000;
+function alocarCoordenadaEmpresa(totalEmpresas) {
+  return {
+    x: (totalEmpresas + 1) * BLOCO_EMPRESA,
+    y: 0,
+    z: 0
   };
 }
 
@@ -77,29 +97,30 @@ app.get('/api/proxima', async (req, res) => {
 });
 
 // Registrar coordenada para uma carteira
-// Body: { carteira: "...", tx_id: "..." (opcional por enquanto) }
+// Body: { carteira, tipo: 'pessoa'|'empresa', nome }
 app.post('/api/registrar', async (req, res) => {
   try {
-    const { carteira } = req.body;
+    const { carteira, tipo = 'pessoa', nome = null } = req.body;
     if (!carteira) return res.status(400).json({ erro: 'carteira obrigatoria' });
 
-    // Já tem coordenada? Devolve a existente
-    const existente = await pool.query(
-      'SELECT * FROM registros WHERE carteira = $1',
-      [carteira]
-    );
+    const existente = await pool.query('SELECT * FROM registros WHERE carteira = $1', [carteira]);
     if (existente.rows.length > 0) {
       return res.json({ coordenada: existente.rows[0], nova: false });
     }
 
-    // Aloca próxima coordenada disponível
-    const { rows: contagem } = await pool.query('SELECT COUNT(*) AS total FROM registros');
-    const coord = alocarCoordenada(parseInt(contagem[0].total));
+    let coord;
+    if (tipo === 'empresa') {
+      const { rows: cnt } = await pool.query("SELECT COUNT(*) AS total FROM registros WHERE tipo='empresa'");
+      coord = alocarCoordenadaEmpresa(parseInt(cnt[0].total));
+    } else {
+      const { rows: cnt } = await pool.query("SELECT COUNT(*) AS total FROM registros WHERE tipo='pessoa'");
+      coord = alocarCoordenada(parseInt(cnt[0].total));
+    }
 
     const { rows } = await pool.query(
-      `INSERT INTO registros (carteira, coord_x, coord_y, coord_z)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [carteira, coord.x, coord.y, coord.z]
+      `INSERT INTO registros (carteira, coord_x, coord_y, coord_z, nome, tipo)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [carteira, coord.x, coord.y, coord.z, nome, tipo]
     );
     res.json({ coordenada: rows[0], nova: true });
   } catch (e) {
@@ -167,34 +188,33 @@ app.patch('/api/nome', async (req, res) => {
 // Iniciar pagamento — gera QR code e referência única
 app.post('/api/pagamento/iniciar', async (req, res) => {
   try {
-    const { carteira } = req.body;
+    const { carteira, tipo = 'pessoa', nome = null } = req.body;
     if (!carteira) return res.status(400).json({ erro: 'carteira obrigatoria' });
     if (!WALLET_RENNER) return res.status(500).json({ erro: 'WALLET_RENNER nao configurado no servidor' });
 
-    // Já tem coordenada registrada?
     const existente = await pool.query('SELECT * FROM registros WHERE carteira = $1', [carteira]);
     if (existente.rows.length > 0) {
       return res.json({ ja_registrado: true, coordenada: existente.rows[0] });
     }
 
-    // Gerar chave de referência única para rastrear o pagamento
+    const preco = tipo === 'empresa' ? PRECO_SOL_EMPRESA : PRECO_SOL;
     const referencia = Keypair.generate().publicKey.toBase58();
 
     await pool.query(
-      'INSERT INTO pagamentos (referencia, carteira) VALUES ($1, $2) ON CONFLICT (referencia) DO NOTHING',
-      [referencia, carteira]
+      'INSERT INTO pagamentos (referencia, carteira, tipo, nome) VALUES ($1, $2, $3, $4) ON CONFLICT (referencia) DO NOTHING',
+      [referencia, carteira, tipo, nome]
     );
 
-    // URL padrão Solana Pay
-    const url = `solana:${WALLET_RENNER}?amount=${PRECO_SOL}&reference=${referencia}&label=COSM&message=Registro+de+Coordenada+COSM`;
+    const label = tipo === 'empresa' ? 'COSM+Empresa' : 'COSM';
+    const msg   = tipo === 'empresa' ? 'Registro+Empresa+COSM' : 'Registro+Coordenada+COSM';
+    const url   = `solana:${WALLET_RENNER}?amount=${preco}&reference=${referencia}&label=${label}&message=${msg}`;
 
-    // QR code transparente (fundo preto, texto branco — combina com o tema)
     const qr = await QRCode.toDataURL(url, {
       width: 220, margin: 2,
       color: { dark: '#ffffff', light: '#00000000' }
     });
 
-    res.json({ referencia, url, qr, preco: PRECO_SOL });
+    res.json({ referencia, url, qr, preco });
   } catch (e) {
     res.status(500).json({ erro: e.message });
   }
@@ -218,19 +238,24 @@ app.get('/api/pagamento/verificar/:referencia', async (req, res) => {
     const sigs = await connection.getSignaturesForAddress(refPubkey, { limit: 1 });
 
     if (sigs.length > 0) {
-      // Pagamento encontrado — registrar coordenada
       await pool.query('UPDATE pagamentos SET status = $1 WHERE referencia = $2', ['confirmado', referencia]);
 
-      const carteira = pag.rows[0].carteira;
-      const { rows: contagem } = await pool.query('SELECT COUNT(*) AS total FROM registros');
-      const coord = alocarCoordenada(parseInt(contagem[0].total));
+      const { carteira, tipo = 'pessoa', nome = null } = pag.rows[0];
+      let coord;
+      if (tipo === 'empresa') {
+        const { rows: cnt } = await pool.query("SELECT COUNT(*) AS total FROM registros WHERE tipo='empresa'");
+        coord = alocarCoordenadaEmpresa(parseInt(cnt[0].total));
+      } else {
+        const { rows: cnt } = await pool.query("SELECT COUNT(*) AS total FROM registros WHERE tipo='pessoa'");
+        coord = alocarCoordenada(parseInt(cnt[0].total));
+      }
 
       const { rows } = await pool.query(
-        `INSERT INTO registros (carteira, coord_x, coord_y, coord_z)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO registros (carteira, coord_x, coord_y, coord_z, nome, tipo)
+         VALUES ($1, $2, $3, $4, $5, $6)
          ON CONFLICT (carteira) DO UPDATE SET carteira = EXCLUDED.carteira
          RETURNING *`,
-        [carteira, coord.x, coord.y, coord.z]
+        [carteira, coord.x, coord.y, coord.z, nome, tipo]
       );
       return res.json({ status: 'confirmado', coordenada: rows[0] });
     }

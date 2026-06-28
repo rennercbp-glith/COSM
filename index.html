@@ -100,6 +100,63 @@
     position:fixed;inset:0;pointer-events:none;z-index:50;
     background:#ffffff;opacity:0;
   }
+
+  /* ── Botão COSM:// info ── */
+  #btn-info{
+    position:fixed;top:20px;left:20px;z-index:10;
+    background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.12);
+    border-radius:8px;padding:8px 16px;color:rgba(255,255,255,0.5);
+    cursor:pointer;font-family:'Courier New',monospace;font-size:10px;
+    letter-spacing:3px;backdrop-filter:blur(6px);transition:all 0.2s;
+  }
+  #btn-info:hover{border-color:rgba(180,140,255,0.5);color:rgba(180,140,255,0.9);}
+
+  /* ── Modal info ── */
+  #modal-info{
+    position:fixed;inset:0;z-index:200;display:flex;
+    align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.88);backdrop-filter:blur(12px);
+    opacity:0;pointer-events:none;transition:opacity 0.3s;
+  }
+  #modal-info.ativo{opacity:1;pointer-events:all;}
+  #painel-info{
+    background:#08080f;border:1px solid rgba(255,255,255,0.1);
+    border-radius:14px;padding:36px 40px;width:520px;max-width:92vw;
+    max-height:85vh;overflow-y:auto;font-family:'Courier New',monospace;
+    scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.1) transparent;
+  }
+  .info-sec{margin-bottom:28px;}
+  .info-label{font-size:9px;letter-spacing:5px;color:rgba(255,255,255,0.22);margin-bottom:10px;}
+  .info-titulo{font-size:16px;letter-spacing:4px;color:#fff;font-weight:normal;margin-bottom:12px;}
+  .info-p{font-size:12px;color:rgba(255,255,255,0.55);line-height:2;margin-bottom:8px;}
+  .info-box{
+    background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
+    border-radius:8px;padding:14px 18px;margin:14px 0;
+    font-size:11px;color:rgba(255,255,255,0.55);line-height:2;
+  }
+  .info-box strong{color:#fff;display:block;font-size:10px;letter-spacing:3px;margin-bottom:6px;}
+  .info-divisor{height:1px;background:rgba(255,255,255,0.06);margin:24px 0;}
+
+  /* ── Seletor tipo PESSOA/EMPRESA ── */
+  .reg-tipo-sel{display:flex;gap:10px;margin:16px 0;}
+  .reg-tipo-btn{
+    flex:1;background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.12);border-radius:8px;
+    padding:16px 10px;cursor:pointer;font-family:'Courier New',monospace;
+    color:rgba(255,255,255,0.35);font-size:11px;letter-spacing:3px;
+    transition:all 0.2s;text-align:center;
+  }
+  .reg-tipo-btn span{display:block;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,0.18);margin-top:6px;}
+  .reg-tipo-btn.ativo{
+    border-color:rgba(100,200,255,0.45);color:rgba(100,200,255,0.9);
+    background:rgba(100,200,255,0.05);
+  }
+  .reg-tipo-btn.ativo span{color:rgba(100,200,255,0.45);}
+  .reg-tipo-info{
+    font-size:10px;color:rgba(255,255,255,0.28);line-height:1.8;
+    padding:10px 12px;background:rgba(255,255,255,0.02);
+    border-radius:6px;border:1px solid rgba(255,255,255,0.06);min-height:48px;
+  }
 </style>
 </head>
 <body>
@@ -126,19 +183,103 @@
 <div id="prox-overlay"></div>
 <div id="flash"></div>
 
+<button id="btn-info" onclick="abrirInfo()">COSM://</button>
 <button id="btn-registrar" onclick="abrirRegistro()">REGISTRAR</button>
+
+<!-- ── Modal info ── -->
+<div id="modal-info">
+  <div id="painel-info">
+
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="font-size:9px;letter-spacing:5px;color:rgba(255,255,255,0.22);margin-bottom:10px;">O QUE É</div>
+      <div style="font-size:22px;letter-spacing:12px;color:#fff;">COSM</div>
+      <div style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.3);margin-top:8px;">UM UNIVERSO DE COORDENADAS PERMANENTES</div>
+    </div>
+
+    <div class="info-divisor"></div>
+
+    <div class="info-sec">
+      <div class="info-label">01 — O QUE É</div>
+      <p class="info-p">Um espaço tridimensional infinito onde cada coordenada é um endereço real e permanente no universo digital. Quem registra uma coordenada é seu dono para sempre.</p>
+      <div class="info-box">
+        <strong>EXEMPLO DE ENDEREÇO</strong>
+        COSM://14.2S : 3.7S : 0m<br>
+        <span style="font-size:10px;color:rgba(255,255,255,0.25)">14 setores no eixo X · 3 setores no eixo Y</span>
+      </div>
+    </div>
+
+    <div class="info-sec">
+      <div class="info-label">02 — ESCALA DE NAVEGAÇÃO</div>
+      <div class="info-box">
+        <strong>O PAINEL MUDA CONFORME ONDE VOCÊ ESTÁ</strong>
+        <span style="color:rgba(255,255,255,0.4)">LOCAL &nbsp;&nbsp;&nbsp;→</span> dentro de um espaço específico<br>
+        <span style="color:rgba(100,255,180,0.7)">PESSOAL →</span> seu espaço registrado<br>
+        <span style="color:rgba(100,200,255,0.7)">SETOR &nbsp;&nbsp;→</span> entre regiões do universo<br>
+        <span style="color:rgba(180,140,255,0.7)">ANOS-LUZ→</span> escala galáctica
+      </div>
+    </div>
+
+    <div class="info-sec">
+      <div class="info-label">03 — TIPOS DE REGISTRO</div>
+      <div class="info-box">
+        <strong>PESSOA</strong>
+        Uma coordenada individual em espiral áurea — máxima separação dos vizinhos. Ideal para uso pessoal, criadores, projetos independentes.
+      </div>
+      <div class="info-box" style="border-color:rgba(180,140,255,0.15);">
+        <strong style="color:rgba(180,140,255,0.8)">EMPRESA</strong>
+        Um <em>prefixo exclusivo</em> no eixo X — funciona como uma agência bancária. A empresa controla todas as coordenadas internas daquele bloco. Ideal para empresas, estúdios, plataformas.
+      </div>
+    </div>
+
+    <div class="info-sec">
+      <div class="info-label">04 — VISÃO</div>
+      <p class="info-p">O COSM não é um aplicativo. É um protocolo — como o HTTP é o protocolo da web, o COSM:// é o endereçamento do universo digital tridimensional.</p>
+      <p class="info-p">No futuro, qualquer plataforma poderá renderizar conteúdo em coordenadas COSM. Uma empresa registra <em style="color:rgba(255,255,255,0.7)">COSM://nike:0:0</em> e qualquer pessoa navega até lá de qualquer dispositivo.</p>
+    </div>
+
+    <div style="text-align:center;margin-top:8px;">
+      <button class="reg-btn reg-btn-destaque" onclick="fecharInfo();abrirRegistro();">REGISTRAR MEU ESPAÇO →</button>
+      &nbsp;
+      <button class="reg-btn" onclick="fecharInfo()">FECHAR</button>
+    </div>
+
+  </div>
+</div>
 
 <div id="modal-reg">
   <div id="painel-reg">
 
-    <!-- Step 1: carteira -->
-    <div id="reg-s1">
+    <!-- Step 0: tipo -->
+    <div id="reg-s0">
       <div class="reg-label">REGISTRAR COORDENADA</div>
+      <p style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px;">Tipo de registro:</p>
+      <div class="reg-tipo-sel">
+        <button id="btn-tipo-pessoa" class="reg-tipo-btn ativo" onclick="selecionarTipo('pessoa')">
+          PESSOA<span>coordenada individual</span>
+        </button>
+        <button id="btn-tipo-empresa" class="reg-tipo-btn" onclick="selecionarTipo('empresa')">
+          EMPRESA<span>prefixo exclusivo</span>
+        </button>
+      </div>
+      <div id="reg-tipo-info" class="reg-tipo-info">Coordenada individual em espiral áurea — máxima separação dos vizinhos. Ideal para uso pessoal, criadores, projetos independentes.</div>
+      <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+        <button class="reg-btn" onclick="fecharRegistro()">CANCELAR</button>
+        <button class="reg-btn reg-btn-destaque" onclick="irParaS1()">CONTINUAR →</button>
+      </div>
+    </div>
+
+    <!-- Step 1: carteira -->
+    <div id="reg-s1" style="display:none;">
+      <div id="reg-s1-label" class="reg-label">REGISTRAR COORDENADA</div>
       <p style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:16px;">Sua carteira Solana (chave pública):</p>
       <input id="reg-carteira" class="reg-input" type="text" placeholder="Ex: 5FHwkXz3...abc" spellcheck="false"/>
-      <p class="reg-hint">Chave pública da sua carteira Phantom, Solflare ou similar.<br>Nunca peça sua chave privada.</p>
+      <p class="reg-hint">Chave pública da sua carteira Phantom, Solflare ou similar.<br>Nunca compartilhe sua chave privada.</p>
+      <div id="reg-empresa-campos" style="display:none;margin-top:14px;">
+        <input id="reg-nome-empresa" class="reg-input" type="text" placeholder="Nome da empresa / organização" spellcheck="false" style="margin-top:0;"/>
+        <p class="reg-hint">Nome público que aparecerá no universo para identificar sua empresa.</p>
+      </div>
       <div style="display:flex;gap:10px;margin-top:24px;justify-content:flex-end;">
-        <button class="reg-btn" onclick="fecharRegistro()">CANCELAR</button>
+        <button class="reg-btn" onclick="voltarParaS0()">← VOLTAR</button>
         <button class="reg-btn reg-btn-destaque" onclick="iniciarPagamento()">CONTINUAR →</button>
       </div>
     </div>
@@ -681,7 +822,21 @@ let regReferencia   = null;
 let regPolling      = null;
 let minhaCoordReg   = null;
 
+let regTipo = 'pessoa';
+
+window.abrirInfo = function() {
+  document.getElementById('modal-info').classList.add('ativo');
+};
+window.fecharInfo = function() {
+  document.getElementById('modal-info').classList.remove('ativo');
+};
+
 window.abrirRegistro = function() {
+  // Sempre começa no step 0
+  document.getElementById('reg-s0').style.display = 'block';
+  document.getElementById('reg-s1').style.display = 'none';
+  document.getElementById('reg-s2').style.display = 'none';
+  document.getElementById('reg-s3').style.display = 'none';
   document.getElementById('modal-reg').classList.add('ativo');
 };
 window.fecharRegistro = function() {
@@ -689,15 +844,53 @@ window.fecharRegistro = function() {
   if (regPolling) { clearInterval(regPolling); regPolling = null; }
 };
 
+window.selecionarTipo = function(tipo) {
+  regTipo = tipo;
+  document.getElementById('btn-tipo-pessoa').classList.toggle('ativo', tipo === 'pessoa');
+  document.getElementById('btn-tipo-empresa').classList.toggle('ativo', tipo === 'empresa');
+  const info = document.getElementById('reg-tipo-info');
+  if (tipo === 'pessoa') {
+    info.textContent = 'Coordenada individual em espiral áurea — máxima separação dos vizinhos. Ideal para uso pessoal, criadores, projetos independentes.';
+  } else {
+    info.textContent = 'Prefixo exclusivo no eixo X — funciona como uma agência bancária. Você controla todas as coordenadas internas daquele bloco. Para empresas, estúdios e plataformas.';
+  }
+};
+
+window.irParaS1 = function() {
+  document.getElementById('reg-s0').style.display = 'none';
+  document.getElementById('reg-s1').style.display = 'block';
+  const label = document.getElementById('reg-s1-label');
+  const camposEmpresa = document.getElementById('reg-empresa-campos');
+  if (regTipo === 'empresa') {
+    label.textContent = 'REGISTRAR EMPRESA';
+    camposEmpresa.style.display = 'block';
+  } else {
+    label.textContent = 'REGISTRAR COORDENADA';
+    camposEmpresa.style.display = 'none';
+  }
+};
+
+window.voltarParaS0 = function() {
+  document.getElementById('reg-s1').style.display = 'none';
+  document.getElementById('reg-s0').style.display = 'block';
+};
+
 window.iniciarPagamento = async function() {
   const carteira = document.getElementById('reg-carteira').value.trim();
   if (!carteira) return;
+  const nomeEmpresa = regTipo === 'empresa'
+    ? (document.getElementById('reg-nome-empresa').value.trim() || null)
+    : null;
+  if (regTipo === 'empresa' && !nomeEmpresa) {
+    alert('Informe o nome da empresa.');
+    return;
+  }
 
   try {
     const resp = await fetch('/api/pagamento/iniciar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ carteira })
+      body: JSON.stringify({ carteira, tipo: regTipo, nome: nomeEmpresa })
     });
     const data = await resp.json();
 
@@ -710,6 +903,7 @@ window.iniciarPagamento = async function() {
     }
 
     regReferencia = data.referencia;
+    document.getElementById('reg-s0').style.display = 'none';
     document.getElementById('reg-s1').style.display = 'none';
     document.getElementById('reg-s2').style.display = 'block';
     document.getElementById('reg-preco').textContent = data.preco;
@@ -741,11 +935,20 @@ async function verificarPagamento() {
 }
 
 function mostrarConfirmado(coord) {
+  document.getElementById('reg-s0').style.display = 'none';
   document.getElementById('reg-s1').style.display = 'none';
   document.getElementById('reg-s2').style.display = 'none';
   document.getElementById('reg-s3').style.display = 'block';
-  document.getElementById('reg-coord').textContent =
-    `${coord.coord_x} : ${coord.coord_y} : ${coord.coord_z}`;
+  const isEmpresa = coord.tipo === 'empresa';
+  const coordEl = document.getElementById('reg-coord');
+  if (isEmpresa) {
+    coordEl.innerHTML =
+      `COSM://${coord.coord_x} : ${coord.coord_y} : ${coord.coord_z}<br>` +
+      `<span style="font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:2px;display:block;margin-top:8px;">` +
+      `PREFIXO EXCLUSIVO — ${coord.coord_x}:X:X é o seu espaço</span>`;
+  } else {
+    coordEl.textContent = `${coord.coord_x} : ${coord.coord_y} : ${coord.coord_z}`;
+  }
 }
 
 window.irParaMeuEspaco = function() {
