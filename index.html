@@ -295,10 +295,11 @@
 <div id="modal-reg">
   <div id="painel-reg">
 
-    <!-- Step 0: tipo -->
+    <!-- Step 0: tipo + plano -->
     <div id="reg-s0">
       <div class="reg-label">REGISTRAR COORDENADA</div>
-      <p style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px;">Tipo de registro:</p>
+
+      <p style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;letter-spacing:1px;">Tipo:</p>
       <div class="reg-tipo-sel">
         <button id="btn-tipo-pessoa" class="reg-tipo-btn ativo" onclick="selecionarTipo('pessoa')">
           PESSOA<span>coordenada individual</span>
@@ -307,10 +308,25 @@
           EMPRESA<span>prefixo exclusivo</span>
         </button>
       </div>
-      <div id="reg-tipo-info" class="reg-tipo-info">Coordenada individual em espiral áurea — máxima separação dos vizinhos. Ideal para uso pessoal, criadores, projetos independentes.</div>
-      <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
-        <button class="reg-btn" onclick="fecharRegistro()">CANCELAR</button>
-        <button class="reg-btn reg-btn-destaque" onclick="irParaS1()">CONTINUAR →</button>
+
+      <p style="font-size:11px;color:rgba(255,255,255,0.4);margin:14px 0 6px;letter-spacing:1px;">Plano:</p>
+      <div class="reg-tipo-sel">
+        <button id="btn-plano-anual" class="reg-tipo-btn" onclick="selecionarPlano('anual')">
+          ANUAL<span id="txt-preco-anual">0.01 SOL / ano</span>
+        </button>
+        <button id="btn-plano-permanente" class="reg-tipo-btn ativo" onclick="selecionarPlano('permanente')">
+          PERMANENTE<span id="txt-preco-perm">1 SOL — para sempre</span>
+        </button>
+      </div>
+
+      <div id="reg-tipo-info" class="reg-tipo-info" style="margin-top:10px;"></div>
+
+      <div style="display:flex;gap:10px;margin-top:16px;justify-content:space-between;align-items:center;">
+        <div id="reg-preco-resumo" style="font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:1px;"></div>
+        <div style="display:flex;gap:10px;">
+          <button class="reg-btn" onclick="fecharRegistro()">CANCELAR</button>
+          <button class="reg-btn reg-btn-destaque" onclick="irParaS1()">CONTINUAR →</button>
+        </div>
       </div>
     </div>
 
@@ -350,7 +366,12 @@
       <div style="font-size:11px;color:rgba(100,255,180,0.8);letter-spacing:3px;margin-bottom:16px;">✓ PAGAMENTO CONFIRMADO</div>
       <p style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:8px;">SEU ENDEREÇO NO UNIVERSO</p>
       <div id="reg-coord" style="font-size:15px;letter-spacing:2px;color:#fff;margin:16px 0;padding:16px;background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.1);"></div>
-      <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;">
+      <div id="reg-s3-plano" style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.25);margin-bottom:8px;"></div>
+      <div id="reg-s3-royalty" style="display:none;font-size:10px;color:rgba(255,200,80,0.5);letter-spacing:1px;padding:8px 12px;background:rgba(255,200,80,0.04);border:1px solid rgba(255,200,80,0.1);border-radius:6px;margin:0 0 16px;line-height:1.8;">
+        Este espaço pode ser vendido no marketplace COSM.<br>
+        Em toda revenda, 10% vai automaticamente para o COSM.
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;">
         <button class="reg-btn" onclick="fecharRegistro()">FECHAR</button>
         <button class="reg-btn reg-btn-destaque" onclick="irParaMeuEspaco()">IR PARA LÁ →</button>
       </div>
@@ -868,7 +889,36 @@ let regReferencia   = null;
 let regPolling      = null;
 let minhaCoordReg   = null;
 
-let regTipo = 'pessoa';
+let regTipo  = 'pessoa';
+let regPlano = 'permanente';
+
+// Preços em SOL (espelham o servidor)
+const PRECOS = {
+  pessoa:  { anual: 0.01, permanente: 1   },
+  empresa: { anual: 0.1,  permanente: 10  }
+};
+
+function atualizarResumoPreco() {
+  const preco = PRECOS[regTipo][regPlano];
+  const sufixo = regPlano === 'anual' ? ' SOL / ano' : ' SOL — para sempre';
+  document.getElementById('reg-preco-resumo').textContent = preco + sufixo;
+
+  // Atualiza labels nos botões de plano
+  const pa = PRECOS[regTipo].anual;
+  const pp = PRECOS[regTipo].permanente;
+  document.getElementById('txt-preco-anual').textContent = pa + ' SOL / ano';
+  document.getElementById('txt-preco-perm').textContent  = pp + ' SOL — para sempre';
+}
+
+function atualizarInfoTipo() {
+  const info = document.getElementById('reg-tipo-info');
+  if (regTipo === 'pessoa') {
+    info.textContent = 'Coordenada individual em espiral áurea — máxima separação dos vizinhos. Ideal para uso pessoal, criadores, projetos independentes.';
+  } else {
+    info.textContent = 'Prefixo exclusivo no eixo X — funciona como uma agência bancária. Você controla todas as coordenadas internas daquele bloco. Para empresas, estúdios e plataformas.';
+  }
+  atualizarResumoPreco();
+}
 
 window.abrirInfo = function() {
   document.getElementById('modal-info').classList.add('ativo');
@@ -878,11 +928,11 @@ window.fecharInfo = function() {
 };
 
 window.abrirRegistro = function() {
-  // Sempre começa no step 0
   document.getElementById('reg-s0').style.display = 'block';
   document.getElementById('reg-s1').style.display = 'none';
   document.getElementById('reg-s2').style.display = 'none';
   document.getElementById('reg-s3').style.display = 'none';
+  atualizarInfoTipo();
   document.getElementById('modal-reg').classList.add('ativo');
 };
 window.fecharRegistro = function() {
@@ -894,12 +944,14 @@ window.selecionarTipo = function(tipo) {
   regTipo = tipo;
   document.getElementById('btn-tipo-pessoa').classList.toggle('ativo', tipo === 'pessoa');
   document.getElementById('btn-tipo-empresa').classList.toggle('ativo', tipo === 'empresa');
-  const info = document.getElementById('reg-tipo-info');
-  if (tipo === 'pessoa') {
-    info.textContent = 'Coordenada individual em espiral áurea — máxima separação dos vizinhos. Ideal para uso pessoal, criadores, projetos independentes.';
-  } else {
-    info.textContent = 'Prefixo exclusivo no eixo X — funciona como uma agência bancária. Você controla todas as coordenadas internas daquele bloco. Para empresas, estúdios e plataformas.';
-  }
+  atualizarInfoTipo();
+};
+
+window.selecionarPlano = function(plano) {
+  regPlano = plano;
+  document.getElementById('btn-plano-anual').classList.toggle('ativo', plano === 'anual');
+  document.getElementById('btn-plano-permanente').classList.toggle('ativo', plano === 'permanente');
+  atualizarResumoPreco();
 };
 
 window.irParaS1 = function() {
@@ -936,7 +988,7 @@ window.iniciarPagamento = async function() {
     const resp = await fetch('/api/pagamento/iniciar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ carteira, tipo: regTipo, nome: nomeEmpresa })
+      body: JSON.stringify({ carteira, tipo: regTipo, plano: regPlano, nome: nomeEmpresa })
     });
     const data = await resp.json();
 
@@ -985,8 +1037,11 @@ function mostrarConfirmado(coord) {
   document.getElementById('reg-s1').style.display = 'none';
   document.getElementById('reg-s2').style.display = 'none';
   document.getElementById('reg-s3').style.display = 'block';
-  const isEmpresa = coord.tipo === 'empresa';
+
+  const isEmpresa   = coord.tipo === 'empresa';
+  const isPermanente = coord.plano === 'permanente';
   const coordEl = document.getElementById('reg-coord');
+
   if (isEmpresa) {
     coordEl.innerHTML =
       `COSM://${coord.coord_x} : ${coord.coord_y} : ${coord.coord_z}<br>` +
@@ -994,6 +1049,18 @@ function mostrarConfirmado(coord) {
       `PREFIXO EXCLUSIVO — ${coord.coord_x}:X:X é o seu espaço</span>`;
   } else {
     coordEl.textContent = `${coord.coord_x} : ${coord.coord_y} : ${coord.coord_z}`;
+  }
+
+  const planoEl   = document.getElementById('reg-s3-plano');
+  const royaltyEl = document.getElementById('reg-s3-royalty');
+  if (isPermanente) {
+    planoEl.textContent = '✦ PLANO PERMANENTE — este espaço é seu para sempre';
+    planoEl.style.color = 'rgba(255,200,80,0.5)';
+    royaltyEl.style.display = 'block';
+  } else {
+    planoEl.textContent = 'PLANO ANUAL — renove antes do vencimento para manter o espaço';
+    planoEl.style.color = 'rgba(255,255,255,0.25)';
+    royaltyEl.style.display = 'none';
   }
 }
 
