@@ -681,15 +681,15 @@ let regReferencia   = null;
 let regPolling      = null;
 let minhaCoordReg   = null;
 
-function abrirRegistro() {
+window.abrirRegistro = function() {
   document.getElementById('modal-reg').classList.add('ativo');
-}
-function fecharRegistro() {
+};
+window.fecharRegistro = function() {
   document.getElementById('modal-reg').classList.remove('ativo');
   if (regPolling) { clearInterval(regPolling); regPolling = null; }
-}
+};
 
-async function iniciarPagamento() {
+window.iniciarPagamento = async function() {
   const carteira = document.getElementById('reg-carteira').value.trim();
   if (!carteira) return;
 
@@ -748,7 +748,7 @@ function mostrarConfirmado(coord) {
     `${coord.coord_x} : ${coord.coord_y} : ${coord.coord_z}`;
 }
 
-function irParaMeuEspaco() {
+window.irParaMeuEspaco = function() {
   if (!minhaCoordReg) return;
   fecharRegistro();
   document.getElementById('coord-input').value =
