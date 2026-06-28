@@ -304,11 +304,12 @@ canvas.addEventListener('mousemove', e => {
   const dy = e.clientY - lastY;
   if (Math.abs(dx) + Math.abs(dy) > 2) mouseMoved = true;
   lastX = e.clientX; lastY = e.clientY;
-  // Rotação no eixo LOCAL da câmera — 360° livre em qualquer direção
+  // Yaw: eixo Y MUNDIAL — esq/dir sem roll independente da orientação
   _qRot.setFromAxisAngle(_axY, -dx * 0.003);
-  camera.quaternion.multiply(_qRot);          // yaw: vira cabeça esq/dir
+  camera.quaternion.premultiply(_qRot);
+  // Pitch: eixo X LOCAL da câmera — cima/baixo 360° sem trava
   _qRot.setFromAxisAngle(_axX, -dy * 0.003);
-  camera.quaternion.multiply(_qRot);          // pitch: inclina cima/baixo
+  camera.quaternion.multiply(_qRot);
   camera.quaternion.normalize();
 });
 
