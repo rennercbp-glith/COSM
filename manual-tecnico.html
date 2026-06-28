@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COSM — Manual Técnico</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:#080810;color:#aaccff;
+    font-family:'Courier New',monospace;
+    line-height:1.9;min-height:100vh;
+  }
+  body::before{
+    content:'';position:fixed;top:0;left:0;width:100%;height:100%;
+    background-image:
+      radial-gradient(1px 1px at 12% 18%,rgba(255,255,255,0.4) 0%,transparent 100%),
+      radial-gradient(1px 1px at 45% 7%,rgba(255,255,255,0.3) 0%,transparent 100%),
+      radial-gradient(1px 1px at 71% 33%,rgba(255,255,255,0.4) 0%,transparent 100%),
+      radial-gradient(1px 1px at 88% 14%,rgba(255,255,255,0.2) 0%,transparent 100%),
+      radial-gradient(1px 1px at 29% 58%,rgba(255,255,255,0.3) 0%,transparent 100%),
+      radial-gradient(1px 1px at 94% 65%,rgba(255,255,255,0.4) 0%,transparent 100%),
+      radial-gradient(1px 1px at 58% 81%,rgba(255,255,255,0.25) 0%,transparent 100%),
+      radial-gradient(1px 1px at 6%  90%,rgba(255,255,255,0.3) 0%,transparent 100%);
+    pointer-events:none;z-index:0;
+  }
+  .container{
+    position:relative;z-index:1;
+    max-width:780px;margin:0 auto;padding:80px 40px 120px;
+  }
+
+  /* Cabeçalho */
+  header{text-align:center;margin-bottom:80px;}
+  .badge{
+    display:inline-block;font-size:9px;letter-spacing:5px;
+    color:rgba(100,200,255,0.5);border:1px solid rgba(100,200,255,0.2);
+    border-radius:20px;padding:4px 16px;margin-bottom:20px;
+  }
+  h1{font-size:38px;letter-spacing:12px;color:#fff;font-weight:normal;margin-bottom:12px;}
+  .subtitulo{font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.35);line-height:2;}
+  .linha-divisor{width:60px;height:1px;background:rgba(255,255,255,0.15);margin:36px auto;}
+
+  /* Índice */
+  .indice{
+    background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);
+    border-radius:10px;padding:24px 28px;margin-bottom:64px;
+  }
+  .indice-titulo{font-size:9px;letter-spacing:5px;color:rgba(255,255,255,0.22);margin-bottom:16px;}
+  .indice a{
+    display:block;font-size:12px;color:rgba(255,255,255,0.4);
+    text-decoration:none;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);
+    transition:color 0.2s;letter-spacing:1px;
+  }
+  .indice a:last-child{border-bottom:none;}
+  .indice a:hover{color:rgba(100,200,255,0.8);}
+  .indice a span{float:right;color:rgba(255,255,255,0.18);font-size:11px;}
+
+  /* Seções */
+  section{margin-bottom:72px;scroll-margin-top:40px;}
+  .sec-num{font-size:9px;letter-spacing:5px;color:rgba(255,255,255,0.2);margin-bottom:10px;}
+  h2{font-size:18px;letter-spacing:5px;color:#fff;font-weight:normal;margin-bottom:20px;border-bottom:1px solid rgba(255,255,255,0.07);padding-bottom:14px;}
+  h3{font-size:13px;letter-spacing:3px;color:rgba(200,220,255,0.8);font-weight:normal;margin:28px 0 12px;}
+  p{font-size:13px;color:rgba(255,255,255,0.55);line-height:2;margin-bottom:12px;}
+  strong{color:rgba(255,255,255,0.85);}
+  em{color:rgba(100,200,255,0.8);font-style:normal;}
+
+  /* Caixa de código */
+  .code{
+    background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.08);
+    border-radius:8px;padding:18px 20px;margin:16px 0;
+    font-size:12px;color:rgba(100,200,255,0.8);
+    white-space:pre;overflow-x:auto;line-height:1.7;
+  }
+  .code .cm{color:rgba(255,255,255,0.25);}  /* comentário */
+  .code .kw{color:rgba(180,140,255,0.8);}   /* keyword */
+  .code .st{color:rgba(100,255,180,0.7);}   /* string */
+  .code .nm{color:rgba(255,200,80,0.7);}    /* número */
+
+  /* Caixa informativa */
+  .box{
+    background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
+    border-radius:8px;padding:16px 20px;margin:16px 0;
+    font-size:12px;color:rgba(255,255,255,0.55);line-height:2;
+  }
+  .box strong{display:block;font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.3);margin-bottom:8px;}
+  .box-aviso{border-color:rgba(255,200,80,0.2);background:rgba(255,200,80,0.03);}
+  .box-aviso strong{color:rgba(255,200,80,0.5);}
+  .box-ok{border-color:rgba(100,255,180,0.2);background:rgba(100,255,180,0.02);}
+  .box-ok strong{color:rgba(100,255,180,0.5);}
+  .box-azul{border-color:rgba(100,200,255,0.2);background:rgba(100,200,255,0.02);}
+  .box-azul strong{color:rgba(100,200,255,0.5);}
+
+  /* Tabela */
+  table{width:100%;border-collapse:collapse;margin:20px 0;font-size:12px;}
+  th{text-align:left;font-size:9px;letter-spacing:3px;color:rgba(255,255,255,0.25);padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.08);}
+  td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.55);vertical-align:top;}
+  td:first-child{color:rgba(100,200,255,0.7);white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+
+  /* Rodapé */
+  footer{text-align:center;margin-top:80px;padding-top:40px;border-top:1px solid rgba(255,255,255,0.07);}
+  footer p{font-size:11px;color:rgba(255,255,255,0.18);letter-spacing:2px;line-height:2.4;}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div class="badge">DOCUMENTAÇÃO TÉCNICA</div>
+  <h1>COSM</h1>
+  <div class="subtitulo">
+    Manual para desenvolvedores, criadores e empresas<br>
+    que querem construir dentro do universo.
+  </div>
+  <div class="linha-divisor"></div>
+</header>
+
+<!-- ÍNDICE -->
+<div class="indice">
+  <div class="indice-titulo">ÍNDICE</div>
+  <a href="#s1">01 — Arquitetura geral<span>stack, arquivos, deploy</span></a>
+  <a href="#s2">02 — Sistema de coordenadas<span>floating origin, escala, conversões</span></a>
+  <a href="#s3">03 — Protocolo de conteúdo — iframes<span>isolamento, sandbox, como publicar</span></a>
+  <a href="#s4">04 — API REST<span>endpoints, exemplos curl</span></a>
+  <a href="#s5">05 — Sistema de eventos<span>wheel, mouse, por que não interferem</span></a>
+  <a href="#s6">06 — Pagamentos e planos<span>Solana Pay, anual vs permanente, royalties</span></a>
+  <a href="#s7">07 — Alocação de coordenadas<span>espiral áurea, prefixo empresa</span></a>
+  <a href="#s8">08 — Como construir no seu espaço<span>passo a passo para criar conteúdo</span></a>
+</div>
+
+<!-- 01 -->
+<section id="s1">
+  <div class="sec-num">01</div>
+  <h2>ARQUITETURA GERAL</h2>
+
+  <p>O COSM é composto por dois arquivos principais e um banco de dados. Sem framework, sem build system, sem dependências no frontend.</p>
+
+  <div class="box box-azul">
+    <strong>STACK COMPLETO</strong>
+    Frontend: <em>index.html</em> — Three.js r160 via CDN (importmap), CSS e JS inline<br>
+    Backend:  <em>server.js</em> — Node.js + Express 4, servindo os arquivos estáticos<br>
+    Banco:    <em>PostgreSQL</em> — hospedado no Railway, acessado via variável DATABASE_URL<br>
+    Deploy:   <em>Railway</em> — push no GitHub → deploy automático em ~60 segundos<br>
+    Pagamentos: <em>Solana Pay</em> — QR code padrão, verificação on-chain via @solana/web3.js
+  </div>
+
+  <h3>ESTRUTURA DE ARQUIVOS</h3>
+  <div class="code"><span class="cm">COSM/
+├── index.html          ← universo 3D completo (frontend)
+├── server.js           ← API REST + servidor de arquivos estáticos
+├── package.json        ← dependências Node.js
+├── boas-vindas.html    ← manual público para usuários
+└── manual-tecnico.html ← este arquivo</span></div>
+
+  <h3>VARIÁVEIS DE AMBIENTE (Railway)</h3>
+  <table>
+    <tr><th>VARIÁVEL</th><th>DESCRIÇÃO</th><th>PADRÃO</th></tr>
+    <tr><td>DATABASE_URL</td><td>Connection string do PostgreSQL</td><td>obrigatório</td></tr>
+    <tr><td>WALLET_RENNER</td><td>Chave pública Solana para receber pagamentos</td><td>obrigatório</td></tr>
+    <tr><td>PRECO_PESSOA_ANUAL</td><td>Preço pessoa plano anual (SOL)</td><td>0.01</td></tr>
+    <tr><td>PRECO_PESSOA_PERM</td><td>Preço pessoa plano permanente (SOL)</td><td>1</td></tr>
+    <tr><td>PRECO_EMPRESA_ANUAL</td><td>Preço empresa plano anual (SOL)</td><td>0.1</td></tr>
+    <tr><td>PRECO_EMPRESA_PERM</td><td>Preço empresa plano permanente (SOL)</td><td>10</td></tr>
+    <tr><td>ROYALTY_PERC</td><td>Taxa sobre revendas (0.0 a 1.0)</td><td>0.10</td></tr>
+    <tr><td>SOLANA_RPC</td><td>Endpoint RPC da rede Solana</td><td>mainnet-beta</td></tr>
+  </table>
+</section>
+
+<!-- 02 -->
+<section id="s2">
+  <div class="sec-num">02</div>
+  <h2>SISTEMA DE COORDENADAS</h2>
+
+  <p>O universo COSM usa <strong>floating origin</strong> — uma técnica para evitar o problema de precisão de ponto flutuante em espaços muito grandes.</p>
+
+  <h3>O PROBLEMA SEM FLOATING ORIGIN</h3>
+  <p>Three.js usa números <em>float32</em> internamente. A partir de ~1 milhão de unidades do zero, objetos começam a tremer e perder precisão. Com coordenadas COSM chegando a bilhões de unidades, isso seria fatal.</p>
+
+  <h3>A SOLUÇÃO: COORDBASE</h3>
+  <div class="code"><span class="cm">// A posição real no universo COSM é sempre:</span>
+cosm_x = <span class="kw">coordBase</span>.x + camera.position.x
+cosm_y = <span class="kw">coordBase</span>.y + camera.position.y
+cosm_z = <span class="kw">coordBase</span>.z + camera.position.z
+
+<span class="cm">// A câmera NUNCA se afasta muito do zero Three.js.
+// Quando voa, coordBase avança — a câmera fica próxima à origem.
+// Resultado: precisão perfeita em qualquer ponto do universo.</span></div>
+
+  <div class="box box-ok">
+    <strong>REGRA FUNDAMENTAL</strong>
+    <em>coordBase</em> é a posição COSM do "zero" do mundo Three.js naquele instante.<br>
+    Para posicionar um objeto em COSM(cx, cy, cz) no espaço Three.js:<br>
+    <em>objeto.position.set(cx - coordBase.x, cy - coordBase.y, cz - coordBase.z)</em><br>
+    Deve ser atualizado todo frame porque coordBase muda durante o voo.
+  </div>
+
+  <h3>ESCALA E ZONAS</h3>
+  <table>
+    <tr><th>ZONA</th><th>DISTÂNCIA DO CENTRO</th><th>UNIDADE</th><th>COR HUD</th></tr>
+    <tr><td>LOCAL</td><td>0 — 999</td><td>m (metros)</td><td>branco</td></tr>
+    <tr><td>PESSOAL</td><td>1.000 — 999.999</td><td>k (quilômetros)</td><td>verde</td></tr>
+    <tr><td>SETOR</td><td>1.000.000 — 999.999.999</td><td>S (setores)</td><td>azul</td></tr>
+    <tr><td>ANOS-LUZ</td><td>1.000.000.000+</td><td>A (anos-luz)</td><td>roxo</td></tr>
+  </table>
+
+  <h3>WORMHOLE EM 0:0:0</h3>
+  <p>O wormhole é um objeto Three.js posicionado em <em>-coordBase</em> (o oposto de coordBase), de forma que sempre apareça na coordenada COSM 0:0:0. Tem raio de ejection de 150 unidades e zona de influência gravitacional de 3000 unidades.</p>
+</section>
+
+<!-- 03 -->
+<section id="s3">
+  <div class="sec-num">03</div>
+  <h2>PROTOCOLO DE CONTEÚDO — IFRAMES</h2>
+
+  <p>Cada coordenada registrada pode apontar para uma URL. Quando um usuário chega perto dessa coordenada no universo, o COSM exibe um prompt. Ao clicar, o conteúdo abre em um <strong>iframe isolado</strong>.</p>
+
+  <h3>POR QUE IFRAME?</h3>
+  <p>O universo COSM tem listeners de eventos globais — <em>wheel</em>, <em>mousedown</em>, <em>mousemove</em> — necessários para o voo e rotação da câmera. Se o conteúdo do usuário carregasse na mesma página, esses eventos interfeririam.</p>
+  <p>O iframe é uma caixa separada com seu próprio contexto: eventos, scroll, DOM, JavaScript. O COSM não interfere em nada que acontece dentro do iframe.</p>
+
+  <div class="box box-ok">
+    <strong>ANALOGIA PERFEITA</strong>
+    O COSM é o browser. Cada coordenada é um site.<br>
+    Assim como o Chrome não interfere no JavaScript do site que você visita,<br>
+    o COSM não interfere no conteúdo que roda dentro do seu iframe.
+  </div>
+
+  <h3>ATRIBUTOS SANDBOX</h3>
+  <p>O iframe usa os seguintes atributos de segurança:</p>
+  <div class="code"><span class="kw">sandbox</span>=<span class="st">"allow-scripts allow-same-origin allow-forms allow-popups"</span>
+
+<span class="cm">allow-scripts    → JavaScript funciona normalmente
+allow-same-origin → cookies e storage do seu próprio domínio funcionam
+allow-forms      → formulários podem ser submetidos
+allow-popups     → links podem abrir em nova aba
+
+NÃO incluído (por segurança):
+allow-top-navigation → seu site não pode redirecionar o COSM
+allow-downloads     → downloads diretos bloqueados</span></div>
+
+  <h3>COMO PUBLICAR CONTEÚDO NA SUA COORDENADA</h3>
+  <p>Após registrar uma coordenada, use a API para vincular uma URL:</p>
+  <div class="code"><span class="cm"># Vincular sua URL à coordenada registrada</span>
+curl -X PATCH https://cosm-production.up.railway.app/api/url \
+  -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{"carteira": "SUA_CHAVE_PUBLICA", "url": "https://seusite.com"}'</span></div>
+
+  <p>Qualquer URL funciona: seu site, uma página estática no GitHub Pages, um app React, qualquer coisa que rode em HTTPS.</p>
+
+  <div class="box box-aviso">
+    <strong>IMPORTANTE — HTTPS</strong>
+    A URL deve ser HTTPS. Browsers modernos bloqueiam iframes HTTP dentro de páginas HTTPS.<br>
+    GitHub Pages, Netlify, Vercel e Railway fornecem HTTPS grátis.
+  </div>
+
+  <h3>BEACONS NO UNIVERSO</h3>
+  <p>Coordenadas com conteúdo aparecem como esferas luminosas no universo — azul para pessoas, roxo para empresas. Ao chegar a menos de 2000 unidades, um prompt aparece na tela convidando a entrar.</p>
+</section>
+
+<!-- 04 -->
+<section id="s4">
+  <div class="sec-num">04</div>
+  <h2>API REST</h2>
+
+  <p>Base URL: <em>https://cosm-production.up.railway.app</em></p>
+  <p>Todas as respostas são JSON. Erros retornam <em>{"erro": "mensagem"}</em>.</p>
+
+  <h3>COORDENADAS PÚBLICAS</h3>
+  <table>
+    <tr><th>MÉTODO</th><th>ROTA</th><th>DESCRIÇÃO</th></tr>
+    <tr><td>GET</td><td>/api/coordenadas</td><td>Lista todas as coordenadas públicas com nome, tipo e URL de conteúdo</td></tr>
+    <tr><td>GET</td><td>/api/coordenada/:carteira</td><td>Retorna a coordenada de uma carteira específica</td></tr>
+    <tr><td>GET</td><td>/api/proxima</td><td>Prévia de qual seria a próxima coordenada alocada</td></tr>
+  </table>
+
+  <div class="code"><span class="cm"># Listar coordenadas públicas</span>
+curl https://cosm-production.up.railway.app/api/coordenadas
+
+<span class="cm"># Resposta</span>
+[
+  {
+    <span class="st">"carteira"</span>:     <span class="st">"3vYnxHp12AV..."</span>,
+    <span class="st">"coord_x"</span>:      <span class="nm">10000000</span>,
+    <span class="st">"coord_y"</span>:      <span class="nm">0</span>,
+    <span class="st">"coord_z"</span>:      <span class="nm">-3090170</span>,
+    <span class="st">"nome"</span>:         <span class="st">"Meu Espaço"</span>,
+    <span class="st">"tipo"</span>:         <span class="st">"pessoa"</span>,
+    <span class="st">"url_conteudo"</span>: <span class="st">"https://meusite.com"</span>
+  }
+]</div>
+
+  <h3>GESTÃO DO ESPAÇO</h3>
+  <table>
+    <tr><th>MÉTODO</th><th>ROTA</th><th>BODY</th><th>DESCRIÇÃO</th></tr>
+    <tr><td>PATCH</td><td>/api/url</td><td>carteira, url</td><td>Define a URL de conteúdo da coordenada</td></tr>
+    <tr><td>PATCH</td><td>/api/nome</td><td>carteira, nome</td><td>Atualiza o nome público do espaço</td></tr>
+    <tr><td>PATCH</td><td>/api/privacidade</td><td>carteira, publico</td><td>Alterna visibilidade (true/false)</td></tr>
+  </table>
+
+  <h3>PAGAMENTOS</h3>
+  <table>
+    <tr><th>MÉTODO</th><th>ROTA</th><th>DESCRIÇÃO</th></tr>
+    <tr><td>POST</td><td>/api/pagamento/iniciar</td><td>Gera QR code Solana Pay. Body: carteira, tipo, plano, nome</td></tr>
+    <tr><td>GET</td><td>/api/pagamento/verificar/:ref</td><td>Verifica se o pagamento foi confirmado na blockchain</td></tr>
+  </table>
+
+  <div class="code"><span class="cm"># Iniciar pagamento</span>
+curl -X POST https://cosm-production.up.railway.app/api/pagamento/iniciar \
+  -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{"carteira": "SUA_CHAVE", "tipo": "pessoa", "plano": "permanente"}'</span>
+
+<span class="cm"># Resposta</span>
+{
+  <span class="st">"referencia"</span>: <span class="st">"8xKp...base58"</span>,
+  <span class="st">"url"</span>:        <span class="st">"solana:WALLET?amount=1&reference=8xKp...&label=COSM"</span>,
+  <span class="st">"qr"</span>:         <span class="st">"data:image/png;base64,..."</span>,
+  <span class="st">"preco"</span>:      <span class="nm">1</span>
+}</div>
+</section>
+
+<!-- 05 -->
+<section id="s5">
+  <div class="sec-num">05</div>
+  <h2>SISTEMA DE EVENTOS</h2>
+
+  <p>O universo COSM captura eventos globais para controlar o voo e a câmera. Se você está construindo conteúdo para uma coordenada, precisa entender o que acontece e por que <strong>não é problema para você</strong>.</p>
+
+  <h3>EVENTOS CAPTURADOS PELO COSM</h3>
+  <table>
+    <tr><th>EVENTO</th><th>ONDE</th><th>O QUE FAZ</th></tr>
+    <tr><td>wheel</td><td>document</td><td>Controla velocidade de voo. Usa preventDefault() para bloquear scroll nativo.</td></tr>
+    <tr><td>mousedown</td><td>canvas</td><td>Inicia rotação da câmera.</td></tr>
+    <tr><td>mousemove</td><td>document</td><td>Aplica rotação enquanto arrastar.</td></tr>
+    <tr><td>keydown/keyup</td><td>document</td><td>Teclas de navegação (WASD, espaço).</td></tr>
+  </table>
+
+  <h3>POR QUE NÃO AFETA SEU CONTEÚDO</h3>
+  <p>Seu conteúdo roda dentro de um <em>iframe</em>. Iframes têm contexto de eventos completamente separado. O <em>wheel</em> que o COSM captura no <em>document</em> pai não existe dentro do seu iframe — são dois documentos distintos.</p>
+
+  <div class="box box-ok">
+    <strong>RESULTADO PRÁTICO</strong>
+    Scroll, cliques, teclado, drag — tudo funciona normalmente dentro do seu iframe.<br>
+    O COSM nem sabe o que está acontecendo lá dentro. É isolamento total.
+  </div>
+
+  <h3>QUANDO OS MODAIS ESTÃO ABERTOS</h3>
+  <p>Quando o modal de informações ou de registro está aberto, o COSM desabilita automaticamente <em>pointer-events</em> do canvas e pula o <em>preventDefault()</em> do wheel, permitindo scroll normal dentro dos painéis. Este é o mesmo mecanismo que garante scroll no seu conteúdo quando carregado em modal overlay.</p>
+
+  <div class="code"><span class="cm">// Lógica de isolamento nos eventos do COSM</span>
+<span class="kw">function</span> modalAberto() {
+  <span class="kw">return</span> infoAtivo || registroAtivo || iframeAtivo;
+}
+
+document.addEventListener(<span class="st">'wheel'</span>, e => {
+  <span class="kw">if</span> (modalAberto()) <span class="kw">return</span>; <span class="cm">// não interfere</span>
+  e.preventDefault();
+  <span class="cm">// ... controla voo</span>
+}, { passive: <span class="kw">false</span> });</div>
+</section>
+
+<!-- 06 -->
+<section id="s6">
+  <div class="sec-num">06</div>
+  <h2>PAGAMENTOS E PLANOS</h2>
+
+  <h3>DOIS TIPOS DE REGISTRO</h3>
+  <table>
+    <tr><th>TIPO</th><th>DESCRIÇÃO</th><th>ALOCAÇÃO</th></tr>
+    <tr><td>PESSOA</td><td>Coordenada individual. Criadores, uso pessoal, projetos independentes.</td><td>Espiral áurea no plano XZ</td></tr>
+    <tr><td>EMPRESA</td><td>Prefixo exclusivo no eixo X. Controla um bloco de 1 milhão de coordenadas internas.</td><td>n × 1.000.000 : 0 : 0</td></tr>
+  </table>
+
+  <h3>DOIS PLANOS</h3>
+  <table>
+    <tr><th>PLANO</th><th>PESSOA</th><th>EMPRESA</th><th>REVENDA</th><th>EXPIRAÇÃO</th></tr>
+    <tr><td>ANUAL</td><td>0.01 SOL/ano</td><td>0.1 SOL/ano</td><td>Não</td><td>1 ano — perde se não renovar</td></tr>
+    <tr><td>PERMANENTE</td><td>1 SOL</td><td>10 SOL</td><td>Sim</td><td>Nunca</td></tr>
+  </table>
+
+  <h3>SISTEMA DE ROYALTIES</h3>
+  <p>Toda revenda de coordenada permanente no marketplace COSM gera um royalty automático de <em>10%</em> para o COSM. O vendedor recebe 90%. Não há teto — quanto maior o mercado crescer, maior o valor das transações e dos royalties.</p>
+
+  <div class="code"><span class="cm"># Exemplo de revenda</span>
+Compra original:  <span class="nm">1</span> SOL  → COSM recebe 1 SOL
+Revenda para empresa: <span class="nm">500</span> SOL → vendedor recebe 450 SOL, COSM recebe 50 SOL
+Segunda revenda:  <span class="nm">2000</span> SOL → vendedor recebe 1800 SOL, COSM recebe 200 SOL</div>
+
+  <h3>SOLANA PAY — COMO FUNCIONA</h3>
+  <p>O registro usa o padrão <em>Solana Pay</em>. Ao iniciar o pagamento, o servidor gera um keypair aleatório como referência única. O QR code aponta para esse pagamento. O servidor verifica a blockchain a cada 4 segundos procurando uma transação com aquela referência.</p>
+
+  <div class="code"><span class="cm"># Formato da URL Solana Pay</span>
+solana:<span class="st">WALLET_DESTINO</span>
+  ?amount=<span class="nm">1</span>
+  &reference=<span class="st">BASE58_KEYPAIR_PUBLICO</span>
+  &label=<span class="st">COSM</span>
+  &message=<span class="st">Registro+pessoa+permanente+COSM</span></div>
+</section>
+
+<!-- 07 -->
+<section id="s7">
+  <div class="sec-num">07</div>
+  <h2>ALOCAÇÃO DE COORDENADAS</h2>
+
+  <h3>PESSOAS — ESPIRAL ÁUREA</h3>
+  <p>As coordenadas de pessoas são distribuídas em espiral áurea no plano XZ. A espiral áurea usa o ângulo irracional φ = 2.39996… rad, que garante <strong>máxima separação angular</strong> entre qualquer par de vizinhos — nenhum dois espaços ficam lado a lado.</p>
+
+  <div class="code"><span class="cm">// Alocação da n-ésima coordenada pessoa</span>
+<span class="kw">const</span> GAP   = <span class="nm">10_000_000</span>; <span class="cm">// ~10 milhões de unidades entre vizinhos</span>
+<span class="kw">const</span> theta = n * <span class="nm">2.39996322972</span>; <span class="cm">// ângulo áureo</span>
+<span class="kw">const</span> r     = GAP * Math.sqrt(n + <span class="nm">1</span>);
+
+coord_x = Math.round(r * Math.cos(theta))
+coord_z = Math.round(r * Math.sin(theta))
+coord_y = <span class="nm">0</span> <span class="cm">// todos no plano Y=0 por ora</span></div>
+
+  <p>A distância entre o espaço nº1 e o nº1.000.000 é de <em>~10 trilhões de unidades</em> (zona ANOS-LUZ). O universo nunca fica "lotado".</p>
+
+  <h3>EMPRESAS — PREFIXO EXCLUSIVO</h3>
+  <p>Empresas recebem um bloco inteiro no eixo X. A empresa nº1 recebe o prefixo <em>1.000.000:0:0</em> e pode usar qualquer coordenada de 1.000.000:0:0 até 1.999.999:999.999:999.999. A empresa nº2 recebe <em>2.000.000:0:0</em>, e assim por diante.</p>
+
+  <div class="code"><span class="cm">// Prefixo da n-ésima empresa (n começa em 0)</span>
+coord_x = (n + <span class="nm">1</span>) * <span class="nm">1_000_000</span>
+coord_y = <span class="nm">0</span>
+coord_z = <span class="nm">0</span>
+
+<span class="cm">// Empresa 0 → 1.000.000 : 0 : 0  (zona PESSOAL/SETOR)
+// Empresa 1 → 2.000.000 : 0 : 0
+// Empresa 99 → 100.000.000 : 0 : 0  (zona SETOR)</span></div>
+
+  <div class="box box-aviso">
+    <strong>COORDENADAS SÃO ÚNICAS POR CARTEIRA</strong>
+    Uma carteira Solana só pode ter uma coordenada registrada.<br>
+    Empresas que precisam de múltiplos prefixos devem usar múltiplas carteiras.
+  </div>
+</section>
+
+<!-- 08 -->
+<section id="s8">
+  <div class="sec-num">08</div>
+  <h2>COMO CONSTRUIR NO SEU ESPAÇO</h2>
+
+  <p>Você registrou uma coordenada. Agora quer colocar algo lá. O processo é simples:</p>
+
+  <h3>PASSO 1 — CRIAR SEU CONTEÚDO</h3>
+  <p>Construa qualquer site, app ou página. Pode ser:</p>
+  <div class="box">
+    <strong>OPÇÕES DE CONTEÚDO</strong>
+    ✓ Site estático (HTML/CSS/JS) hospedado no GitHub Pages, Netlify ou Vercel — grátis<br>
+    ✓ App React, Vue, Svelte, qualquer framework<br>
+    ✓ Aplicação backend completa com servidor próprio<br>
+    ✓ Até outro universo 3D feito em Three.js ou Babylon.js<br>
+    ✓ Uma loja, um portfólio, um jogo, qualquer coisa
+  </div>
+
+  <h3>PASSO 2 — VINCULAR AO COSM</h3>
+  <div class="code">curl -X PATCH https://cosm-production.up.railway.app/api/url \
+  -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{"carteira": "SUA_CHAVE_PUBLICA_SOLANA", "url": "https://seusite.com"}'</span></div>
+
+  <h3>PASSO 3 — TESTAR</h3>
+  <p>Navegue até a sua coordenada no COSM (use o campo COSM:// com suas coordenadas X:Y:Z). Quando chegar perto, o prompt <em>"ENTRAR EM SEU ESPAÇO"</em> vai aparecer. Clique e o iframe abre.</p>
+
+  <h3>PASSO 4 — COMUNICAR COM O COSM (futuro)</h3>
+  <p>Em versões futuras, o COSM SDK vai permitir que seu conteúdo dentro do iframe se comunique com o universo via <em>postMessage</em> — posicionar objetos 3D, mover a câmera, abrir outras coordenadas.</p>
+
+  <div class="code"><span class="cm">// Futuro: COSM SDK (ainda não disponível)</span>
+<span class="kw">import</span> COSM <span class="kw">from</span> <span class="st">'@cosm/sdk'</span>;
+
+COSM.onEnter(() => {
+  console.log(<span class="st">'Usuário chegou na minha coordenada'</span>);
+});
+COSM.place3DObject({ url: <span class="st">'./modelo.glb'</span>, x: <span class="nm">100</span>, y: <span class="nm">0</span>, z: <span class="nm">0</span> });</div>
+
+  <div class="box box-azul">
+    <strong>DICA PARA EMPRESAS</strong>
+    Você tem um bloco de 1 trilhão de coordenadas internas.<br>
+    Pode criar sub-rotas: <em>COSM://1000000:1:0</em> → loja, <em>COSM://1000000:2:0</em> → suporte,
+    <em>COSM://1000000:3:0</em> → escritório virtual, etc.<br>
+    Cada sub-coordenada pode ter sua própria URL de conteúdo.
+  </div>
+</section>
+
+<footer>
+  <p>
+    COSM — MANUAL TÉCNICO<br>
+    Versão 0.1 · Junho 2026<br>
+    cosm-production.up.railway.app
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

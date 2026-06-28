@@ -41,9 +41,10 @@ async function initDB() {
       criado_em  TIMESTAMPTZ DEFAULT NOW()
     )
   `);
-  await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS tipo       TEXT DEFAULT 'pessoa'`);
-  await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS plano      TEXT DEFAULT 'permanente'`);
-  await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS valido_ate TIMESTAMPTZ`);
+  await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS tipo        TEXT DEFAULT 'pessoa'`);
+  await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS plano       TEXT DEFAULT 'permanente'`);
+  await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS valido_ate  TIMESTAMPTZ`);
+  await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS url_conteudo TEXT`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS pagamentos (
@@ -170,10 +171,26 @@ app.get('/api/coordenada/:carteira', async (req, res) => {
 app.get('/api/coordenadas', async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT carteira, coord_x, coord_y, coord_z, nome
+      `SELECT carteira, coord_x, coord_y, coord_z, nome, tipo, url_conteudo
        FROM registros WHERE publico = true ORDER BY id`
     );
     res.json(rows);
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+// Definir URL de conteúdo para uma coordenada
+// Body: { carteira, url }
+app.patch('/api/url', async (req, res) => {
+  try {
+    const { carteira, url } = req.body;
+    if (!carteira) return res.status(400).json({ erro: 'carteira obrigatoria' });
+    await pool.query(
+      'UPDATE registros SET url_conteudo = $1 WHERE carteira = $2',
+      [url || null, carteira]
+    );
+    res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ erro: e.message });
   }

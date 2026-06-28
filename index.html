@@ -102,6 +102,37 @@
     background:#ffffff;opacity:0;
   }
 
+  /* ── Iframe overlay de conteúdo ── */
+  #iframe-overlay{
+    position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;
+    background:#000;opacity:0;pointer-events:none;transition:opacity 0.3s;
+  }
+  #iframe-overlay.ativo{opacity:1;pointer-events:all;}
+  #iframe-barra{
+    display:flex;align-items:center;gap:12px;padding:10px 16px;
+    background:#080810;border-bottom:1px solid rgba(255,255,255,0.08);
+    flex-shrink:0;
+  }
+  #iframe-titulo{font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.5);flex:1;}
+  #iframe-coord{font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.25);}
+  #iframe-fechar{
+    background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:5px;
+    color:rgba(255,255,255,0.45);cursor:pointer;font-family:'Courier New',monospace;
+    font-size:10px;letter-spacing:3px;padding:5px 12px;transition:all 0.2s;
+  }
+  #iframe-fechar:hover{border-color:rgba(255,100,100,0.5);color:rgba(255,100,100,0.8);}
+  #iframe-content{flex:1;border:none;width:100%;background:#000;}
+
+  /* ── Beacon (marcador de coordenada com conteúdo) ── */
+  #beacon-prompt{
+    position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+    background:rgba(0,0,0,0.75);border:1px solid rgba(100,200,255,0.3);
+    border-radius:8px;padding:10px 20px;font-size:11px;letter-spacing:3px;
+    color:rgba(100,200,255,0.8);cursor:pointer;pointer-events:all;z-index:20;
+    display:none;backdrop-filter:blur(6px);transition:all 0.2s;
+  }
+  #beacon-prompt:hover{border-color:rgba(100,200,255,0.7);color:#fff;}
+
   /* ── Botão COSM:// info ── */
   #btn-info{
     position:fixed;top:20px;left:20px;z-index:10;
@@ -183,6 +214,19 @@
 <div id="notif"></div>
 <div id="prox-overlay"></div>
 <div id="flash"></div>
+
+<!-- Iframe overlay para conteúdo de coordenadas -->
+<div id="iframe-overlay">
+  <div id="iframe-barra">
+    <div id="iframe-titulo">COSM://</div>
+    <div id="iframe-coord"></div>
+    <button id="iframe-fechar" onclick="fecharIframe()">← VOLTAR AO UNIVERSO</button>
+  </div>
+  <iframe id="iframe-content" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+</div>
+
+<!-- Beacon prompt: aparece quando perto de coordenada com conteúdo -->
+<div id="beacon-prompt" onclick="abrirConteudoBeacon()"></div>
 
 <button id="btn-info" onclick="abrirInfo()">COSM://</button>
 <button id="btn-registrar" onclick="abrirRegistro()">REGISTRAR</button>
@@ -921,6 +965,7 @@ function loop() {
   }
 
   atualizarHUD();
+  atualizarBeacons();
   renderer.render(scene, camera);
 }
 
@@ -1172,7 +1217,91 @@ window.irParaMeuEspaco = function() {
   document.getElementById('coord-input').value =
     `${minhaCoordReg.coord_x} : ${minhaCoordReg.coord_y} : ${minhaCoordReg.coord_z}`;
   irParaCoordenada();
+};
+
+// ═══════════════════════════════════════════════════════
+//  BEACONS — coordenadas públicas com conteúdo
+// ═══════════════════════════════════════════════════════
+const beacons = [];           // { mesh, cx, cy, cz, nome, url, tipo }
+let beaconAtivo = null;       // beacon mais próximo com conteúdo
+
+const beaconGeo  = new THREE.SphereGeometry(80, 12, 12);
+const beaconMats = {
+  pessoa:  new THREE.MeshBasicMaterial({ color: 0x44ccff, transparent: true, opacity: 0.55 }),
+  empresa: new THREE.MeshBasicMaterial({ color: 0xcc88ff, transparent: true, opacity: 0.55 })
+};
+
+async function carregarCoordenadas() {
+  try {
+    const resp = await fetch('/api/coordenadas');
+    const lista = await resp.json();
+    lista.forEach(reg => {
+      const mat  = beaconMats[reg.tipo] || beaconMats.pessoa;
+      const mesh = new THREE.Mesh(beaconGeo, mat.clone());
+      scene.add(mesh);
+      beacons.push({
+        mesh,
+        cx: reg.coord_x, cy: reg.coord_y, cz: reg.coord_z,
+        nome: reg.nome || reg.carteira.slice(0,8) + '...',
+        url:  reg.url_conteudo || null,
+        tipo: reg.tipo || 'pessoa'
+      });
+    });
+  } catch (_) {}
 }
+carregarCoordenadas();
+
+function atualizarBeacons() {
+  const prompt = document.getElementById('beacon-prompt');
+  let maisperto = null;
+  let distMin   = Infinity;
+
+  beacons.forEach(b => {
+    // Posição no espaço Three.js = coord_cosm - coordBase
+    b.mesh.position.set(
+      b.cx - coordBase.x,
+      b.cy - coordBase.y,
+      b.cz - coordBase.z
+    );
+    // Pulsar suavemente
+    const s = 1 + 0.12 * Math.sin(clock.getElapsedTime() * 1.8);
+    b.mesh.scale.setScalar(s);
+
+    if (b.url) {
+      const dist = camera.position.distanceTo(b.mesh.position);
+      if (dist < distMin) { distMin = dist; maisperto = b; }
+    }
+  });
+
+  // Mostrar prompt se estiver a menos de 2000 unidades de beacon com URL
+  if (maisperto && distMin < 2000 && !document.getElementById('iframe-overlay').classList.contains('ativo')) {
+    beaconAtivo = maisperto;
+    prompt.textContent = `▶  ENTRAR EM ${maisperto.nome.toUpperCase()}`;
+    prompt.style.display = 'block';
+  } else {
+    beaconAtivo = null;
+    prompt.style.display = 'none';
+  }
+}
+
+window.abrirConteudoBeacon = function() {
+  if (!beaconAtivo?.url) return;
+  const overlay = document.getElementById('iframe-overlay');
+  document.getElementById('iframe-titulo').textContent =
+    beaconAtivo.nome.toUpperCase();
+  document.getElementById('iframe-coord').textContent =
+    `COSM://${beaconAtivo.cx}:${beaconAtivo.cy}:${beaconAtivo.cz}`;
+  document.getElementById('iframe-content').src = beaconAtivo.url;
+  overlay.classList.add('ativo');
+  bloquearCanvas(true);
+};
+
+window.fecharIframe = function() {
+  const overlay  = document.getElementById('iframe-overlay');
+  overlay.classList.remove('ativo');
+  document.getElementById('iframe-content').src = '';
+  if (!modalAberto()) bloquearCanvas(false);
+};
 </script>
 </body>
 </html>
