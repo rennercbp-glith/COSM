@@ -43,6 +43,48 @@
   .painel-label{font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.22);margin-bottom:5px;}
   .painel-valor{font-size:13px;color:rgba(255,255,255,0.65);letter-spacing:1px;}
 
+  #btn-registrar{
+    position:fixed;top:20px;right:20px;z-index:10;
+    background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.12);
+    border-radius:8px;padding:8px 16px;color:rgba(255,255,255,0.5);
+    cursor:pointer;font-family:'Courier New',monospace;font-size:10px;
+    letter-spacing:3px;backdrop-filter:blur(6px);transition:all 0.2s;
+  }
+  #btn-registrar:hover{border-color:rgba(100,200,255,0.5);color:rgba(100,200,255,0.9);}
+
+  #modal-reg{
+    position:fixed;inset:0;z-index:200;display:flex;
+    align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);
+    opacity:0;pointer-events:none;transition:opacity 0.3s;
+  }
+  #modal-reg.ativo{opacity:1;pointer-events:all;}
+  #painel-reg{
+    background:#08080f;border:1px solid rgba(255,255,255,0.1);
+    border-radius:14px;padding:36px;width:360px;max-width:92vw;
+    font-family:'Courier New',monospace;
+  }
+  .reg-label{font-size:9px;letter-spacing:5px;color:rgba(255,255,255,0.25);margin-bottom:20px;}
+  .reg-input{
+    width:100%;background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.12);border-radius:6px;
+    padding:10px 12px;color:#fff;font-family:'Courier New',monospace;
+    font-size:11px;letter-spacing:1px;outline:none;box-sizing:border-box;
+  }
+  .reg-input::placeholder{color:rgba(255,255,255,0.2);}
+  .reg-hint{font-size:10px;color:rgba(255,255,255,0.25);margin-top:6px;line-height:1.6;}
+  .reg-btn{
+    background:transparent;border:1px solid rgba(255,255,255,0.18);
+    border-radius:6px;color:rgba(255,255,255,0.55);cursor:pointer;
+    font-family:'Courier New',monospace;font-size:10px;letter-spacing:3px;
+    padding:8px 16px;transition:all 0.2s;
+  }
+  .reg-btn:hover{border-color:rgba(255,255,255,0.45);color:#fff;}
+  .reg-btn-destaque{
+    border-color:rgba(100,200,255,0.35);color:rgba(100,200,255,0.8);
+  }
+  .reg-btn-destaque:hover{border-color:rgba(100,200,255,0.7);color:rgba(100,200,255,1);}
+
   #notif{
     position:fixed;top:68px;left:50%;transform:translateX(-50%);
     font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.35);
@@ -83,6 +125,52 @@
 <div id="notif"></div>
 <div id="prox-overlay"></div>
 <div id="flash"></div>
+
+<button id="btn-registrar" onclick="abrirRegistro()">REGISTRAR</button>
+
+<div id="modal-reg">
+  <div id="painel-reg">
+
+    <!-- Step 1: carteira -->
+    <div id="reg-s1">
+      <div class="reg-label">REGISTRAR COORDENADA</div>
+      <p style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:16px;">Sua carteira Solana (chave pública):</p>
+      <input id="reg-carteira" class="reg-input" type="text" placeholder="Ex: 5FHwkXz3...abc" spellcheck="false"/>
+      <p class="reg-hint">Chave pública da sua carteira Phantom, Solflare ou similar.<br>Nunca peça sua chave privada.</p>
+      <div style="display:flex;gap:10px;margin-top:24px;justify-content:flex-end;">
+        <button class="reg-btn" onclick="fecharRegistro()">CANCELAR</button>
+        <button class="reg-btn reg-btn-destaque" onclick="iniciarPagamento()">CONTINUAR →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: QR code + polling -->
+    <div id="reg-s2" style="display:none;">
+      <div class="reg-label">AGUARDANDO PAGAMENTO</div>
+      <p style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px;">Escaneie com sua carteira Solana:</p>
+      <p style="font-size:11px;color:rgba(255,255,255,0.25);margin-bottom:18px;">Valor: <span id="reg-preco" style="color:rgba(255,255,255,0.6)"></span> SOL · expira em 30 min</p>
+      <div style="text-align:center;margin:12px 0 20px;">
+        <img id="reg-qr" style="width:200px;height:200px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);"/>
+      </div>
+      <div id="reg-status" style="text-align:center;font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.3);">VERIFICANDO BLOCKCHAIN...</div>
+      <div style="text-align:center;margin-top:20px;">
+        <button class="reg-btn" onclick="fecharRegistro()">CANCELAR</button>
+      </div>
+    </div>
+
+    <!-- Step 3: confirmado -->
+    <div id="reg-s3" style="display:none;text-align:center;">
+      <div class="reg-label" style="text-align:center;">COORDENADA REGISTRADA</div>
+      <div style="font-size:11px;color:rgba(100,255,180,0.8);letter-spacing:3px;margin-bottom:16px;">✓ PAGAMENTO CONFIRMADO</div>
+      <p style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:8px;">SEU ENDEREÇO NO UNIVERSO</p>
+      <div id="reg-coord" style="font-size:15px;letter-spacing:2px;color:#fff;margin:16px 0;padding:16px;background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.1);"></div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;">
+        <button class="reg-btn" onclick="fecharRegistro()">FECHAR</button>
+        <button class="reg-btn reg-btn-destaque" onclick="irParaMeuEspaco()">IR PARA LÁ →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
@@ -585,6 +673,88 @@ function loop() {
 }
 
 loop();
+
+// ═══════════════════════════════════════════════════════
+//  REGISTRO DE COORDENADA — Solana Pay
+// ═══════════════════════════════════════════════════════
+let regReferencia   = null;
+let regPolling      = null;
+let minhaCoordReg   = null;
+
+function abrirRegistro() {
+  document.getElementById('modal-reg').classList.add('ativo');
+}
+function fecharRegistro() {
+  document.getElementById('modal-reg').classList.remove('ativo');
+  if (regPolling) { clearInterval(regPolling); regPolling = null; }
+}
+
+async function iniciarPagamento() {
+  const carteira = document.getElementById('reg-carteira').value.trim();
+  if (!carteira) return;
+
+  try {
+    const resp = await fetch('/api/pagamento/iniciar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ carteira })
+    });
+    const data = await resp.json();
+
+    if (data.erro) { alert('Erro: ' + data.erro); return; }
+
+    if (data.ja_registrado) {
+      minhaCoordReg = data.coordenada;
+      mostrarConfirmado(data.coordenada);
+      return;
+    }
+
+    regReferencia = data.referencia;
+    document.getElementById('reg-s1').style.display = 'none';
+    document.getElementById('reg-s2').style.display = 'block';
+    document.getElementById('reg-preco').textContent = data.preco;
+    document.getElementById('reg-qr').src = data.qr;
+
+    regPolling = setInterval(verificarPagamento, 4000);
+  } catch (e) {
+    alert('Erro de conexão: ' + e.message);
+  }
+}
+
+async function verificarPagamento() {
+  if (!regReferencia) return;
+  try {
+    const resp = await fetch('/api/pagamento/verificar/' + regReferencia);
+    const data = await resp.json();
+
+    if (data.status === 'confirmado') {
+      clearInterval(regPolling); regPolling = null;
+      minhaCoordReg = data.coordenada;
+      mostrarConfirmado(data.coordenada);
+    } else if (data.status === 'expirado') {
+      clearInterval(regPolling); regPolling = null;
+      const el = document.getElementById('reg-status');
+      el.textContent = 'EXPIRADO — FECHE E TENTE NOVAMENTE';
+      el.style.color = 'rgba(255,100,80,0.8)';
+    }
+  } catch (_) {}
+}
+
+function mostrarConfirmado(coord) {
+  document.getElementById('reg-s1').style.display = 'none';
+  document.getElementById('reg-s2').style.display = 'none';
+  document.getElementById('reg-s3').style.display = 'block';
+  document.getElementById('reg-coord').textContent =
+    `${coord.coord_x} : ${coord.coord_y} : ${coord.coord_z}`;
+}
+
+function irParaMeuEspaco() {
+  if (!minhaCoordReg) return;
+  fecharRegistro();
+  document.getElementById('coord-input').value =
+    `${minhaCoordReg.coord_x} : ${minhaCoordReg.coord_y} : ${minhaCoordReg.coord_z}`;
+  irParaCoordenada();
+}
 </script>
 </body>
 </html>
