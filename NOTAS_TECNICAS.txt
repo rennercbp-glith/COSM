@@ -1,6 +1,6 @@
 ===============================================================
   COSM — NOTAS TÉCNICAS (para Claude ler no futuro)
-  Última atualização: 2026-06-25 (v3)
+  Última atualização: 2026-06-28 (v5)
   Pasta: C:\Users\renne\Projetos\COSM\
   Deploy: cosm-production.up.railway.app
 ===============================================================
@@ -474,45 +474,74 @@ C:\Users\renne\Projetos\COSM\
   index.html           ← interface visual 3D (construída)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  FILOSOFIA DE SEGURANÇA DO COSM (definida pelo Renner)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+O COSM é código praticamente aberto. Qualquer pessoa pode
+construir o que quiser dentro do universo.
+
+REGRA CLARA DE RESPONSABILIDADE:
+  → Quer esconder algo para uso PRÓPRIO?
+    Já está seguro por natureza. A distância é a barreira.
+    10 milhões de unidades de espaço entre cada coordenada.
+    Navegar manualmente = horas de voo em linha reta.
+    Sem a coordenada exata, ninguém chega.
+
+  → Quer esconder algo para COMPARTILHAR com selecionados?
+    O COSM não oferece isso nativamente.
+    O usuário precisa criar sua própria camada de segurança:
+    criptografia, senha no arquivo, link com token, etc.
+    O COSM não se responsabiliza por conteúdo compartilhado
+    sem proteção adicional.
+
+FRASE RESUMO:
+  "O espaço protege o que é seu. O que você compartilha
+   é sua responsabilidade proteger."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   ONDE ESTAMOS AGORA
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Data: 2026-06-25
+Data: 2026-06-28
 
-Concluído:
-  ✓ Conceito definido e documentado
-  ✓ Arquitetura das 7 camadas documentada
-  ✓ Universo compartilhado definido (um só espaço global)
-  ✓ Sistema de visibilidade definido (visível/invisível por escolha)
-  ✓ Zonas do espaço definidas (pública / privada / premium)
-  ✓ Coordenadas premium como ativo especulável definido
-  ✓ Visão expandida: armazenamento + entretenimento + mundos (Ready Player One)
-  ✓ Identidade sem identificação: frase secreta → hash → coordenada permanente
-  ✓ Interface visual 3D construída e no ar (cosm-production.up.railway.app)
-  ✓ Janela gerenciador de arquivos (estilo PC, visual holográfico)
-  ✓ Upload de arquivos com preview (imagens em tela cheia)
-  ✓ Persistência com IndexedDB
-  ✓ Coordenada de navegação em tempo real (atualiza ao mover)
-  ✓ Posicionamento por IP (coordenada inicial por usuário)
-  ✓ Teleporte por coordenada com floating origin (sem bug de precisão)
-  ✓ Projeto no Railway com auto-deploy via GitHub (push → deploy automático)
-  ✓ Git local configurado (Claude pode fazer push direto)
+Concluído (sessões anteriores até 2026-06-25):
+  ✓ Conceito, visão e arquitetura das 7 camadas documentados
+  ✓ Interface visual 3D no ar (cosm-production.up.railway.app)
+  ✓ Universo infinito com coordenadas floating origin
+  ✓ Wormhole em 0:0:0 (estilo Interstellar) com galáxia interior
+  ✓ Campo gravitacional ao se aproximar do wormhole
+  ✓ Ejeção ao entrar no wormhole → coordenadas aleatórias do universo
+  ✓ Teleporte instantâneo com efeito de warp (sem voo físico)
+  ✓ Câmera 360° sem gimbal lock (quaternion world-Y + local-X)
+  ✓ Chega a 1800u do destino já olhando para ele
+  ✓ Auto-deploy via GitHub → Railway
 
-Concluído nesta sessão (2026-06-25, continuação):
-  ✓ Marco Zero (500:80:0) bloqueado para uploads — notificação orienta
-  ✓ Textos flutuantes 3D no Marco Zero (sprite CanvasTexture)
-  ✓ Cubo viaja (lerp) até o espaço pessoal ao confirmar identidade
-  ✓ Esfera aparece após criar identidade — flutua à frente da câmera
-  ✓ Esfera pulsa quando em casa (< 400 unidades de homeCoord3D)
-  ✓ Animação ao clicar no cubo: expande → clareia → encolhe → janela abre
-  ✓ Marco Zero detectado: janela mostra apenas documento público do COSM
-  ✓ Documento clicável com texto completo (HTML scrollável no preview)
-  ✓ Interface migrada de azul para branco (CSS + Three.js + Möbius)
+Concluído nesta sessão (2026-06-28):
+  ✓ Backend Node.js + Express adicionado ao projeto
+  ✓ PostgreSQL adicionado no Railway (DATABASE_URL conectado)
+  ✓ API de registro de coordenadas funcionando:
+      GET  /api/proxima          → preview da próxima coordenada
+      POST /api/registrar        → registra carteira → coordenada
+      GET  /api/coordenada/:cart → busca coordenada de uma carteira
+      GET  /api/coordenadas      → lista todos os espaços públicos
+      PATCH /api/privacidade     → toggle público/privado
+      PATCH /api/nome            → atualiza nome do espaço
+  ✓ Alocação em espiral áurea (ângulo 137.5°):
+      → 1º usuário: ~10M unidades do centro
+      → Cresce com √(posição) — nunca dois vizinhos na mesma direção
+      → Impossível de encontrar por acidente (horas de voo)
+  ✓ Filosofia de segurança definida (ver seção acima)
 
-Em desenvolvimento / pendente:
-  → Controles de toque para mobile (viewport corrigido, touch implementado)
-  → Frase → SHA-256 → coordenada permanente — FEITO (modal identidade)
-  → Centro do universo COSM://0:0:0 (objeto especial, zona protegida)
-  → Visibilidade de objetos (público / invisível / compartilhado)
+Pendente — próximos passos em ordem:
+  → [3] Pagamento em Solana (Solana Pay QR code)
+        integrar verificação de tx_id no /api/registrar
+  → [4] Página de boas-vindas pública explicando como funciona
+        (o que é o COSM, como registrar, o que pode construir,
+         aviso de responsabilidade de segurança)
+  → [5] Botão "Registrar Meu Espaço" no index.html
+        (conecta com a carteira, paga, recebe coordenada)
+  → [6] Markers visuais no espaço para coordenadas públicas
+        (beacons flutuando nas coordenadas registradas)
+  → [7] API pública documentada para empresas/devs
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   DECISÃO DE ARQUITETURA — COSM É AUTO-SUFICIENTE (2026-06-25)
@@ -618,8 +647,62 @@ IA PESSOAL DENTRO DA ESFERA (ideia do Renner — 2026-06-25):
   → IA gera conteúdo e salva diretamente nas coordenadas
   → Cada esfera tem uma "personalidade" diferente por usuário
 
+  VISÃO EXPANDIDA — A ESFERA COMO PORTAL DE CONTEÚDO (2026-06-25):
+  O usuário pede para a esfera pesquisar algo (ex: "pesquisa bactérias").
+  A esfera (com a IA do usuário dentro) executa e traz o resultado
+  diretamente para o espaço COSM — a caixa do Google, um documento,
+  uma imagem — aparece flutuando nas coordenadas do usuário.
+  O COSM vira a interface central de toda a vida digital da pessoa.
+  Não é um app que abre outros apps — é um espaço que absorve tudo.
+
   Implementação: campo de API key no file manager (criptografado
   localmente), toggle para ativar/desativar, chat embutido na esfera.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ESTRATÉGIA MULTI-PLATAFORMA (visão do Renner — 2026-06-25)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+O COSM não é só um site. É uma plataforma com múltiplas formas de entrar:
+
+  HOJE (Fase 1):
+    → Browser (Chrome, Firefox, Safari)
+    → Qualquer dispositivo com internet, sem instalar nada
+    → Ideal para testar, explorar, criar identidade
+
+  FUTURO PRÓXIMO (Fase 2):
+    → App nativo (Windows, Mac, Linux)
+    → Sem abrir browser — COSM já é o ambiente
+    → Melhor performance, acesso offline parcial
+    → Integração com sistema de arquivos local
+
+  FUTURO LONGO (Fase 3 — visão completa):
+    → Óculos VR (Meta Quest, Apple Vision Pro)
+    → O universo 3D é o ambiente real — não uma janela
+    → A perspectiva que parece distorcida no browser fica
+      geometricamente perfeita nos óculos (cada olho tem
+      sua câmera com perspectiva correta para o humano)
+    → Vídeos flutuando no espaço, documentos em órbita,
+      objetos com escala real — tudo faz sentido em VR
+
+DIFERENÇA BROWSER vs ÓCULOS:
+  No browser: objeto perto da borda da tela parece oval
+    → solução: manter objetos a 300+ unidades, FOV menor
+  Nos óculos: a distorção perspectiva é o comportamento
+    correto — seus olhos estão fisicamente posicionados
+    e o cérebro processa profundidade real
+  Conclusão: o que parece limitação no browser é o produto
+    ideal nos óculos. O COSM faz mais sentido em VR do que
+    em monitor — o browser é só o ponto de entrada.
+
+A ESFERA COMO INTERFACE UNIVERSAL (Renner — 2026-06-25):
+  Em qualquer plataforma (browser, app, VR), a esfera é
+  a mesma companheira. No VR ela flutua ao lado do usuário
+  fisicamente. O usuário fala com ela:
+    "pesquisa bactérias" → esfera executa, traz resultado
+    "abre meus arquivos" → file manager aparece no espaço
+    "navega para X" → universo se move até a coordenada
+  A esfera é a Siri/Alexa do universo COSM — mas vive
+  no seu espaço, com a IA que você escolheu.
 
 BLOCO DE NOTAS SIMPLES (criar nota):
   Botão "Criar nota" na sidebar do file manager abre editor de texto:
@@ -639,11 +722,22 @@ Depois:
   INFRAESTRUTURA
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Railway: rennercbp-glith's P... — plano Hobby ($5/mês)
-  Projeto atual: intuitive-vision (NexosRamo) — 1 serviço online
-  Novo projeto:  cosmic-ledger — a criar agora
+  Projeto COSM:     zealous-clarity — 2 serviços: COSM + Postgres
+  Projeto NexosRamo: intuitive-vision — 1 serviço online
 
-NexosRamo: manter no Railway (tem server.js Node.js, não pode ir para GitHub Pages)
-Cosmic Ledger: novo projeto Railway — site estático (só index.html)
+COSM no Railway:
+  → Node.js backend (server.js) serve o index.html + API REST
+  → PostgreSQL (postgres-volume) — banco persistente
+  → DATABASE_URL conectado via variável de ambiente
+  → Auto-deploy: push no GitHub → Railway redeploy automático
+  → URL: cosm-production.up.railway.app
+
+Arquivos do projeto:
+  index.html        ← universo 3D (Three.js r160)
+  server.js         ← backend Express + rotas da API
+  package.json      ← dependências Node.js (express, pg)
+  boas-vindas.html  ← documento público standalone
+  NOTAS_TECNICAS.txt← este arquivo
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   COMO O RENNER GOSTA DE TRABALHAR
