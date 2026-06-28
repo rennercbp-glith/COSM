@@ -121,8 +121,8 @@
   #modal-info.ativo{opacity:1;pointer-events:all;}
   #painel-info{
     background:#08080f;border:1px solid rgba(255,255,255,0.1);
-    border-radius:14px;padding:36px 40px;width:520px;max-width:92vw;
-    max-height:85vh;overflow-y:auto;font-family:'Courier New',monospace;
+    border-radius:14px;padding:40px 48px;width:660px;max-width:94vw;
+    max-height:88vh;overflow-y:auto;font-family:'Courier New',monospace;
     scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.1) transparent;
   }
   .info-sec{margin-bottom:28px;}
@@ -190,56 +190,102 @@
 <div id="modal-info">
   <div id="painel-info">
 
-    <div style="text-align:center;margin-bottom:28px;">
-      <div style="font-size:9px;letter-spacing:5px;color:rgba(255,255,255,0.22);margin-bottom:10px;">O QUE É</div>
-      <div style="font-size:22px;letter-spacing:12px;color:#fff;">COSM</div>
-      <div style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.3);margin-top:8px;">UM UNIVERSO DE COORDENADAS PERMANENTES</div>
+    <div style="text-align:center;margin-bottom:32px;">
+      <div style="font-size:9px;letter-spacing:5px;color:rgba(255,255,255,0.2);margin-bottom:12px;">O QUE É</div>
+      <div style="font-size:26px;letter-spacing:14px;color:#fff;">COSM</div>
+      <div style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.28);margin-top:10px;line-height:1.9;">
+        Um universo tridimensional infinito.<br>Cada ponto no espaço pertence a alguém — ou ainda a ninguém.
+      </div>
     </div>
 
     <div class="info-divisor"></div>
 
+    <!-- 01 — O QUE É -->
     <div class="info-sec">
       <div class="info-label">01 — O QUE É</div>
-      <p class="info-p">Um espaço tridimensional infinito onde cada coordenada é um endereço real e permanente no universo digital. Quem registra uma coordenada é seu dono para sempre.</p>
+      <p class="info-p">Imagine um universo 3D sem fim, com trilhões de endereços únicos. Cada endereço é uma coordenada — e você pode registrar uma para sempre. Ninguém mais terá aquele ponto no espaço.</p>
+      <p class="info-p">Não é um servidor. Não é uma pasta na nuvem. É um <em style="color:rgba(255,255,255,0.8)">lugar físico no universo digital</em> — com coordenadas reais que você pode compartilhar, visitar e construir.</p>
       <div class="info-box">
-        <strong>EXEMPLO DE ENDEREÇO</strong>
-        COSM://14.2S : 3.7S : 0m<br>
-        <span style="font-size:10px;color:rgba(255,255,255,0.25)">14 setores no eixo X · 3 setores no eixo Y</span>
+        <strong>SEU ENDEREÇO PERMANENTE</strong>
+        COSM://<span style="color:rgba(100,200,255,0.8)">14.2S</span> : <span style="color:rgba(100,255,180,0.8)">3.7S</span> : <span style="color:rgba(255,200,100,0.8)">0m</span><br>
+        <span style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:4px;display:block;">Só você sabe este endereço. Só você chega aqui.</span>
       </div>
     </div>
 
+    <!-- 02 — PARA QUEM É -->
     <div class="info-sec">
-      <div class="info-label">02 — ESCALA DE NAVEGAÇÃO</div>
+      <div class="info-label">02 — PARA QUEM É</div>
+
+      <div class="info-box" style="margin-bottom:10px;">
+        <strong>PARA QUEM QUER PRIVACIDADE</strong>
+        Guarde senhas, códigos, documentos confidenciais ou qualquer coisa que só você deve ver.
+        Sua coordenada fica a <em style="color:rgba(255,255,255,0.75)">anos-luz de distância</em> de qualquer outra pessoa no universo —
+        sem login, sem e-mail, sem conta. Chegar lá sem saber o endereço exato seria como encontrar um grão de areia no oceano.
+      </div>
+
+      <div class="info-box" style="margin-bottom:10px;">
+        <strong>PARA CRIADORES E PROFISSIONAIS</strong>
+        Publique trabalhos, portfólios, projetos e conteúdo diretamente na sua coordenada.
+        Qualquer pessoa que receber seu endereço COSM:// chega até lá de qualquer dispositivo —
+        computador, celular, óculos VR. Seu trabalho tem um <em style="color:rgba(255,255,255,0.75)">endereço permanente no universo</em>,
+        não um link que some quando o serviço fecha.
+      </div>
+
+      <div class="info-box" style="margin-bottom:10px;border-color:rgba(100,255,180,0.15);">
+        <strong style="color:rgba(100,255,180,0.8)">PARA QUEM GOSTA DE JOGOS E MUNDOS VIRTUAIS</strong>
+        Pensa no COSM como o universo onde tudo acontece. Você registra suas coordenadas e constrói
+        o que quiser lá dentro — um mundo, uma loja, uma sala de jogo, uma cidade inteira.
+        É como o <em style="color:rgba(255,255,255,0.75)">Roblox, mas sem fronteiras e sem dono</em> —
+        o endereço é seu, o conteúdo é seu, para sempre.
+      </div>
+
+      <div class="info-box" style="border-color:rgba(180,140,255,0.15);">
+        <strong style="color:rgba(180,140,255,0.8)">PARA EMPRESAS</strong>
+        Uma empresa registra um <em style="color:rgba(255,255,255,0.75)">prefixo exclusivo</em> — funciona como uma agência bancária.
+        A Nike registra <em style="color:rgba(180,140,255,0.7)">COSM://1000000:0:0</em> e constrói toda
+        sua presença digital dentro daquele bloco de um milhão de coordenadas.
+        Showroom, loja, experiência imersiva — tudo com endereço fixo no universo.
+      </div>
+    </div>
+
+    <!-- 03 — ESCALA -->
+    <div class="info-sec">
+      <div class="info-label">03 — ESCALA DO UNIVERSO</div>
       <div class="info-box">
         <strong>O PAINEL MUDA CONFORME ONDE VOCÊ ESTÁ</strong>
-        <span style="color:rgba(255,255,255,0.4)">LOCAL &nbsp;&nbsp;&nbsp;→</span> dentro de um espaço específico<br>
-        <span style="color:rgba(100,255,180,0.7)">PESSOAL →</span> seu espaço registrado<br>
-        <span style="color:rgba(100,200,255,0.7)">SETOR &nbsp;&nbsp;→</span> entre regiões do universo<br>
-        <span style="color:rgba(180,140,255,0.7)">ANOS-LUZ→</span> escala galáctica
+        <span style="color:rgba(255,255,255,0.4)">LOCAL &nbsp;&nbsp;&nbsp;→</span> <span style="color:rgba(255,255,255,0.6)">dentro de um espaço específico</span><br>
+        <span style="color:rgba(100,255,180,0.7)">PESSOAL →</span> <span style="color:rgba(255,255,255,0.6)">seu espaço registrado, a quilômetros do centro</span><br>
+        <span style="color:rgba(100,200,255,0.7)">SETOR &nbsp;&nbsp;→</span> <span style="color:rgba(255,255,255,0.6)">entre regiões do universo, escala de setores</span><br>
+        <span style="color:rgba(180,140,255,0.7)">ANOS-LUZ→</span> <span style="color:rgba(255,255,255,0.6)">escala galáctica — onde estão as empresas</span>
       </div>
     </div>
 
-    <div class="info-sec">
-      <div class="info-label">03 — TIPOS DE REGISTRO</div>
-      <div class="info-box">
-        <strong>PESSOA</strong>
-        Uma coordenada individual em espiral áurea — máxima separação dos vizinhos. Ideal para uso pessoal, criadores, projetos independentes.
-      </div>
-      <div class="info-box" style="border-color:rgba(180,140,255,0.15);">
-        <strong style="color:rgba(180,140,255,0.8)">EMPRESA</strong>
-        Um <em>prefixo exclusivo</em> no eixo X — funciona como uma agência bancária. A empresa controla todas as coordenadas internas daquele bloco. Ideal para empresas, estúdios, plataformas.
-      </div>
-    </div>
-
+    <!-- 04 — VISÃO FUTURA -->
     <div class="info-sec">
       <div class="info-label">04 — VISÃO</div>
-      <p class="info-p">O COSM não é um aplicativo. É um protocolo — como o HTTP é o protocolo da web, o COSM:// é o endereçamento do universo digital tridimensional.</p>
-      <p class="info-p">No futuro, qualquer plataforma poderá renderizar conteúdo em coordenadas COSM. Uma empresa registra <em style="color:rgba(255,255,255,0.7)">COSM://nike:0:0</em> e qualquer pessoa navega até lá de qualquer dispositivo.</p>
+      <p class="info-p" style="font-size:13px;color:rgba(255,255,255,0.65);">
+        Você já assistiu <em style="color:rgba(255,255,255,0.9)">Jogador Número Um</em>?<br>
+        O OASIS é um universo virtual onde as pessoas trabalham, jogam, criam e vivem.
+        Qualquer empresa ou pessoa pode construir qualquer coisa lá dentro — e todo mundo navega com o mesmo endereço.
+      </p>
+      <div class="info-box" style="border-color:rgba(255,200,80,0.2);margin-bottom:10px;">
+        <strong style="color:rgba(255,200,80,0.8)">O COSM É O OASIS — MAS REAL</strong>
+        Não é um jogo. É um protocolo. Como o HTTP é o protocolo da web,
+        o <em style="color:rgba(255,255,255,0.8)">COSM:// é o protocolo do universo 3D</em>.
+        Hoje você navega, você voa, você registra seu endereço.
+        No futuro, qualquer plataforma renderiza conteúdo nas coordenadas COSM —
+        browser, óculos VR, console, celular.
+      </div>
+      <p class="info-p" style="font-size:11px;color:rgba(255,255,255,0.35);font-style:italic;">
+        O universo já existe. As coordenadas estão esperando. Quem chegar primeiro, fica para sempre.
+      </p>
     </div>
 
-    <div style="text-align:center;margin-top:8px;">
-      <button class="reg-btn reg-btn-destaque" onclick="fecharInfo();abrirRegistro();">REGISTRAR MEU ESPAÇO →</button>
-      &nbsp;
+    <div class="info-divisor"></div>
+
+    <div style="text-align:center;margin-top:4px;">
+      <button class="reg-btn reg-btn-destaque" onclick="fecharInfo();abrirRegistro();" style="padding:10px 24px;font-size:11px;">REGISTRAR MEU ESPAÇO →</button>
+      &nbsp;&nbsp;
       <button class="reg-btn" onclick="fecharInfo()">FECHAR</button>
     </div>
 
