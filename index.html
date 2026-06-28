@@ -384,8 +384,10 @@ document.getElementById('coord-input').addEventListener('keydown', e => {
 });
 
 // ═══════════════════════════════════════════════════════
-//  TELETRANSPORTE
+//  TELETRANSPORTE — instantâneo com efeito de warp
 // ═══════════════════════════════════════════════════════
+let warping = false;
+
 window.irParaCoordenada = function() {
   const val    = document.getElementById('coord-input').value.trim();
   const partes = val.split(':').map(v => parseFloat(v.trim()));
@@ -395,33 +397,40 @@ window.irParaCoordenada = function() {
     setTimeout(() => inp.style.color = '', 800);
     return;
   }
+  if (warping || ejetando) return;
   const [cx, cy, cz] = partes;
 
-  // Posição do destino em Three.js (considerando coordBase atual)
-  const destinoWorld = new THREE.Vector3(
-    cx - coordBase.x,
-    cy - coordBase.y,
-    cz - coordBase.z
-  );
+  velCruz = 0; voando = false; alvoVoo = null; alvoVooRotacao = null;
+  warping = true;
 
-  // Chega a 1800 unidades do destino, vindo da direção atual da câmera
-  const direcaoChegada = camera.position.clone().sub(destinoWorld).normalize();
-  alvoVoo = destinoWorld.clone().addScaledVector(direcaoChegada, 1800);
-
-  // Orienta câmera para olhar direto para o destino ao chegar
-  const olharPara = destinoWorld.clone().sub(alvoVoo).normalize();
-  const quaternionFinal = new THREE.Quaternion();
-  const mx = new THREE.Matrix4().lookAt(alvoVoo, destinoWorld, new THREE.Vector3(0,1,0));
-  quaternionFinal.setFromRotationMatrix(mx);
-
-  // Ajusta coordBase para que alvoVoo corresponda à posição Three.js correta
-  coordBase.x = cx - destinoWorld.x;
-  coordBase.y = cy - destinoWorld.y;
-  coordBase.z = cz - destinoWorld.z;
-
-  alvoVooRotacao = quaternionFinal;
-  voando = true; velCruz = 0;
+  // Warp entrada: canvas estica e brilha
+  canvas.style.transition = 'filter 0.22s';
+  canvas.style.filter = 'blur(10px) brightness(3.5) saturate(5)';
+  flashEl.style.background = 'radial-gradient(ellipse at center, #aaddff 0%, #0011aa 55%, #000011 100%)';
+  flashEl.style.transition = 'opacity 0.20s';
+  flashEl.style.opacity = '0.92';
   notif(`SALTANDO → ${formatCoord(cx)} : ${formatCoord(cy)} : ${formatCoord(cz)}`);
+
+  setTimeout(() => {
+    // Teleporte instantâneo: reposiciona coordBase, câmera chega a 1800u do destino
+    const fwd     = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+    const chegada = fwd.clone().multiplyScalar(-1800); // 1800u oposto ao olhar
+
+    coordBase.x = cx; coordBase.y = cy; coordBase.z = cz;
+    camera.position.copy(chegada);
+
+    // Orienta câmera para o destino (Three.js origin = coordenada destino)
+    const mx = new THREE.Matrix4().lookAt(chegada, new THREE.Vector3(0,0,0), new THREE.Vector3(0,1,0));
+    camera.quaternion.setFromRotationMatrix(mx);
+
+    // Warp saída: fade suave de volta ao espaço
+    canvas.style.transition = 'filter 0.75s';
+    canvas.style.filter = '';
+    flashEl.style.transition = 'opacity 0.60s';
+    flashEl.style.opacity = '0';
+    flashEl.style.background = '#ffffff';
+    setTimeout(() => { warping = false; }, 800);
+  }, 240);
 };
 
 // ═══════════════════════════════════════════════════════
@@ -511,7 +520,7 @@ function loop() {
   anelInclinado.rotation.y  = -t * 0.055;
 
   // Proximidade ao wormhole — campo gravitacional
-  if (!ejetando) {
+  if (!ejetando && !warping) {
     const distWH = camera.position.distanceTo(wormholeGroup.position);
     const ZONA   = 1400;
     const RAIO   = 150;
