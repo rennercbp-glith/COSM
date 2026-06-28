@@ -715,6 +715,7 @@ canvas.addEventListener('mouseup', () => {
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 
 document.addEventListener('wheel', e => {
+  if (modalAberto()) return;
   e.preventDefault();
   velCruz = Math.max(-VEL_MAX, Math.min(VEL_MAX, velCruz - e.deltaY * 0.6));
 }, {passive: false});
