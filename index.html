@@ -6,7 +6,7 @@
 <title>COSM</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:#000;overflow:hidden;font-family:'Courier New',monospace;}
+  body{background:#080810;overflow:hidden;font-family:'Courier New',monospace;color:#aaccff;}
   canvas{display:block;cursor:crosshair;}
 
   /* ── DESTINO ──────────────────────────────────── */
@@ -130,9 +130,9 @@ function gerarEstrelas(qtd, raioMin, raioMax, tamanho, opacidade){
   });
   return new THREE.Points(geo,mat);
 }
-scene.add(gerarEstrelas(12000, 2e6,  80e6, 1.2, 0.8));
-scene.add(gerarEstrelas(4000,  500e3, 2e6, 1.0, 0.5));
-scene.add(gerarEstrelas(800,   50e3,  500e3, 1.5, 0.9));
+scene.add(gerarEstrelas(7000, 2e6,  80e6, 1.0, 0.55));
+scene.add(gerarEstrelas(2000, 500e3, 2e6,  0.8, 0.35));
+scene.add(gerarEstrelas(400,  50e3,  500e3, 1.2, 0.65));
 
 // ═══════════════════════════════════════════════════════
 //  COORDENADAS — floating origin
