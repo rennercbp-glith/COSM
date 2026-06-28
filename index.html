@@ -280,21 +280,13 @@ let alvoVoo     = null;
 let arrastando  = false;
 let mouseMoved  = false;
 let lastX       = 0, lastY = 0;
-let camYaw      = 0, camPitch = 0;   // ângulos da câmera em radianos
-const teclas    = {};
+const teclas = {};
 
-// Quaternion helpers — reutilizados a cada frame, sem alloc
-const _qY  = new THREE.Quaternion();
-const _qX  = new THREE.Quaternion();
-const _axY = new THREE.Vector3(0, 1, 0);
-const _axX = new THREE.Vector3(1, 0, 0);
-const _fwd = new THREE.Vector3();
-
-function aplicarRotacaoCamera() {
-  _qY.setFromAxisAngle(_axY, camYaw);
-  _qX.setFromAxisAngle(_axX, camPitch);
-  camera.quaternion.multiplyQuaternions(_qY, _qX);
-}
+// Quaternion helpers — reutilizados sem alloc por frame
+const _qRot = new THREE.Quaternion();
+const _axY  = new THREE.Vector3(0, 1, 0);
+const _axX  = new THREE.Vector3(1, 0, 0);
+const _fwd  = new THREE.Vector3();
 
 // ═══════════════════════════════════════════════════════
 //  EVENTOS DE ENTRADA
@@ -312,9 +304,12 @@ canvas.addEventListener('mousemove', e => {
   const dy = e.clientY - lastY;
   if (Math.abs(dx) + Math.abs(dy) > 2) mouseMoved = true;
   lastX = e.clientX; lastY = e.clientY;
-  camYaw   -= dx * 0.003;
-  camPitch -= dy * 0.003;
-  aplicarRotacaoCamera();
+  // Rotação no eixo LOCAL da câmera — 360° livre em qualquer direção
+  _qRot.setFromAxisAngle(_axY, -dx * 0.003);
+  camera.quaternion.multiply(_qRot);          // yaw: vira cabeça esq/dir
+  _qRot.setFromAxisAngle(_axX, -dy * 0.003);
+  camera.quaternion.multiply(_qRot);          // pitch: inclina cima/baixo
+  camera.quaternion.normalize();
 });
 
 canvas.addEventListener('mouseup', () => {
