@@ -278,8 +278,9 @@ function coordAtual() {
 // ═══════════════════════════════════════════════════════
 const VEL_MAX   = 1200;
 let velCruz     = 0;
-let voando      = false;
-let alvoVoo     = null;
+let voando          = false;
+let alvoVoo         = null;
+let alvoVooRotacao  = null;
 let arrastando  = false;
 let mouseMoved  = false;
 let lastX       = 0, lastY = 0;
@@ -351,11 +352,30 @@ window.irParaCoordenada = function() {
     return;
   }
   const [cx, cy, cz] = partes;
-  coordBase.x = cx - camera.position.x;
-  coordBase.y = cy - camera.position.y;
-  coordBase.z = cz - camera.position.z;
-  _fwd.set(0, 0, -1).applyQuaternion(camera.quaternion);
-  alvoVoo = camera.position.clone().addScaledVector(_fwd, 400);
+
+  // Posição do destino em Three.js (considerando coordBase atual)
+  const destinoWorld = new THREE.Vector3(
+    cx - coordBase.x,
+    cy - coordBase.y,
+    cz - coordBase.z
+  );
+
+  // Chega a 1800 unidades do destino, vindo da direção atual da câmera
+  const direcaoChegada = camera.position.clone().sub(destinoWorld).normalize();
+  alvoVoo = destinoWorld.clone().addScaledVector(direcaoChegada, 1800);
+
+  // Orienta câmera para olhar direto para o destino ao chegar
+  const olharPara = destinoWorld.clone().sub(alvoVoo).normalize();
+  const quaternionFinal = new THREE.Quaternion();
+  const mx = new THREE.Matrix4().lookAt(alvoVoo, destinoWorld, new THREE.Vector3(0,1,0));
+  quaternionFinal.setFromRotationMatrix(mx);
+
+  // Ajusta coordBase para que alvoVoo corresponda à posição Three.js correta
+  coordBase.x = cx - destinoWorld.x;
+  coordBase.y = cy - destinoWorld.y;
+  coordBase.z = cz - destinoWorld.z;
+
+  alvoVooRotacao = quaternionFinal;
   voando = true; velCruz = 0;
   notif(`SALTANDO → ${formatCoord(cx)} : ${formatCoord(cy)} : ${formatCoord(cz)}`);
 };
@@ -399,12 +419,16 @@ function loop() {
   if (voando && alvoVoo) {
     const dist = camera.position.distanceTo(alvoVoo);
     if (dist < 60) {
-      voando = false; alvoVoo = null;
+      voando = false; alvoVoo = null; alvoVooRotacao = null;
     } else {
       camera.position.addScaledVector(
         alvoVoo.clone().sub(camera.position).normalize(),
         Math.min(dist * 0.07, VEL_MAX)
       );
+      // Gira câmera suavemente para olhar para o destino durante o voo
+      if (alvoVooRotacao) {
+        camera.quaternion.slerp(alvoVooRotacao, 0.06);
+      }
     }
   }
 
