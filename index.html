@@ -71,7 +71,7 @@
 
 <div id="hud-bottom">
   <div class="painel">
-    <div class="painel-label">COORDENADA ATUAL</div>
+    <div class="painel-label">COSM · <span id="txt-zona" style="color:rgba(180,220,255,0.5)">LOCAL</span></div>
     <div id="txt-pos" class="painel-valor">0 : 0 : 0</div>
   </div>
   <div class="painel">
@@ -297,11 +297,18 @@ const coordBase = {x:0, y:0, z:0};
 function formatCoord(v) {
   const s = v < 0 ? '-' : '';
   const a = Math.abs(v);
-  if (a >= 1e12) return s + (a/1e12).toFixed(2) + 'T';
-  if (a >= 1e9)  return s + (a/1e9 ).toFixed(2) + 'G';
-  if (a >= 1e6)  return s + (a/1e6 ).toFixed(2) + 'M';
-  if (a >= 1e3)  return s + (a/1e3 ).toFixed(2) + 'k';
-  return s + Math.round(a);
+  if (a >= 1e9)  return s + (a/1e9).toFixed(2)  + 'A'; // Anos-luz
+  if (a >= 1e6)  return s + (a/1e6).toFixed(2)  + 'S'; // Setor
+  if (a >= 1e3)  return s + (a/1e3).toFixed(1)  + 'k'; // Pessoal
+  return s + Math.round(a) + 'm';                        // Local
+}
+
+function zonaAtual(c) {
+  const m = Math.max(Math.abs(c.x), Math.abs(c.y), Math.abs(c.z));
+  if (m >= 1e9) return { label: 'ANOS-LUZ',  cor: 'rgba(180,140,255,0.7)' };
+  if (m >= 1e6) return { label: 'SETOR',     cor: 'rgba(100,200,255,0.7)' };
+  if (m >= 1e3) return { label: 'PESSOAL',   cor: 'rgba(100,255,180,0.7)' };
+  return           { label: 'LOCAL',      cor: 'rgba(255,255,255,0.4)'  };
 }
 
 function coordAtual() {
@@ -454,8 +461,12 @@ function atualizarHUD() {
       const c = coordAtual();
       document.getElementById('txt-pos').textContent =
         `${formatCoord(c.x)} : ${formatCoord(c.y)} : ${formatCoord(c.z)}`;
+      const zona = zonaAtual(c);
+      const el = document.getElementById('txt-zona');
+      el.textContent = zona.label;
+      el.style.color  = zona.cor;
       hudTimer = null;
-    }, 80);
+    }, 150);
   }
   const v = Math.abs(Math.round(velCruz));
   document.getElementById('txt-vel').textContent =
