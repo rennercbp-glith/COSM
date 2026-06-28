@@ -132,9 +132,14 @@ function gerarEstrelas(qtd, raioMin, raioMax, tamanho, opacidade){
   });
   return new THREE.Points(geo,mat);
 }
-scene.add(gerarEstrelas(7000, 2e6,  80e6, 1.0, 0.55));
+// Distantes — fundo do universo
+scene.add(gerarEstrelas(7000, 2e6,  80e6,  1.0, 0.55));
 scene.add(gerarEstrelas(2000, 500e3, 2e6,  0.8, 0.35));
-scene.add(gerarEstrelas(400,  50e3,  500e3, 1.2, 0.65));
+// Médias — paralaxe leve
+scene.add(gerarEstrelas(1200, 20e3, 500e3, 1.1, 0.60));
+// Próximas — paralaxe visível ao navegar
+scene.add(gerarEstrelas(600,  2000, 20e3,  1.4, 0.70));
+scene.add(gerarEstrelas(150,  400,  2000,  1.8, 0.80));
 
 // ═══════════════════════════════════════════════════════
 //  WORMHOLE — COSM://0:0:0
@@ -309,10 +314,9 @@ canvas.addEventListener('mousemove',e=>{
   const dx=e.clientX-lastX, dy=e.clientY-lastY;
   if(Math.abs(dx)+Math.abs(dy)>2) mouseMoved=true;
   lastX=e.clientX; lastY=e.clientY;
-  camera.rotation.order='YXZ';
   camera.rotation.y-=dx*0.003;
   camera.rotation.x-=dy*0.003;
-  camera.rotation.x=Math.max(-Math.PI/2,Math.min(Math.PI/2,camera.rotation.x));
+  camera.rotation.x=Math.max(-Math.PI/2+0.01,Math.min(Math.PI/2-0.01,camera.rotation.x));
 });
 
 canvas.addEventListener('mouseup',()=>{
