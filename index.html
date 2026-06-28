@@ -188,8 +188,8 @@
 <button id="btn-registrar" onclick="abrirRegistro()">REGISTRAR</button>
 
 <!-- ── Modal info ── -->
-<div id="modal-info">
-  <div id="painel-info">
+<div id="modal-info" onclick="if(event.target===this)fecharInfo()">
+  <div id="painel-info" onclick="event.stopPropagation()">
 
     <div style="text-align:center;margin-bottom:32px;">
       <div style="font-size:9px;letter-spacing:5px;color:rgba(255,255,255,0.2);margin-bottom:12px;">O QUE É</div>
@@ -293,8 +293,8 @@
   </div>
 </div>
 
-<div id="modal-reg">
-  <div id="painel-reg">
+<div id="modal-reg" onclick="if(event.target===this)fecharRegistro()">
+  <div id="painel-reg" onclick="event.stopPropagation()">
 
     <!-- Step 0: tipo + plano -->
     <div id="reg-s0">
@@ -963,11 +963,21 @@ function atualizarInfoTipo() {
   atualizarResumoPreco();
 }
 
+function modalAberto() {
+  return document.getElementById('modal-info').classList.contains('ativo') ||
+         document.getElementById('modal-reg').classList.contains('ativo');
+}
+function bloquearCanvas(sim) {
+  canvas.style.pointerEvents = sim ? 'none' : 'auto';
+}
+
 window.abrirInfo = function() {
   document.getElementById('modal-info').classList.add('ativo');
+  bloquearCanvas(true);
 };
 window.fecharInfo = function() {
   document.getElementById('modal-info').classList.remove('ativo');
+  if (!modalAberto()) bloquearCanvas(false);
 };
 
 window.abrirRegistro = function() {
@@ -977,10 +987,12 @@ window.abrirRegistro = function() {
   document.getElementById('reg-s3').style.display = 'none';
   atualizarInfoTipo();
   document.getElementById('modal-reg').classList.add('ativo');
+  bloquearCanvas(true);
 };
 window.fecharRegistro = function() {
   document.getElementById('modal-reg').classList.remove('ativo');
   if (regPolling) { clearInterval(regPolling); regPolling = null; }
+  if (!modalAberto()) bloquearCanvas(false);
 };
 
 window.selecionarTipo = function(tipo) {
