@@ -521,9 +521,9 @@
       <div style="font-size:9px;letter-spacing:5px;color:rgba(80,255,180,0.35);margin-bottom:12px;">ZONA DE DEMONSTRAÇÃO</div>
       <div style="font-size:18px;letter-spacing:6px;color:#fff;margin-bottom:10px;">TESTE SEU ESPAÇO</div>
       <div style="font-size:11px;color:rgba(255,255,255,0.35);line-height:2;letter-spacing:1px;">
-        Cole qualquer URL e veja como ela fica renderizada dentro do COSM.<br>
-        Funciona como um espaço real — mas <span style="color:rgba(80,255,180,0.7)">some quando você fechar a página</span>.<br>
-        Para fixar para sempre, registre uma coordenada.
+        A zona de teste já tem um <span style="color:rgba(80,255,180,0.7)">personagem 3D animado</span> flutuando no espaço.<br>
+        Clique em VOAR para ver. Você também pode colocar qualquer site lá.<br>
+        Tudo some ao fechar — permanente só com registro.
       </div>
     </div>
 
@@ -558,9 +558,10 @@
   </div>
 </div>
 
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // ═══════════════════════════════════════════════════════
 //  RENDERER
@@ -960,6 +961,38 @@ const beaconMats = {
 };
 
 // ═══════════════════════════════════════════════════════
+//  OBJETOS 3D NATIVOS — declarações antecipadas
+// ═══════════════════════════════════════════════════════
+const COORD_TESTE  = { x: 0, y: 777777, z: 0 };
+const objetos3d    = [];  // { mesh, cx, cy, cz, mixer }
+const gltfLoader   = new GLTFLoader();
+
+function carregarObjeto3D(cx, cy, cz, url, escala = 500) {
+  gltfLoader.load(url, gltf => {
+    const obj = gltf.scene;
+    obj.scale.setScalar(escala);
+    scene.add(obj);
+    let mixer = null;
+    if (gltf.animations && gltf.animations.length > 0) {
+      mixer = new THREE.AnimationMixer(obj);
+      gltf.animations.forEach(clip => mixer.clipAction(clip).play());
+    }
+    objetos3d.push({ mesh: obj, cx, cy, cz, mixer });
+  }, undefined, err => console.warn('COSM 3D load error:', url, err));
+}
+
+function atualizarObjetos3D(dt) {
+  objetos3d.forEach(o => {
+    o.mesh.position.set(
+      o.cx - coordBase.x,
+      o.cy - coordBase.y,
+      o.cz - coordBase.z
+    );
+    if (o.mixer) o.mixer.update(dt);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
 //  LOOP PRINCIPAL
 // ═══════════════════════════════════════════════════════
 function loop() {
@@ -1068,6 +1101,7 @@ function loop() {
 
   atualizarHUD();
   atualizarBeacons();
+  atualizarObjetos3D(clock.getDelta());
   renderer.render(scene, camera);
 }
 
@@ -1118,8 +1152,6 @@ function modalAberto() {
 }
 
 // ─── Zona de Teste ───────────────────────────────────────
-const COORD_TESTE = { x: 0, y: 777777, z: 0 };
-
 window.abrirTeste = function() {
   document.getElementById('modal-teste').classList.add('ativo');
   bloquearCanvas(true);
@@ -1368,6 +1400,7 @@ async function carregarCoordenadas() {
     const resp = await fetch('/api/coordenadas');
     const lista = await resp.json();
     lista.forEach(reg => {
+      // Beacon sempre aparece (marcador de presença)
       const mat  = beaconMats[reg.tipo] || beaconMats.pessoa;
       const mesh = new THREE.Mesh(beaconGeo, mat.clone());
       scene.add(mesh);
@@ -1378,10 +1411,21 @@ async function carregarCoordenadas() {
         url:  reg.url_conteudo || null,
         tipo: reg.tipo || 'pessoa'
       });
+      // Objeto 3D nativo — se tiver url_3d, carrega no universo
+      if (reg.url_3d) {
+        carregarObjeto3D(reg.coord_x, reg.coord_y, reg.coord_z, reg.url_3d);
+      }
     });
   } catch (_) {}
 }
 carregarCoordenadas();
+
+// Demonstração: robot animado na zona de teste
+carregarObjeto3D(
+  COORD_TESTE.x, COORD_TESTE.y, COORD_TESTE.z,
+  'https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb',
+  500
+);
 
 function atualizarBeacons() {
   const prompt = document.getElementById('beacon-prompt');

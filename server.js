@@ -45,6 +45,7 @@ async function initDB() {
   await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS plano       TEXT DEFAULT 'permanente'`);
   await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS valido_ate  TIMESTAMPTZ`);
   await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS url_conteudo TEXT`);
+  await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS url_3d      TEXT`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS pagamentos (
@@ -171,7 +172,7 @@ app.get('/api/coordenada/:carteira', async (req, res) => {
 app.get('/api/coordenadas', async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT carteira, coord_x, coord_y, coord_z, nome, tipo, url_conteudo
+      `SELECT carteira, coord_x, coord_y, coord_z, nome, tipo, url_conteudo, url_3d
        FROM registros WHERE publico = true ORDER BY id`
     );
     res.json(rows);
@@ -188,6 +189,22 @@ app.patch('/api/url', async (req, res) => {
     if (!carteira) return res.status(400).json({ erro: 'carteira obrigatoria' });
     await pool.query(
       'UPDATE registros SET url_conteudo = $1 WHERE carteira = $2',
+      [url || null, carteira]
+    );
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+// Definir objeto 3D nativo (.glb) para uma coordenada
+// Body: { carteira, url }
+app.patch('/api/url3d', async (req, res) => {
+  try {
+    const { carteira, url } = req.body;
+    if (!carteira) return res.status(400).json({ erro: 'carteira obrigatoria' });
+    await pool.query(
+      'UPDATE registros SET url_3d = $1 WHERE carteira = $2',
       [url || null, carteira]
     );
     res.json({ ok: true });
