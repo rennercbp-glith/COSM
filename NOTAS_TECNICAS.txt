@@ -1,766 +1,390 @@
 ===============================================================
   COSM — NOTAS TÉCNICAS (para Claude ler no futuro)
-  Última atualização: 2026-06-28 (v5)
+  Última atualização: 2026-06-28 (v6 — estado real pós-sessão)
   Pasta: C:\Users\renne\Projetos\COSM\
   Deploy: cosm-production.up.railway.app
+  GitHub: https://github.com/rennercbp-glith/COSM.git
 ===============================================================
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  A IDEIA — CONCEITO CENTRAL
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Um sistema de armazenamento digital eterno baseado em
-coordenadas espaciais 3D num universo virtual fixo e infinito.
-
-Em vez de endereços aleatórios (como 0x4f3a... do Bitcoin),
-cada arquivo tem um endereço visual e memorável:
-  COSM://2800:120:-1600
-
-O universo é fixo — as coordenadas nunca mudam.
-O espaço é infinito — os endereços nunca acabam.
-O arquivo é eterno — distribuído em nós pelo mundo.
-
-Diferencial principal:
-  → A pessoa NAVEGA até o arquivo no espaço 3D
-  → Funciona com óculos VR (Meta Quest, Apple Vision Pro)
-  → Mais intuitivo que qualquer blockchain existente
-  → Sem nome, sem CPF, sem banco — só chave criptográfica
+INSTRUÇÃO PARA CLAUDE AO ABRIR ESTA SESSÃO:
+  1. Leia este arquivo inteiro antes de qualquer ação
+  2. Verifique o estado atual do código (index.html, server.js)
+  3. Confirme ao Renner: "Li as notas. Estou ciente do estado atual."
+  4. Não implemente nada sem o Renner pedir
+  5. Se encontrar inconsistência entre as notas e o código, relate
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  UNIVERSO COMPARTILHADO — COMO FUNCIONA
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-O universo é UM SÓ para todos os usuários do mundo.
-Como a internet — qualquer pessoa acessa o mesmo endereço.
-
-Um usuário no Brasil e um no Japão navegam no MESMO espaço.
-Se o brasileiro registrou um arquivo em 500:80:0, o japonês
-pode navegar até lá e VER o objeto flutuando.
-
-VISIBILIDADE vs ACESSO — são coisas diferentes:
-  OBJETO VISÍVEL → qualquer um vê o cubo/arquivo flutuando
-  CONTEÚDO BLOQUEADO → só abre com a chave privada do dono
-
-  É igual ao Bitcoin:
-  Qualquer um vê que existe uma carteira em 0x4f3a... com 5 BTC.
-  Mas ninguém move sem a chave privada.
-
-FRASE DE MARKETING:
-  "Seu arquivo existe no universo.
-   Qualquer um pode encontrá-lo. Só você pode abri-lo."
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  VISIBILIDADE DO OBJETO — ESCOLHA DO DONO
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-O dono escolhe se o objeto aparece no espaço ou fica invisível.
-
-  INVISÍVEL (padrão para arquivos pessoais)
-    → Objeto existe mas não flutua no espaço
-    → Só acessível por quem tem o endereço exato
-    → Ideal para contratos, documentos médicos, dados privados
-
-  VISÍVEL (padrão para pastas públicas)
-    → Objeto flutua no espaço — qualquer navegador vê
-    → Paga menos tokens COSM (incentivo)
-    → Dono ganha "reputação" no espaço
-    → Ideal para portfólios, arte, tokens, empresas
-
-  Regra: o universo fica mais rico visualmente quanto mais
-  objetos visíveis existirem — criando um incentivo natural.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  ZONAS DO ESPAÇO — POLÍTICA DE COORDENADAS
+  CONCEITO CENTRAL (nunca mudar sem alinhamento com Renner)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-ZONA PÚBLICA  (0 até 10.000 em qualquer eixo)
-  → Região central do universo, mais tráfego
-  → Objetos visíveis por padrão
-  → Mais barato em tokens COSM
-  → Para: artistas, devs, empresas que querem ser encontradas
-
-ZONA PRIVADA  (10.001 em diante)
-  → Regiões remotas do universo, menos tráfego
-  → Objetos invisíveis por padrão
-  → Custo médio em tokens COSM
-  → Para: documentos pessoais, contratos, dados médicos
-
-ZONA PREMIUM  (coordenadas "redondas" especiais)
-  Exemplos: 1000:0:0 / 0:1000:0 / 777:777:777 / 1:0:0
-  → Endereços fáceis de memorizar e compartilhar
-  → Adquiridos por leilão — quem paga mais fica com eles
-  → Alto valor especulativo (como domínios .com nos anos 90)
-  → COSM://1:0:0 pode valer muito no futuro
-
-  OPORTUNIDADE: coordenadas premium são propriedade digital
-  especulável. Quem registrar cedo paga pouco. Quem quiser
-  depois paga o preço de mercado — ou o dono vende.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  VISÃO DE PLATAFORMA — O PROTOCOLO DO UNIVERSO DIGITAL
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-A ANALOGIA MAIS IMPORTANTE:
-  Cosmic Ledger = HTTP (o protocolo de endereçamento)
-  Plataformas    = Chrome, Safari, Firefox, PS5, Quest (quem renderiza)
-
-O protocolo é do Renner. A renderização é de quem construir em cima.
-
-CAMADAS DE RENDERIZAÇÃO POR PLATAFORMA:
-  Browser (hoje)    → WebGL, HD/4K, qualquer resolução de monitor
-  Meta Quest        → VR imersivo, tempo real, 3D espacial
-  Apple Vision Pro  → Mixed reality, hologramas sobre o mundo real
-  PlayStation / Xbox→ Qualidade cinema, servidores na nuvem
-  Empresa própria   → Servidores dedicados, gráficos ilimitados
-
-COMO FUNCIONA NA PRÁTICA:
-  Ferrari registra COSM://ferrari:0:0 com uma pista de corrida.
-  → No browser:    roda em WebGL, bom e acessível
-  → No PS5:        roda com gráficos de última geração
-  → No Quest:      o jogador está DENTRO da pista em VR
-  → No celular:    versão simplificada, mesmo endereço
-
-  O endereço COSM:// é universal e pertence à Ferrari para sempre.
-  A qualidade varia pela plataforma — o endereço não muda.
-
-CONTEÚDO QUE EMPRESAS PODEM REGISTRAR EM COORDENADAS:
-  → Pistas de corrida (jogadores digitam COSM://ferrari:0:0)
-  → Arenas de batalha online
-  → Showrooms de produtos (Nike, Apple, BMW)
-  → Galerias de arte e museus virtuais
-  → Escritórios e salas de reunião
-  → Qualquer experiência 3D interativa
-
-MODELO DE NEGÓCIO — A ANALOGIA DA VISA:
-  A Visa não fabrica produtos, não tem loja física.
-  Só processa o endereço da transação. Vale bilhões.
-
-  Cosmic Ledger não renderiza jogos de PS5.
-  Só fornece o endereço COSM:// onde o jogo existe.
-  Quem quiser colocar conteúdo nesse universo precisa das coordenadas.
-
-PLATAFORMAS QUE PODEM COMPRAR OU LICENCIAR O PROTOCOLO:
-  Meta, Sony, Microsoft, Apple, Google, Amazon (AWS GameLift)
-  Cada uma renderiza o conteúdo do jeito que quiser —
-  mas o endereçamento é sempre COSM://.
-
-FREEMIUM → ENTERPRISE:
-  GRÁTIS    → navegar + objetos simples até certo limite
-  BÁSICO    → objetos maiores, texturas, scripts
-  PRO       → cenas 3D completas, interatividade
-  EMPRESA   → coordenadas premium + suporte + API dedicada
-  PLATAFORMA→ licença do protocolo COSM:// para integrar em
-               seus próprios sistemas (Meta, PlayStation, etc.)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  COMPARAÇÃO COM BITCOIN / BLOCKCHAIN COMUM
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Bitcoin usa blocos com: tempo, hash, dados, nó anterior
-Cosmic Ledger usa:      coordenada, chave pública, arquivo, assinatura
-
-Não usa timestamp — a coordenada JÁ É o identificador único.
-Não usa nome/CPF — a chave criptográfica é a identidade.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  ARQUITETURA — 7 CAMADAS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-CAMADA 1 — ESPAÇO DE COORDENADAS
-  Universo virtual fixo com inteiros de 64 bits
-  X, Y, Z: -9.223.372.036.854.775.808 até +9.223.372.036.854.775.807
-  Endereço: COSM://X:Y:Z
-  Total de endereços: praticamente infinito — nunca acaba
-
-CAMADA 2 — O BLOCO MÍNIMO
-  {
-    "coord": "2800:120:-1600",
-    "dono": "chave_publica_512bits",
-    "dados": "arquivo_binario",
-    "assinatura": "prova_criptografica",
-    "visivel": true/false
-  }
-  5 campos. Nada mais.
-
-CAMADA 3 — PASTAS E HIERARQUIA
-  Pastas são coordenadas que apontam para outras coordenadas.
-  Filhos ficam em coordenadas próximas no espaço.
-  COSM://2800:120:-1600  (pasta)
-      ├── COSM://2800:121:-1600  (documento)
-      ├── COSM://2800:122:-1600  (imagem)
-      └── COSM://2800:123:-1600  (video)
-
-CAMADA 4 — PROVA DE PROPRIEDADE
-  Chave privada: fica só com o dono, nunca sai do dispositivo
-  Chave pública: o mundo vê, prova identidade sem revelar quem é
-  Para provar que é dono: assina um desafio matemático — segundos
-  Para roubar: precisaria quebrar criptografia — bilhões de anos
-
-CAMADA 5 — REDE DE NÓS
-  Cada nó = computador com software COSM + cópia do universo
-  Quando arquivo é gravado → transmite para TODOS os nós
-  Se um nó cai → os outros continuam. Ninguém percebe.
-  Para destruir o universo → precisaria destruir TODOS os nós
-  Operadores de nó ganham tokens COSM como recompensa
-
-CAMADA 6 — INTERFACE VISUAL 3D
-  Tela preta + estrelas (espaço simples e limpo)
-  Objetos flutuam nas coordenadas registradas:
-    📁 Pasta     → cubo translúcido brilhando
-    📄 Documento → retângulo branco flutuando
-    🖼 Imagem    → quadro com preview
-    🎬 Vídeo     → portal com preview
-    💎 Token     → cristal girando
-  Digitar coordenada → voa automaticamente até lá
-  Clicar no objeto → abre o conteúdo
-  Funciona no browser, mobile e óculos VR
-
-CAMADA 7 — TOKEN COSM
-  Registrar coordenada nova  → paga X COSM
-  Renovar coordenada         → paga Y COSM por ano
-  Transferir para outro dono → paga Z COSM
-  Coordenada abandonada (sem renovação) → volta ao mercado
-  Token COSM = combustível do universo
-  Objetos visíveis pagam MENOS (incentivo ao universo rico)
-  Coordenadas premium (redondas) → leilão, alto valor
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  IDENTIDADE SEM IDENTIFICAÇÃO — PRINCÍPIO FUNDAMENTAL
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-A COORDENADA É A CHAVE. O ESPAÇO PROVA QUEM VOCÊ É.
-
-Nenhum cadastro. Nenhum CPF. Nenhuma senha. Nenhum e-mail.
-A pessoa navega até a coordenada e o acesso confirma identidade.
-
-  → Saber o endereço exato + ter a chave privada = você é o dono
-  → O local no espaço é o cofre. A chave privada é a combinação.
-  → Mais seguro do que qualquer login/senha: não tem o que hackear
-
-PROPOSTA DE VALOR CENTRAL (para o usuário final):
-  "Esconde coisas do mundo de forma mais segura
-   sem precisar se identificar em lugar nenhum.
-   O espaço é a prova. A chave é você."
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  VISÃO EXPANDIDA — ALÉM DO ARMAZENAMENTO
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-O espaço não é só para guardar arquivos.
-É uma plataforma onde qualquer coisa pode existir.
-
-  ARMAZENAMENTO   → documentos, fotos, contratos, chaves
-  ENTRETENIMENTO  → assistir filmes, séries, conteúdo
-  JOGOS           → arenas, pistas, mundos interativos
-  CRIAÇÃO         → mundos completos feitos por usuários
-  SOCIAL          → encontrar pessoas, eventos, comunidades
-
-REFERÊNCIA VISUAL E CULTURAL: "Jogador Número 1" (Ready Player One)
-  O usuário entra no espaço e pode criar qualquer experiência.
-  Diferença: no Cosmic Ledger o endereço é PERMANENTE e pertence
-  ao criador. Não tem empresa controlando. O protocolo é o dono.
-
-PROGRESSÃO NATURAL DO USUÁRIO:
-  1. Entra para guardar arquivos com segurança
-  2. Descobre que pode assistir conteúdo de outros
-  3. Cria seu próprio espaço com conteúdo
-  4. Outros visitam e interagem com o que criou
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  O QUE PODE SER GUARDADO E CRIADO
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Qualquer coisa digital:
-  - Documentos, contratos, propriedade intelectual
-  - Imagens, vídeos, músicas
-  - Bitcoin, tokens, NFTs
-  - Identidade digital
-  - Registros médicos
-  - Mundos 3D interativos
-  - Jogos e experiências
-  - Qualquer arquivo ou experiência digital
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  DIFERENCIAIS ÚNICOS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. Endereço visual e memorável — não um hash aleatório
-2. Universo navegável em 3D — qualquer pessoa entende
-3. Pronto para VR — óculos Meta Quest e Apple Vision Pro
-4. Sem intermediário — arquivo vai direto para a coordenada
-5. Anonimato real — chave criptográfica, sem nome
-6. Eterno — distribuído em nós no mundo inteiro
-7. Infinito — endereços nunca acabam
-8. Universo compartilhado — um só espaço para todos os usuários
-9. Coordenadas premium — propriedade especulável como domínios
-10. Visibilidade configurável — público ou invisível por escolha
-11. Plataforma aberta — qualquer empresa renderiza conteúdo nas coordenadas
-12. Protocolo universal — como HTTP, mas para o universo 3D
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  POSICIONAMENTO ESPACIAL — IP COMO COORDENADA
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-CONCEITO CENTRAL:
-  Cada usuário entra no universo em um ponto DIFERENTE a cada vez,
-  a não ser que faça login com seu token (chave criptográfica).
-  O IP é usado como semente matemática para gerar uma coordenada
-  única em escala de anos-luz — garantindo que usuários nunca
-  fiquem próximos por acidente e o espaço nunca fique "poluído".
-
-COMO FUNCIONA O IP → COORDENADA:
-  IPv4 tem 4 números: ex. 187.45.12.200
-  → Usar os 4 octetos como semente de um gerador de coordenadas
-  → Cada octeto gera uma dimensão em escala de anos-luz
-  → Resultado: A 187.045:45.012:12.200  (escala galáctica única)
-  → IPs diferentes = regiões do universo imensamente distantes
-  → O espaço de cada pessoa é grande o suficiente para nunca
-    colidir com o do vizinho
-
-PROBLEMA: IPs podem se repetir (DHCP, VPN, IPs compartilhados)
-SOLUÇÃO: IP + seed aleatório gerado na primeira visita (salvo em
-  IndexedDB). Mesmo IP mas seed diferente = coordenada diferente.
-  A seed é o que realmente ancora o usuário no espaço anonimamente.
-
-USUÁRIO SEM LOGIN (anônimo):
-  → Na primeira visita: IP + seed aleatório → coordenada temporária
-  → Seed salva localmente (IndexedDB) → mesma posição ao voltar
-  → Se limpar o browser: seed some, nova posição gerada
-  → Nunca tem nome, email ou identificação
-
-USUÁRIO COM LOGIN (token / chave criptográfica):
-  → Gera par de chaves: pública + privada (no dispositivo)
-  → Chave pública → hash → coordenada PERMANENTE no universo
-  → Mesma chave = mesma posição em qualquer device, sempre
-  → Chave privada nunca sai do dispositivo — é a identidade
-
-ESTRUTURA DE ESCALAS POR TIPO DE ESPAÇO:
-  Anos-luz (A)  → espaço do USUÁRIO/SESSÃO
-                   cada pessoa em uma região galáctica única
-                   ex: A 187.0:45.0:12.2
-
-  Setor (S)     → espaço de EMPRESAS / organizações
-                   regiões registradas e nomeadas
-                   ex: S 500.0:0.0:0.0 (Nike Store)
-
-  Km (k)        → espaço PESSOAL dentro da região do usuário
-                   onde ficam os arquivos, pastas, portais
-                   ex: 500:80:0 k (dentro do meu espaço)
-
-SISTEMA DE VISIBILIDADE (privacidade granular):
-  Dentro do espaço pessoal (km), o dono controla o que aparece:
-
-  VISÍVEL    → objeto flutua no espaço, qualquer visitante vê
-  INVISÍVEL  → objeto existe mas não aparece para ninguém
-  COMPARTILHADO → dono envia a coordenada exata para alguém
-
-  EXEMPLO REAL:
-    Meu amigo me envia: A 187.0:45.0:12.2
-    → Digito no COSM://, voo até lá (anos-luz de distância)
-    → Chego perto o suficiente → entro na escala km
-    → Só vejo o que ele deixou visível (ex: fotos)
-    → O resto (documentos, chaves, cripto) está invisível
-    → Não consigo abrir nada sem a chave privada dele
-
-FRASE QUE RESUME:
-  "Cada pessoa tem um universo dentro do universo.
-   Grande o suficiente para nunca encontrar ninguém por acidente.
-   Pequeno o suficiente para ser navegável por quem você convidar."
-
-DECISÃO PENDENTE (aguardando comando do Renner):
-  → Implementar geração de coordenada a partir do IP + seed local
-  → Implementar posicionamento inicial do usuário ao entrar
-  → Definir a matemática exata de IP → coordenada em anos-luz
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  IDEIAS — ESCALA DINÂMICA DE COORDENADAS (de análise Gemini)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-IDEIA FORTE — Sistema de prefixo por escala de distância:
-  Em vez de exibir números brutos (ex: 1500000:200000:0),
-  o painel comprime automaticamente conforme a distância:
-
-  Coordenada bruta       → Exibição no painel
-  0 a 999                → 500:80:0 m       (zona do arquivo)
-  1.000 a 999.999        → 1.5:0.08:0 k     (navegação local)
-  1.000.000 a 999.999.999→ 1.5:0.08:0 S     (entre setores)
-  acima de 1.000.000.000 → 1.5:0.08:0 A     (escala galáctica)
-
-  Prefixos sugeridos:
-    m = metros       (escala do arquivo, operação)
-    k = kilo         (navegação local, seu setor)
-    S = Setor/Sistema (viagem entre regiões do universo)
-    A = Anos-luz     (saltos galácticos)
-
-IDEIA FORTE — Debounce no painel de coordenadas:
-  Os números não devem ficar mudando freneticamente enquanto a
-  câmera move. Atualizar o painel a cada 100ms com arredondamento
-  de 1 casa decimal. Leitura estável, não "tremelica".
-
-IDEIA BOA — Prefixo como entrada de coordenada:
-  Usuário digita: A 1000:1000:1000
-  Sistema entende: saltar para escala de anos-luz
-  Torna a navegação entre escalas muito mais ágil
-
-DECISÃO PENDENTE (aguardando comando do Renner):
-  → Implementar escala dinâmica no painel de coordenadas
-  → Implementar debounce de 100ms na exibição
-  → Definir prefixo final (S de Setor ou outro)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  IDENTIDADE — FRASE SECRETA (decisão 2026-06-25)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-PROBLEMA RESOLVIDO:
-  Nicknames não podem ser a semente das coordenadas.
-  Se o nick é público + algoritmo é público = qualquer um
-  calcula onde você mora no COSM. Quebra a privacidade.
-
-  IP também não: IPs se repetem (DHCP, VPN, IPs compartilhados).
-  Dois usuários diferentes podem cair na mesma coordenada em
-  dias diferentes. Quem construiu ali encontra "invasor".
-
-SOLUÇÃO — FRASE SECRETA (sem Google, sem custo, sem app):
-  O usuário cria uma frase secreta qualquer.
-  Ex: "meu gato preto bebe cafe de manha"
-
-  O browser usa Web Crypto API (embutida, gratuita, nativa) para:
-    SHA-256("meu gato preto bebe cafe de manha")
-    → hash de 64 caracteres hex
-    → divide em 3 partes → X : Y : Z
-    → coordenada permanente e única no universo COSM
-
-  RESULTADO:
-    Mesma frase → sempre mesma coordenada, em qualquer device
-    Frase diferente → coordenada completamente diferente
-    Ninguém sabe sua frase → ninguém sabe sua coordenada
-    Não precisa de Google, de app, de servidor, de conta
-
-  POR QUE É SEGURO:
-    SHA-256 tem 2^256 combinações possíveis
-    Hackear por força bruta levaria bilhões de anos
-    O universo COSM tem coordenadas igualmente imensas
-    Sem login, sem senha, sem e-mail = nada para hackear
-    Hacker não sabe nem por onde começar a procurar
-
-DOIS TIPOS DE USUÁRIO:
-
-  VISITANTE (anônimo, sem frase):
-    → IP + seed local aleatório → posição temporária de visita
-    → Pode navegar, explorar, ver conteúdo público
-    → NÃO pode registrar coordenadas (sem identidade permanente)
-    → Se limpar o browser: nova posição gerada
-
-  DONO (com frase secreta):
-    → Frase → hash → coordenada PERMANENTE e única
-    → Pode registrar, construir, guardar arquivos
-    → Mesma frase = mesmo lugar em qualquer device, sempre
-    → Se perder a frase: perde o espaço (como perder chave de cofre)
-    → Recomendado: anotar a frase em papel físico guardado
-
-NICK / NOME DE EXIBIÇÃO:
-  Existe como apelido visual, NÃO conectado à coordenada.
-  O nick é público. A frase é secreta. São coisas separadas.
-  Ninguém consegue calcular sua coordenada a partir do nick.
-
-NÃO PRECISA DE:
-  → Google Authenticator (free mas exige app e setup)
-  → Token de 6 dígitos (TOTP — adiciona fricção desnecessária)
-  → Carteira crypto (Metamask — exige extensão, conhecimento)
-  → Qualquer serviço externo pago ou gratuito
-
-IMPLEMENTAÇÃO TÉCNICA:
-  Web Crypto API → SubtleCrypto.digest('SHA-256', frase)
-  → ArrayBuffer → hex string → split → parseInt → X, Y, Z
-  Tudo no browser, zero servidor, zero custo
+O COSM é um universo 3D infinito onde cada coordenada é um
+endereço real e permanente. Funciona como protocolo — como
+o HTTP é o protocolo da web, COSM:// é o endereçamento do
+universo digital tridimensional.
+
+Visão de futuro: o OASIS do filme "Jogador Número Um".
+Um universo onde qualquer pessoa ou empresa constrói o que
+quiser, com endereço próprio, permanente, sem dono central.
+
+O Renner é o fundador do protocolo. Ele fornece a infraestrutura
+de coordenadas. Usuários e empresas constroem conteúdo.
+
+FRASES-CHAVE DO PRODUTO:
+  → "Seu endereço no universo. Para sempre."
+  → "Quem chegar primeiro, fica para sempre."
+  → "O espaço protege o que é seu."
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   ARQUIVOS DO PROJETO
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 C:\Users\renne\Projetos\COSM\
-  NOTAS_TECNICAS.txt   ← este arquivo
-  index.html           ← interface visual 3D (construída)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  FILOSOFIA DE SEGURANÇA DO COSM (definida pelo Renner)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-O COSM é código praticamente aberto. Qualquer pessoa pode
-construir o que quiser dentro do universo.
-
-REGRA CLARA DE RESPONSABILIDADE:
-  → Quer esconder algo para uso PRÓPRIO?
-    Já está seguro por natureza. A distância é a barreira.
-    10 milhões de unidades de espaço entre cada coordenada.
-    Navegar manualmente = horas de voo em linha reta.
-    Sem a coordenada exata, ninguém chega.
-
-  → Quer esconder algo para COMPARTILHAR com selecionados?
-    O COSM não oferece isso nativamente.
-    O usuário precisa criar sua própria camada de segurança:
-    criptografia, senha no arquivo, link com token, etc.
-    O COSM não se responsabiliza por conteúdo compartilhado
-    sem proteção adicional.
-
-FRASE RESUMO:
-  "O espaço protege o que é seu. O que você compartilha
-   é sua responsabilidade proteger."
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  ONDE ESTAMOS AGORA
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Data: 2026-06-28
-
-Concluído (sessões anteriores até 2026-06-25):
-  ✓ Conceito, visão e arquitetura das 7 camadas documentados
-  ✓ Interface visual 3D no ar (cosm-production.up.railway.app)
-  ✓ Universo infinito com coordenadas floating origin
-  ✓ Wormhole em 0:0:0 (estilo Interstellar) com galáxia interior
-  ✓ Campo gravitacional ao se aproximar do wormhole
-  ✓ Ejeção ao entrar no wormhole → coordenadas aleatórias do universo
-  ✓ Teleporte instantâneo com efeito de warp (sem voo físico)
-  ✓ Câmera 360° sem gimbal lock (quaternion world-Y + local-X)
-  ✓ Chega a 1800u do destino já olhando para ele
-  ✓ Auto-deploy via GitHub → Railway
-
-Concluído nesta sessão (2026-06-28):
-  ✓ Backend Node.js + Express adicionado ao projeto
-  ✓ PostgreSQL adicionado no Railway (DATABASE_URL conectado)
-  ✓ API de registro de coordenadas funcionando:
-      GET  /api/proxima          → preview da próxima coordenada
-      POST /api/registrar        → registra carteira → coordenada
-      GET  /api/coordenada/:cart → busca coordenada de uma carteira
-      GET  /api/coordenadas      → lista todos os espaços públicos
-      PATCH /api/privacidade     → toggle público/privado
-      PATCH /api/nome            → atualiza nome do espaço
-  ✓ Alocação em espiral áurea (ângulo 137.5°):
-      → 1º usuário: ~10M unidades do centro
-      → Cresce com √(posição) — nunca dois vizinhos na mesma direção
-      → Impossível de encontrar por acidente (horas de voo)
-  ✓ Filosofia de segurança definida (ver seção acima)
-
-Pendente — próximos passos em ordem:
-  → [3] Pagamento em Solana (Solana Pay QR code)
-        integrar verificação de tx_id no /api/registrar
-  → [4] Página de boas-vindas pública explicando como funciona
-        (o que é o COSM, como registrar, o que pode construir,
-         aviso de responsabilidade de segurança)
-  → [5] Botão "Registrar Meu Espaço" no index.html
-        (conecta com a carteira, paga, recebe coordenada)
-  → [6] Markers visuais no espaço para coordenadas públicas
-        (beacons flutuando nas coordenadas registradas)
-  → [7] API pública documentada para empresas/devs
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  DECISÃO DE ARQUITETURA — COSM É AUTO-SUFICIENTE (2026-06-25)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-PRINCÍPIO DEFINIDO PELO RENNER:
-  O COSM não depende de serviços externos para funcionar.
-  Mensagens, broadcasts, listas de usuários — tudo trafega
-  dentro do próprio universo COSM, de coordenada para coordenada.
-  Usar Google Sheets, Gmail ou qualquer API externa contradiz
-  a visão do protocolo.
-
-POR QUE ISSO IMPORTA:
-  Se o COSM é um protocolo de endereçamento universal (como HTTP),
-  ele não pode depender de outro protocolo para existir.
-  A comunicação interna é parte do protocolo — não um add-on.
-
-FASE 1 — PROTÓTIPO ATUAL (HTML estático):
-  Sem servidor. Dados ficam no navegador de cada pessoa.
-  Comunicação entre usuários = impossível sem recurso externo.
-  Aceitável para provar o conceito visual. Não é o produto final.
-
-FASE 2 — BACKEND MÍNIMO NO RAILWAY (próximo passo):
-  Adicionar servidor Node.js simples ao mesmo projeto Railway.
-  Banco de dados leve (SQLite ou PostgreSQL free tier).
-  O que isso desbloqueia:
-    → Coordenadas de usuários cadastrados ficam no servidor COSM
-    → Renner envia mensagem → servidor entrega para cada coordenada
-    → Usuário abre esfera → mensagem já está lá (sem Google, sem email)
-    → Lista de coordenadas cadastradas visível só para o criador
-    → Tudo dentro do universo
-
-FASE 3 — REDE DISTRIBUÍDA (futuro):
-  Múltiplos nós rodando o software COSM no mundo inteiro.
-  Cada nó replica os dados. Se um cai, os outros continuam.
-  Aí o COSM é verdadeiramente independente — sem Railway, sem ninguém.
-
-DECISÃO: não implementar Google Sheets nem APIs externas.
-  Esperar o backend próprio (Fase 2) para fazer comunicação real.
-  O protótipo atual foca em visual, navegação e identidade.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  PRÓXIMA FASE — FILE MANAGER REDESENHADO + ESFERA COMO INBOX
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-(aprovado pelo Renner em 2026-06-25, aguardando implementação)
-
-CONCEITO: ESFERA = CUBO PESSOAL DO USUÁRIO
-  A esfera que aparece após criar identidade é a "casa" do usuário.
-  Clicar na esfera abre o file manager PESSOAL (não o Marco Zero).
-  O cubo wireframe em 500:80:0 continua sendo o Marco Zero público.
-
-  Fluxo completo:
-    1. Entrar → vê o Marco Zero (cubo em 500:80:0)
-    2. Clicar no Marco Zero → animação → abre doc público do COSM
-    3. Criar frase secreta → cubo viaja para coordenadas pessoais
-    4. Esfera aparece perto da câmera = inbox/casa pessoal
-    5. Clicar na esfera → abre file manager PESSOAL
-
-FILE MANAGER REDESENHADO:
-  Problema atual: texto apagado, visual azulado, difícil de ler.
-
-  Solução:
-    → Fundo sólido escuro (não translúcido)
-    → Texto branco nítido, tamanho maior
-    → Sidebar esquerda com categorias: Mensagens / Fotos / Vídeos /
-      Documentos / Notas
-    → Botões: Enviar arquivo / Criar nota (abre bloco de notas simples)
-    → Estilo: file manager real de PC, não holográfico apagado
-
-SISTEMA DE BROADCAST (Renner → todos os usuários):
-  LIMITAÇÃO ATUAL (site estático, sem backend):
-    Não há servidor para guardar mensagens e distribuir.
-    Solução temporária: Renner manda o texto ao Claude, que o coloca
-    em um array `MENSAGENS_BROADCAST` no código. Após push no Railway,
-    todos veem a mensagem ao abrir a esfera.
-
-  FUTURO (quando COSM tiver backend/banco de dados):
-    Renner cria mensagem no seu painel de criador.
-    Sistema envia para a coordenada de CADA usuário cadastrado.
-    Aparece na esfera como notificação não lida (ponto pulsante).
-    Usuário clica → lê → marca como lido (localStorage).
-    Isso exige: API REST + banco de dados + sistema de usuários.
-
-  IMPLEMENTAÇÃO TEMPORÁRIA PLANEJADA:
-    → Array `MENSAGENS_BROADCAST` no index.html com mensagens do Renner
-    → Cada mensagem tem: id, data, título, conteúdo HTML
-    → localStorage salva quais IDs já foram lidas
-    → Esfera pisca/pulsa quando há mensagem não lida
-    → Clicar na esfera: se há mensagem nova → mostra mensagem primeiro
-    → Ao ler: marca como lida, entra no file manager normal
-
-IA PESSOAL DENTRO DA ESFERA (ideia do Renner — 2026-06-25):
-  Cada usuário poderá colocar a API key da IA de sua preferência
-  dentro da própria esfera. A esfera vira um assistente pessoal
-  com a IA que o usuário escolher (OpenAI, Claude, Gemini, etc).
-  A API key fica salva localmente (nunca sai do dispositivo).
-  O usuário fala com a IA direto no seu espaço COSM — sem sair
-  do universo, sem abrir outro app.
-
-  Possibilidades futuras:
-  → IA ajuda a organizar arquivos na coordenada
-  → IA responde perguntas sobre o conteúdo do espaço
-  → IA gera conteúdo e salva diretamente nas coordenadas
-  → Cada esfera tem uma "personalidade" diferente por usuário
-
-  VISÃO EXPANDIDA — A ESFERA COMO PORTAL DE CONTEÚDO (2026-06-25):
-  O usuário pede para a esfera pesquisar algo (ex: "pesquisa bactérias").
-  A esfera (com a IA do usuário dentro) executa e traz o resultado
-  diretamente para o espaço COSM — a caixa do Google, um documento,
-  uma imagem — aparece flutuando nas coordenadas do usuário.
-  O COSM vira a interface central de toda a vida digital da pessoa.
-  Não é um app que abre outros apps — é um espaço que absorve tudo.
-
-  Implementação: campo de API key no file manager (criptografado
-  localmente), toggle para ativar/desativar, chat embutido na esfera.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  ESTRATÉGIA MULTI-PLATAFORMA (visão do Renner — 2026-06-25)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-O COSM não é só um site. É uma plataforma com múltiplas formas de entrar:
-
-  HOJE (Fase 1):
-    → Browser (Chrome, Firefox, Safari)
-    → Qualquer dispositivo com internet, sem instalar nada
-    → Ideal para testar, explorar, criar identidade
-
-  FUTURO PRÓXIMO (Fase 2):
-    → App nativo (Windows, Mac, Linux)
-    → Sem abrir browser — COSM já é o ambiente
-    → Melhor performance, acesso offline parcial
-    → Integração com sistema de arquivos local
-
-  FUTURO LONGO (Fase 3 — visão completa):
-    → Óculos VR (Meta Quest, Apple Vision Pro)
-    → O universo 3D é o ambiente real — não uma janela
-    → A perspectiva que parece distorcida no browser fica
-      geometricamente perfeita nos óculos (cada olho tem
-      sua câmera com perspectiva correta para o humano)
-    → Vídeos flutuando no espaço, documentos em órbita,
-      objetos com escala real — tudo faz sentido em VR
-
-DIFERENÇA BROWSER vs ÓCULOS:
-  No browser: objeto perto da borda da tela parece oval
-    → solução: manter objetos a 300+ unidades, FOV menor
-  Nos óculos: a distorção perspectiva é o comportamento
-    correto — seus olhos estão fisicamente posicionados
-    e o cérebro processa profundidade real
-  Conclusão: o que parece limitação no browser é o produto
-    ideal nos óculos. O COSM faz mais sentido em VR do que
-    em monitor — o browser é só o ponto de entrada.
-
-A ESFERA COMO INTERFACE UNIVERSAL (Renner — 2026-06-25):
-  Em qualquer plataforma (browser, app, VR), a esfera é
-  a mesma companheira. No VR ela flutua ao lado do usuário
-  fisicamente. O usuário fala com ela:
-    "pesquisa bactérias" → esfera executa, traz resultado
-    "abre meus arquivos" → file manager aparece no espaço
-    "navega para X" → universo se move até a coordenada
-  A esfera é a Siri/Alexa do universo COSM — mas vive
-  no seu espaço, com a IA que você escolheu.
-
-BLOCO DE NOTAS SIMPLES (criar nota):
-  Botão "Criar nota" na sidebar do file manager abre editor de texto:
-  → Textarea estilizada, fundo escuro, texto branco
-  → Título editável
-  → Botão salvar → vira arquivo .txt na pasta local (IndexedDB)
-  → Não precisa de serviço externo
-
-Depois:
-  → Protocolo backend (Node.js) para persistência real entre usuários
-  → API pública para empresas registrarem conteúdo
-  → Rede de nós distribuídos
-  → Token COSM
-  → SDK para integração com plataformas (Meta, PlayStation, etc.)
+  index.html          ← universo 3D completo (Three.js r160, sem build)
+  server.js           ← backend Express + API REST + servidor estático
+  package.json        ← dependências: express, pg, @solana/web3.js, qrcode
+  boas-vindas.html    ← manual público para usuários
+  manual-tecnico.html ← documentação técnica para devs e empresas
+  NOTAS_TECNICAS.txt  ← este arquivo
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   INFRAESTRUTURA
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Railway: rennercbp-glith's P... — plano Hobby ($5/mês)
-  Projeto COSM:     zealous-clarity — 2 serviços: COSM + Postgres
-  Projeto NexosRamo: intuitive-vision — 1 serviço online
 
-COSM no Railway:
-  → Node.js backend (server.js) serve o index.html + API REST
-  → PostgreSQL (postgres-volume) — banco persistente
-  → DATABASE_URL conectado via variável de ambiente
-  → Auto-deploy: push no GitHub → Railway redeploy automático
-  → URL: cosm-production.up.railway.app
+Railway — plano Hobby ($5/mês):
+  Projeto COSM: zealous-clarity
+    → Serviço Node.js: server.js (porta via $PORT)
+    → Serviço PostgreSQL: postgres-volume
+    → Auto-deploy: push no GitHub → Railway redeploy ~60s
+    → URL: cosm-production.up.railway.app
 
-Arquivos do projeto:
-  index.html        ← universo 3D (Three.js r160)
-  server.js         ← backend Express + rotas da API
-  package.json      ← dependências Node.js (express, pg)
-  boas-vindas.html  ← documento público standalone
-  NOTAS_TECNICAS.txt← este arquivo
+Variáveis de ambiente no Railway (OBRIGATÓRIAS):
+  DATABASE_URL          → string de conexão PostgreSQL (Railway insere)
+  WALLET_RENNER         → chave pública Solana do Renner (recebe pagamentos)
+                          Valor atual: 3vYnxHp12AV3ZUT4MiyBR33SmwEENSfDcZysaf7s4goK
+
+Variáveis opcionais (têm default no código):
+  PRECO_PESSOA_ANUAL    → 0.01 SOL/ano
+  PRECO_PESSOA_PERM     → 1 SOL (para sempre)
+  PRECO_EMPRESA_ANUAL   → 0.1 SOL/ano
+  PRECO_EMPRESA_PERM    → 10 SOL (para sempre)
+  ROYALTY_PERC          → 0.10 (10% sobre revendas)
+  SOLANA_RPC            → mainnet-beta padrão
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  COMO O RENNER GOSTA DE TRABALHAR
+  BANCO DE DADOS — TABELAS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Renner descreve → Claude implementa → Renner testa → descreve correções
-  Não programa — explicar em termos visuais e de experiência
-  Gosta de ver resultado rápido
-  Pensa grande — visão de negócio clara e original
 
-POSTURA DO CLAUDE NESTE PROJETO (obrigatório):
-  → Pensar como CTO: se colocar no lugar do Renner E do usuário final
-  → Antes de sugerir mudança que pode afetar o conceito: PERGUNTAR e EXPLICAR
-  → Nunca corrigir por conta própria algo conceitual sem alinhar antes
-  → Se detectar problema técnico que pode afetar a experiência: avisar com explicação clara
+TABELA: registros
+  id          SERIAL PRIMARY KEY
+  carteira    TEXT UNIQUE NOT NULL   ← 1 coordenada por carteira, garantido pelo DB
+  coord_x     BIGINT NOT NULL
+  coord_y     BIGINT NOT NULL
+  coord_z     BIGINT NOT NULL
+  publico     BOOLEAN DEFAULT true   ← aparece no universo ou não
+  nome        TEXT                   ← nome do espaço (opcional)
+  tipo        TEXT DEFAULT 'pessoa'  ← 'pessoa' ou 'empresa'
+  plano       TEXT DEFAULT 'perm'    ← 'anual' ou 'permanente'
+  valido_ate  TIMESTAMPTZ            ← NULL=permanente, data=anual (expira)
+  url_conteudo TEXT                  ← URL do conteúdo no iframe (opcional)
+  criado_em   TIMESTAMPTZ DEFAULT NOW()
 
-REGRA DE AUTO-ATUALIZAÇÃO (experiência do usuário):
-  → O app deve atualizar sozinho — nem o dev nem o usuário faz Ctrl+Shift+R
-  → Cada ação já deve refletir na tela imediatamente (reatividade)
-  → Estado persistido em localStorage — reload não apaga nada
-  → A cada mudança: salvar local + re-renderizar na hora
+TABELA: pagamentos
+  id          SERIAL PRIMARY KEY
+  referencia  TEXT UNIQUE NOT NULL   ← keypair público Solana como ID único
+  carteira    TEXT NOT NULL
+  tipo        TEXT DEFAULT 'pessoa'
+  plano       TEXT DEFAULT 'permanente'
+  nome        TEXT                   ← nome da empresa (quando tipo=empresa)
+  status      TEXT DEFAULT 'pendente' ← 'pendente', 'confirmado', 'expirado'
+  criado_em   TIMESTAMPTZ DEFAULT NOW()
 
-REGRA DE CÓDIGO LIMPO:
-  Ao corrigir qualquer coisa: apagar o bloco antigo e escrever
-  do zero. NUNCA colocar código novo por cima do antigo.
-  Auditar o arquivo inteiro ao iniciar uma sessão de trabalho.
+TABELA: marketplace (criada, ainda sem UI)
+  id          SERIAL PRIMARY KEY
+  registro_id INT REFERENCES registros(id)
+  vendedor    TEXT NOT NULL
+  preco_sol   NUMERIC NOT NULL
+  ativo       BOOLEAN DEFAULT true
+  criado_em   TIMESTAMPTZ DEFAULT NOW()
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  GARANTIA DE UNICIDADE DAS COORDENADAS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+COMO É GARANTIDO QUE NUNCA DUAS PESSOAS TÊM A MESMA COORD:
+
+1. CONSTRAINT DO BANCO: carteira TEXT UNIQUE — uma carteira = uma coord.
+   O banco rejeita duplicata na camada de dados, não só na aplicação.
+
+2. ALOCAÇÃO SEQUENCIAL: a coordenada é calculada com base no COUNT
+   de registros existentes. O próximo índice nunca repete porque o
+   registro anterior já foi inserido antes.
+
+3. PLANO ANUAL — coordenada nunca volta ao pool automaticamente:
+   Quando o plano anual vence (valido_ate < NOW()), o registro PERMANECE
+   no banco com status "expirado" implícito. A coordenada continua ocupada.
+   Isso é intencional: evita que a coord seja dada para outro enquanto
+   o dono pode querer renovar. Futuramente, um job de limpeza pode mover
+   coordenadas expiradas há mais de 90 dias para um "pool de renovação"
+   — mas isso ainda não existe. Por enquanto, coord anual vencida = bloqueada.
+
+4. RACE CONDITION (risco atual):
+   Se dois usuários enviarem pagamento ao mesmo tempo, ambos podem consultar
+   COUNT() antes de qualquer um inserir → mesma coordenada gerada.
+   Solução futura: SELECT FOR UPDATE ou transação serializable no PostgreSQL.
+   Por enquanto: tráfego é baixo, risco é real mas improvável.
+
+REGRA FUNDAMENTAL:
+  Uma coordenada alocada = coordenada ocupada para sempre (ou até job futuro).
+  Nunca duas coordenadas iguais para carteiras diferentes.
+  Nunca a mesma carteira recebe duas coordenadas.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SISTEMA DE COORDENADAS — TÉCNICO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FLOATING ORIGIN (anti-imprecisão):
+  Three.js usa float32. A partir de ~1M unidades, objetos tremem.
+  Solução: coordBase avança com a câmera.
+  Posição real COSM = coordBase + camera.position
+  A câmera nunca se afasta muito do zero Three.js.
+
+Para posicionar beacon em coordenada COSM (cx, cy, cz) no espaço 3D:
+  beacon.position.set(cx - coordBase.x, cy - coordBase.y, cz - coordBase.z)
+  Atualizar todo frame (coordBase muda durante o voo).
+
+ESCALA:
+  LOCAL    → 0 a 999 (metros)
+  PESSOAL  → 1k a 999k (quilômetros)
+  SETOR    → 1S a 999S (setores = milhões)
+  ANOS-LUZ → 1A+ (bilhões)
+
+WORMHOLE em 0:0:0:
+  Posicionado em -coordBase no espaço Three.js.
+  Raio de ejeção: 150 unidades.
+  Zona gravitacional: 3000 unidades.
+  Ejeção: flash → coordenadas aleatórias 50M-500M unidades.
+
+ALOCAÇÃO ESPIRAL ÁUREA (pessoas):
+  theta = n * 2.39996322972  (ângulo áureo)
+  r     = 10_000_000 * sqrt(n+1)
+  x     = round(r * cos(theta))
+  z     = round(r * sin(theta))
+  y     = 0
+
+ALOCAÇÃO EMPRESA (prefixo no eixo X):
+  Empresa n → x = (n+1) * 1_000_000, y = 0, z = 0
+  Empresa 0 → 1.000.000 : 0 : 0
+  Empresa 1 → 2.000.000 : 0 : 0
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  API REST — ENDPOINTS ATIVOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GET  /api/proxima                → preview da próxima coordenada
+GET  /api/coordenada/:carteira   → coordenada de uma carteira
+GET  /api/coordenadas            → todas as coords públicas (+ url_conteudo)
+POST /api/registrar              → registrar carteira → coord (body: carteira, tipo, plano, nome)
+PATCH /api/url                   → vincular URL de conteúdo (body: carteira, url)
+PATCH /api/nome                  → atualizar nome público (body: carteira, nome)
+PATCH /api/privacidade           → toggle público/privado (body: carteira, publico)
+POST /api/pagamento/iniciar      → gera QR Solana Pay (body: carteira, tipo, plano, nome)
+GET  /api/pagamento/verificar/:ref → verifica pagamento na blockchain
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SISTEMA DE PAGAMENTO — SOLANA PAY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Fluxo completo:
+  1. Frontend chama POST /api/pagamento/iniciar
+  2. Servidor gera Keypair.generate() → referencia (base58)
+  3. Salva pagamento no banco (status: pendente)
+  4. Gera URL Solana Pay + QR code
+  5. Frontend exibe QR, inicia polling a cada 4s
+  6. GET /api/pagamento/verificar/:ref consulta blockchain
+  7. getSignaturesForAddress(refPubkey) → se encontrou → confirmado
+  8. Servidor registra coordenada automaticamente
+  9. Frontend mostra step 3 com a coordenada
+
+STATUS ATUAL DO PAGAMENTO:
+  → Implementado e deployado
+  → NUNCA TESTADO COM SOL REAL
+  → Renner planeja fazer o primeiro teste de compra
+  → Risco: pode haver bug na verificação blockchain
+
+PLANOS E PREÇOS:
+  PESSOA ANUAL:      0.01 SOL/ano  (não pode revender, expira)
+  PESSOA PERMANENTE: 1 SOL         (pode revender, para sempre)
+  EMPRESA ANUAL:     0.1 SOL/ano   (não pode revender, expira)
+  EMPRESA PERMANENTE: 10 SOL       (pode revender, para sempre)
+
+ROYALTY DE REVENDA:
+  10% de toda revenda vai para o COSM automaticamente.
+  Tabela marketplace criada, UI não implementada ainda.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  MODAL DE REGISTRO — FLUXO DE 4 STEPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Step 0: Seleção de TIPO (PESSOA/EMPRESA) e PLANO (ANUAL/PERMANENTE)
+        Preço atualiza dinamicamente
+Step 1: Página de produto — o que você está comprando, o que pode fazer,
+        box de valorização para permanente (Meta, PlayStation, Apple),
+        box de alerta para anual (é aluguel, sem revenda)
+        Campo carteira + campo nome empresa (se empresa)
+Step 2: QR code Solana Pay + polling de blockchain a cada 4s
+Step 3: Confirmação com coordenada + info sobre plano + royalty (se perm)
+
+Botões no universo:
+  COSM://   (top left) → abre modal de informações do produto
+  REGISTRAR (top right) → abre modal de registro
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SISTEMA DE BEACONS E IFRAME
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Beacons:
+  Esferas luminosas no universo marcando coordenadas registradas.
+  Azul = pessoa, Roxo = empresa. Pulsam suavemente.
+  Posição atualizada todo frame: beacon.position = coord - coordBase.
+  Só aparecem se url_conteudo estiver preenchido.
+
+Iframe overlay:
+  Ao chegar a <2000 unidades de beacon com URL, aparece prompt.
+  Clicar abre iframe full-screen com barra de navegação.
+  Iframe sandbox: allow-scripts, allow-same-origin, allow-forms, allow-popups.
+  Canvas fica com pointer-events:none enquanto iframe aberto.
+  Botão "← VOLTAR AO UNIVERSO" fecha o iframe e retorna.
+
+ISOLAMENTO TOTAL:
+  O iframe é uma caixa separada. Events do canvas (wheel, mouse)
+  não entram no iframe. O conteúdo do usuário funciona 100% livre.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CORREÇÕES DE BUGS DESTA SESSÃO (para nunca repetir)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+BUG 1 — Scroll bloqueado nos modais:
+  Causa: document.addEventListener('wheel', e => e.preventDefault())
+  capturava TODOS os eventos, mesmo com modal aberto.
+  Fix: if (modalAberto()) return; antes do preventDefault.
+  Lembrar: sempre checar modalAberto() nos event listeners globais.
+
+BUG 2 — Fechar modal exigia reload da página:
+  Causa: canvas com pointer-events:auto capturava cliques do backdrop.
+  Fix: bloquearCanvas(true) ao abrir modal, bloquearCanvas(false) ao fechar.
+  Onclick no backdrop: if (event.target===this) fechar().
+
+BUG 3 — Universo preto, botões sem resposta:
+  Causa: const beacons = [] declarado DEPOIS de loop() ser chamado.
+  const não é hoisted. ReferenceError matava o render a cada frame.
+  Fix: mover TODAS as declarações const de beacons para ANTES do loop().
+  Regra: qualquer variável usada dentro de loop() deve ser declarada antes de loop().
+
+BUG 4 — Funções de registro não respondiam (sessão anterior):
+  Causa: funções dentro de type="module" não ficam no window.
+  onclick="minhaFuncao()" não encontrava.
+  Fix: expor todas as funções chamadas por HTML com window.minhaFuncao = function(){}.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  O QUE ESTÁ FUNCIONANDO (estado em 2026-06-28)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ Universo 3D navegável (scroll=voo, arrastar=rotação, sem gimbal lock)
+✓ Teleporte COSM://X:Y:Z instantâneo com efeito warp
+✓ Wormhole em 0:0:0 (galáxia interior GLSL, Einstein ring)
+✓ Campo gravitacional + ejeção ao entrar no wormhole
+✓ HUD com escala dinâmica (LOCAL/PESSOAL/SETOR/ANOS-LUZ)
+✓ Botão COSM:// (top left) → modal de informações completo
+✓ Botão REGISTRAR (top right) → modal 4 steps
+✓ Seleção PESSOA/EMPRESA + ANUAL/PERMANENTE com preços dinâmicos
+✓ Página de produto no Step 1 (o que compra, o que pode fazer, valorização)
+✓ Pagamento Solana Pay (implementado, não testado com SOL real)
+✓ Registro automático ao confirmar pagamento na blockchain
+✓ Beacons 3D nas coordenadas com conteúdo (azul=pessoa, roxo=empresa)
+✓ Iframe isolado para conteúdo das coordenadas
+✓ Scroll nos modais funciona (wheel handler verifica modalAberto())
+✓ Fechar modal clicando fora funciona
+✓ Backend Express + PostgreSQL no Railway
+✓ Auto-deploy via GitHub → Railway
+✓ boas-vindas.html (manual de usuário)
+✓ manual-tecnico.html (documentação para devs)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  O QUE ESTÁ PENDENTE (prioridade para próximas sessões)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRIORIDADE ALTA (antes de aceitar dinheiro de estranhos):
+
+  → TESTAR PAGAMENTO REAL
+    Renner vai comprar uma coordenada com sua própria carteira.
+    Verificar: QR aparece, pagamento detectado, coord gerada, step 3 OK.
+    Se falhar: diagnosticar e corrigir o fluxo de verificação blockchain.
+
+  → PAINEL DO USUÁRIO (após registro)
+    Hoje não existe UI para o usuário gerenciar seu espaço.
+    Precisam: ver coordenada, definir URL, mudar nome, toggle privacidade.
+    Rota PATCH /api/url existe mas não há UI para chamar.
+
+  → SEGURANÇA DA API (assinatura de carteira)
+    Hoje qualquer um que conhece a carteira alheia pode chamar
+    PATCH /api/url e mudar o conteúdo do espaço.
+    Solução: verificar assinatura Solana (o usuário assina com chave privada).
+    Sem isso, a API é pública e insegura para dados de terceiros.
+
+  → RACE CONDITION na alocação
+    Dois registros simultâneos podem pegar o mesmo COUNT() e gerar
+    mesma coordenada. Solução: SELECT FOR UPDATE ou transação serializable.
+
+PRIORIDADE MÉDIA:
+
+  → RENOVAÇÃO ANUAL
+    Não existe fluxo de renovação. Usuário com plano anual que vence
+    não tem como renovar hoje.
+    Implementar: Renner detecta (consulta DB), envia link de renovação.
+
+  → MARKETPLACE DE REVENDA
+    Tabela criada. UI não existe.
+    Usuário não consegue listar sua coordenada para venda ainda.
+
+  → COORDENADAS PREMIUM (futuro especulativo)
+    Coordenadas "redondas" (1:0:0, 1000:0:0) poderiam ter valor especial.
+    Por leilão ou preço fixo maior. Não implementado.
+
+  → NOTIFICAÇÕES DE OFERTA
+    Empresas querem comprar coordenadas de usuários.
+    Sistema de oferta: empresa faz oferta → usuário recebe notificação.
+    Não existe ainda.
+
+PRIORIDADE BAIXA (visão futura):
+
+  → SDK COSM para comunicação iframe↔universo (postMessage)
+  → Rede de nós distribuídos (sem Railway)
+  → Token COSM
+  → App nativo (Electron)
+  → Suporte a óculos VR (Meta Quest, Apple Vision Pro)
+  → IA pessoal dentro do espaço (API key do usuário)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  POSTURA DO CLAUDE NESTE PROJETO (obrigatório)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+→ Ao abrir sessão: ler estas notas, verificar estado do código, reportar.
+→ Pensar como CTO: colocar-se no lugar do Renner E do usuário final.
+→ Antes de qualquer mudança conceitual: perguntar e explicar primeiro.
+→ Nunca corrigir algo conceitual sem alinhar antes.
+→ Se detectar problema técnico que pode afetar experiência: avisar.
+→ Ao corrigir bugs: apagar o bloco antigo, escrever do zero.
+→ Nunca colocar código novo por cima do antigo sem remover o anterior.
+→ Toda variável usada no loop de animação deve ser declarada ANTES de loop().
+→ Toda função chamada por onclick HTML deve estar em window.funcao = function(){}.
+→ Canvas deve ter pointer-events:none sempre que qualquer overlay estiver ativo.
+
+COMO O RENNER TRABALHA:
+  → Descreve o que quer em linguagem visual e de experiência
+  → Não programa — nunca pedir para ele editar código
+  → Gosta de ver resultado rápido
+  → Pensa grande — visão de negócio clara e original
+  → Testa no browser e reporta o que vê
+  → Commits e pushes: sempre o Claude faz
+
 ===============================================================
