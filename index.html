@@ -255,6 +255,52 @@
     padding:10px 12px;background:rgba(255,255,255,0.02);
     border-radius:6px;border:1px solid rgba(255,255,255,0.06);min-height:48px;
   }
+
+  /* ── Aviso: anote suas coordenadas ── */
+  #aviso-coord{
+    position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(120px);
+    width:min(480px,90vw);
+    background:rgba(10,10,18,0.97);
+    border:1px solid rgba(255,200,60,0.45);
+    border-radius:12px;padding:20px 24px;z-index:9999;
+    pointer-events:all;
+    box-shadow:0 8px 40px rgba(0,0,0,0.7),0 0 0 1px rgba(255,200,60,0.12);
+    transition:transform 0.45s cubic-bezier(.22,1,.36,1),opacity 0.35s;
+    opacity:0;
+  }
+  #aviso-coord.visivel{
+    transform:translateX(-50%) translateY(0);
+    opacity:1;
+  }
+  #aviso-coord-icone{
+    font-size:22px;margin-bottom:10px;
+  }
+  #aviso-coord-titulo{
+    font-size:12px;letter-spacing:2px;color:rgba(255,200,60,0.8);
+    margin-bottom:8px;font-weight:600;
+  }
+  #aviso-coord-msg{
+    font-size:13px;color:rgba(255,255,255,0.75);line-height:1.8;margin-bottom:14px;
+  }
+  #aviso-coord-box{
+    font-family:'Space Mono',monospace;
+    font-size:14px;color:#fff;letter-spacing:1px;
+    background:rgba(255,200,60,0.07);
+    border:1px solid rgba(255,200,60,0.25);
+    border-radius:8px;padding:12px 16px;
+    text-align:center;margin-bottom:16px;
+    user-select:all;cursor:text;
+  }
+  #aviso-coord-sub{
+    font-size:11px;color:rgba(255,255,255,0.35);line-height:1.7;margin-bottom:16px;
+  }
+  #aviso-coord-fechar{
+    background:transparent;border:1px solid rgba(255,200,60,0.3);border-radius:6px;
+    color:rgba(255,200,60,0.7);cursor:pointer;
+    font-family:'Space Grotesk',sans-serif;font-size:12px;letter-spacing:1px;
+    padding:7px 16px;transition:all 0.2s;width:100%;
+  }
+  #aviso-coord-fechar:hover{border-color:rgba(255,200,60,0.7);color:rgba(255,200,60,1);}
 </style>
 </head>
 <body>
@@ -280,6 +326,16 @@
 <div id="notif"></div>
 <div id="prox-overlay"></div>
 <div id="flash"></div>
+
+<!-- ── Aviso: anote suas coordenadas ── -->
+<div id="aviso-coord">
+  <div id="aviso-coord-icone">📌</div>
+  <div id="aviso-coord-titulo">ANOTE ESTE ENDEREÇO</div>
+  <div id="aviso-coord-msg"></div>
+  <div id="aviso-coord-box"></div>
+  <div id="aviso-coord-sub"></div>
+  <button id="aviso-coord-fechar" onclick="fecharAvisoCoord()">ENTENDI — JÁ ANOTEI</button>
+</div>
 
 <!-- Iframe overlay para conteúdo de coordenadas -->
 <div id="iframe-overlay">
@@ -1433,9 +1489,14 @@ window.claimarBeta = async function() {
 window.irParaBetaCoord = function() {
   if (!betaCoordConfirmada) return;
   fecharTeste();
-  document.getElementById('coord-input').value =
-    `${betaCoordConfirmada.x} : ${betaCoordConfirmada.y} : ${betaCoordConfirmada.z}`;
+  const {x, y, z} = betaCoordConfirmada;
+  document.getElementById('coord-input').value = `${x} : ${y} : ${z}`;
   irParaCoordenada();
+  setTimeout(() => mostrarAvisoCoord(
+    'Esta coordenada beta é sua para sempre — sem custo. Mas só você sabe o endereço. Anote agora.',
+    `COSM://${x}:${y}:${z}`,
+    'sua'
+  ), 2000);
 };
 
 window.fecharTeste = function() {
@@ -1464,6 +1525,11 @@ window.renderizarTeste = function() {
     document.getElementById('iframe-teste-banner').style.display = 'block';
     document.getElementById('iframe-overlay').classList.add('ativo');
     bloquearCanvas(true);
+    mostrarAvisoCoord(
+      'Você está na zona de demonstração. Quando registrar seu próprio espaço, anote as coordenadas — elas são o único mapa num universo infinito.',
+      'COSM://0:777777:0',
+      'teste'
+    );
   }, 1600);
 };
 function bloquearCanvas(sim) {
@@ -1667,9 +1733,36 @@ function mostrarConfirmado(coord) {
 window.irParaMeuEspaco = function() {
   if (!minhaCoordReg) return;
   fecharRegistro();
-  document.getElementById('coord-input').value =
-    `${minhaCoordReg.coord_x} : ${minhaCoordReg.coord_y} : ${minhaCoordReg.coord_z}`;
+  const cx = minhaCoordReg.coord_x, cy = minhaCoordReg.coord_y, cz = minhaCoordReg.coord_z;
+  document.getElementById('coord-input').value = `${cx} : ${cy} : ${cz}`;
   irParaCoordenada();
+  setTimeout(() => mostrarAvisoCoord(
+    'Você acaba de registrar este endereço no universo. Sem ele, ninguém — nem você — encontra este lugar de novo.',
+    `COSM://${cx}:${cy}:${cz}`,
+    'sua'
+  ), 2000);
+};
+
+// ═══════════════════════════════════════════════════════
+//  AVISO: ANOTE SUAS COORDENADAS
+// ═══════════════════════════════════════════════════════
+let avisoCoordTimeout = null;
+
+function mostrarAvisoCoord(msg, coordStr, tipo) {
+  const el = document.getElementById('aviso-coord');
+  document.getElementById('aviso-coord-msg').textContent = msg;
+  document.getElementById('aviso-coord-box').textContent = coordStr;
+  document.getElementById('aviso-coord-sub').textContent =
+    tipo === 'sua'
+      ? 'Copie, fotografe, anote no papel. O universo COSM é infinito — coordenadas são o único mapa.'
+      : 'Esta é a zona de demonstração. Quando registrar seu espaço, anote as coordenadas do mesmo jeito.';
+  el.classList.add('visivel');
+  clearTimeout(avisoCoordTimeout);
+}
+
+window.fecharAvisoCoord = function() {
+  const el = document.getElementById('aviso-coord');
+  el.classList.remove('visivel');
 };
 
 // ═══════════════════════════════════════════════════════
