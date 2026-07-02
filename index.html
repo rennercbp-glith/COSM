@@ -4,9 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>COSM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:#080810;overflow:hidden;font-family:'Courier New',monospace;color:#aaccff;}
+  body{background:#080810;overflow:hidden;font-family:'Space Grotesk',sans-serif;color:#aaccff;}
+  code,#coord-input,#coord-label,#txt-pos,#txt-vel,.painel-valor,
+  .dev-tipo-code,#iframe-coord,#iframe-titulo,#iframe-fechar,
+  #btn-ir,#btn-info,#btn-testar,#btn-registrar,
+  #beacon-prompt,#notif,#iframe-teste-banner{
+    font-family:'Space Mono',monospace;
+  }
   canvas{display:block;cursor:crosshair;}
 
   #barra-destino{
@@ -19,14 +27,14 @@
   #coord-label{font-size:10px;letter-spacing:4px;color:rgba(255,255,255,0.25);}
   #coord-input{
     background:transparent;border:none;outline:none;
-    color:rgba(255,255,255,0.75);font-family:'Courier New',monospace;
+    color:rgba(255,255,255,0.75);font-family:'Space Grotesk',sans-serif;
     font-size:13px;letter-spacing:2px;width:170px;
   }
   #coord-input::placeholder{color:rgba(255,255,255,0.18);}
   #btn-ir{
     background:transparent;border:1px solid rgba(255,255,255,0.18);
     border-radius:5px;color:rgba(255,255,255,0.5);cursor:pointer;
-    font-family:'Courier New',monospace;font-size:10px;
+    font-family:'Space Grotesk',sans-serif;font-size:10px;
     letter-spacing:3px;padding:4px 12px;transition:all 0.2s;
   }
   #btn-ir:hover{border-color:rgba(255,255,255,0.45);color:#fff;}
@@ -47,7 +55,7 @@
     position:fixed;top:20px;right:20px;z-index:10;
     background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.12);
     border-radius:8px;padding:8px 16px;color:rgba(255,255,255,0.5);
-    cursor:pointer;font-family:'Courier New',monospace;font-size:10px;
+    cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:10px;
     letter-spacing:3px;backdrop-filter:blur(6px);transition:all 0.2s;
   }
   #btn-registrar:hover{border-color:rgba(100,200,255,0.5);color:rgba(100,200,255,0.9);}
@@ -62,14 +70,14 @@
   #painel-reg{
     background:#08080f;border:1px solid rgba(255,255,255,0.1);
     border-radius:14px;padding:36px;width:460px;max-width:94vw;
-    max-height:90vh;overflow-y:auto;font-family:'Courier New',monospace;
+    max-height:90vh;overflow-y:auto;font-family:'Space Grotesk',sans-serif;
     scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.08) transparent;
   }
   .reg-label{font-size:9px;letter-spacing:5px;color:rgba(255,255,255,0.25);margin-bottom:20px;}
   .reg-input{
     width:100%;background:rgba(255,255,255,0.05);
     border:1px solid rgba(255,255,255,0.12);border-radius:6px;
-    padding:10px 12px;color:#fff;font-family:'Courier New',monospace;
+    padding:10px 12px;color:#fff;font-family:'Space Grotesk',sans-serif;
     font-size:11px;letter-spacing:1px;outline:none;box-sizing:border-box;
   }
   .reg-input::placeholder{color:rgba(255,255,255,0.2);}
@@ -77,7 +85,7 @@
   .reg-btn{
     background:transparent;border:1px solid rgba(255,255,255,0.18);
     border-radius:6px;color:rgba(255,255,255,0.55);cursor:pointer;
-    font-family:'Courier New',monospace;font-size:10px;letter-spacing:3px;
+    font-family:'Space Grotesk',sans-serif;font-size:10px;letter-spacing:3px;
     padding:8px 16px;transition:all 0.2s;
   }
   .reg-btn:hover{border-color:rgba(255,255,255,0.45);color:#fff;}
@@ -117,7 +125,7 @@
   #iframe-coord{font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.25);}
   #iframe-fechar{
     background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:5px;
-    color:rgba(255,255,255,0.45);cursor:pointer;font-family:'Courier New',monospace;
+    color:rgba(255,255,255,0.45);cursor:pointer;font-family:'Space Grotesk',sans-serif;
     font-size:10px;letter-spacing:3px;padding:5px 12px;transition:all 0.2s;
   }
   #iframe-fechar:hover{border-color:rgba(255,100,100,0.5);color:rgba(255,100,100,0.8);}
@@ -138,7 +146,7 @@
     position:fixed;top:20px;right:140px;z-index:10;
     background:rgba(0,0,0,0.55);border:1px solid rgba(80,255,180,0.2);
     border-radius:8px;padding:8px 16px;color:rgba(80,255,180,0.55);
-    cursor:pointer;font-family:'Courier New',monospace;font-size:10px;
+    cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:10px;
     letter-spacing:3px;backdrop-filter:blur(6px);transition:all 0.2s;
   }
   #btn-testar:hover{border-color:rgba(80,255,180,0.55);color:rgba(80,255,180,0.95);}
@@ -154,7 +162,7 @@
   #painel-teste{
     background:#08080f;border:1px solid rgba(80,255,180,0.1);
     border-radius:14px;padding:40px 48px;width:720px;max-width:96vw;
-    max-height:92vh;overflow-y:auto;font-family:'Courier New',monospace;
+    max-height:92vh;overflow-y:auto;font-family:'Space Grotesk',sans-serif;
     scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.08) transparent;
   }
   .dev-tipo{
@@ -196,7 +204,7 @@
     position:fixed;top:20px;left:20px;z-index:10;
     background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.12);
     border-radius:8px;padding:8px 16px;color:rgba(255,255,255,0.5);
-    cursor:pointer;font-family:'Courier New',monospace;font-size:10px;
+    cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:10px;
     letter-spacing:3px;backdrop-filter:blur(6px);transition:all 0.2s;
   }
   #btn-info:hover{border-color:rgba(180,140,255,0.5);color:rgba(180,140,255,0.9);}
@@ -212,7 +220,7 @@
   #painel-info{
     background:#08080f;border:1px solid rgba(255,255,255,0.1);
     border-radius:14px;padding:40px 48px;width:660px;max-width:94vw;
-    max-height:88vh;overflow-y:auto;font-family:'Courier New',monospace;
+    max-height:88vh;overflow-y:auto;font-family:'Space Grotesk',sans-serif;
     scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.1) transparent;
   }
   .info-sec{margin-bottom:28px;}
@@ -232,7 +240,7 @@
   .reg-tipo-btn{
     flex:1;background:rgba(255,255,255,0.03);
     border:1px solid rgba(255,255,255,0.12);border-radius:8px;
-    padding:16px 10px;cursor:pointer;font-family:'Courier New',monospace;
+    padding:16px 10px;cursor:pointer;font-family:'Space Grotesk',sans-serif;
     color:rgba(255,255,255,0.35);font-size:11px;letter-spacing:3px;
     transition:all 0.2s;text-align:center;
   }
@@ -398,9 +406,9 @@
 
     <div style="text-align:center;">
       <div style="font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.18);margin-bottom:8px;">CONTATO</div>
-      <a href="mailto:setmovie@hotmail.com" style="font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:2px;text-decoration:none;transition:color 0.2s;"
+      <a href="mailto:rennercbp@gmail.com" style="font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:2px;text-decoration:none;transition:color 0.2s;"
         onmouseover="this.style.color='rgba(180,140,255,0.8)'" onmouseout="this.style.color='rgba(255,255,255,0.35)'">
-        setmovie@hotmail.com
+        rennercbp@gmail.com
       </a>
       <div style="font-size:10px;color:rgba(255,255,255,0.18);margin-top:6px;letter-spacing:1px;">Dúvidas, sugestões ou parcerias</div>
     </div>

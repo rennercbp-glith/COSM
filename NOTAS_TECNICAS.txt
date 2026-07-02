@@ -1,390 +1,255 @@
 ===============================================================
   COSM — NOTAS TÉCNICAS (para Claude ler no futuro)
-  Última atualização: 2026-06-28 (v6 — estado real pós-sessão)
+  Última atualização: 2026-07-02 (v7 — sessão completa)
   Pasta: C:\Users\renne\Projetos\COSM\
   Deploy: cosm-production.up.railway.app
   GitHub: https://github.com/rennercbp-glith/COSM.git
+  Email de contato: rennercbp@gmail.com
 ===============================================================
 
 INSTRUÇÃO PARA CLAUDE AO ABRIR ESTA SESSÃO:
-  1. Leia este arquivo inteiro antes de qualquer ação
-  2. Verifique o estado atual do código (index.html, server.js)
-  3. Confirme ao Renner: "Li as notas. Estou ciente do estado atual."
-  4. Não implemente nada sem o Renner pedir
-  5. Se encontrar inconsistência entre as notas e o código, relate
+  1. Leia este arquivo inteiro
+  2. Leia o código atual (index.html + server.js) — não confie só na memória
+  3. Para cada coisa nova que for adicionar: pergunte se pode ter versão 3D nativa
+  4. Confirme ao Renner: "Li as notas e o código. Estado atual: [resumo]."
+  5. Nunca implemente nada sem o Renner pedir
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  CONCEITO CENTRAL (nunca mudar sem alinhamento com Renner)
+  VISÃO — NUNCA MUDAR SEM ALINHAMENTO
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-O COSM é um universo 3D infinito onde cada coordenada é um
-endereço real e permanente. Funciona como protocolo — como
-o HTTP é o protocolo da web, COSM:// é o endereçamento do
-universo digital tridimensional.
+O COSM é o OASIS do Jogador Número Um — mas real, no navegador.
+Não é uma tela. Não é um iframe. É um universo onde você ESTÁ.
 
-Visão de futuro: o OASIS do filme "Jogador Número Um".
-Um universo onde qualquer pessoa ou empresa constrói o que
-quiser, com endereço próprio, permanente, sem dono central.
+Quando a PlayStation registra COSM://1000000:0:0, quem voa até lá
+vê a cidade ao redor da câmera. Sem botão entrar. Sem moldura.
+Igual o cassino-planeta do filme — você simplesmente chega lá.
 
-O Renner é o fundador do protocolo. Ele fornece a infraestrutura
-de coordenadas. Usuários e empresas constroem conteúdo.
-
-FRASES-CHAVE DO PRODUTO:
-  → "Seu endereço no universo. Para sempre."
-  → "Quem chegar primeiro, fica para sempre."
-  → "O espaço protege o que é seu."
+O protocolo COSM:// é para o universo digital o que HTTP:// é para a web.
+Endereço fixo. Permanente. Sem dono central. Seguro pela blockchain.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   ARQUIVOS DO PROJETO
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-C:\Users\renne\Projetos\COSM\
-  index.html          ← universo 3D completo (Three.js r160, sem build)
-  server.js           ← backend Express + API REST + servidor estático
-  package.json        ← dependências: express, pg, @solana/web3.js, qrcode
-  boas-vindas.html    ← manual público para usuários
-  manual-tecnico.html ← documentação técnica para devs e empresas
-  NOTAS_TECNICAS.txt  ← este arquivo
+index.html          ← universo 3D completo (Three.js r160, tudo num arquivo)
+server.js           ← backend Express + PostgreSQL + API REST
+package.json        ← dependências: express, pg, @solana/web3.js, qrcode
+boas-vindas.html    ← manual público para usuários
+manual-tecnico.html ← documentação técnica para devs e empresas
+NOTAS_TECNICAS.txt  ← este arquivo
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   INFRAESTRUTURA
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Railway — plano Hobby ($5/mês):
-  Projeto COSM: zealous-clarity
-    → Serviço Node.js: server.js (porta via $PORT)
-    → Serviço PostgreSQL: postgres-volume
-    → Auto-deploy: push no GitHub → Railway redeploy ~60s
-    → URL: cosm-production.up.railway.app
+Railway (plano Hobby):
+  → Serviço Node.js: server.js
+  → Serviço PostgreSQL: postgres-volume
+  → Auto-deploy: git push → Railway redeploy ~60s
 
-Variáveis de ambiente no Railway (OBRIGATÓRIAS):
-  DATABASE_URL          → string de conexão PostgreSQL (Railway insere)
-  WALLET_RENNER         → chave pública Solana do Renner (recebe pagamentos)
-                          Valor atual: 3vYnxHp12AV3ZUT4MiyBR33SmwEENSfDcZysaf7s4goK
+Variáveis de ambiente obrigatórias:
+  DATABASE_URL          → Railway injeta automaticamente
+  WALLET_RENNER         → 3vYnxHp12AV3ZUT4MiyBR33SmwEENSfDcZysaf7s4goK
 
-Variáveis opcionais (têm default no código):
-  PRECO_PESSOA_ANUAL    → 0.01 SOL/ano
-  PRECO_PESSOA_PERM     → 1 SOL (para sempre)
-  PRECO_EMPRESA_ANUAL   → 0.1 SOL/ano
-  PRECO_EMPRESA_PERM    → 10 SOL (para sempre)
-  ROYALTY_PERC          → 0.10 (10% sobre revendas)
-  SOLANA_RPC            → mainnet-beta padrão
+Variáveis opcionais (têm defaults):
+  PRECO_PESSOA_ANUAL    → 0.01 SOL
+  PRECO_PESSOA_PERM     → 1 SOL
+  PRECO_EMPRESA_ANUAL   → 0.1 SOL
+  PRECO_EMPRESA_PERM    → 10 SOL
+  ROYALTY_PERC          → 0.10
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   BANCO DE DADOS — TABELAS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 TABELA: registros
-  id          SERIAL PRIMARY KEY
-  carteira    TEXT UNIQUE NOT NULL   ← 1 coordenada por carteira, garantido pelo DB
-  coord_x     BIGINT NOT NULL
-  coord_y     BIGINT NOT NULL
-  coord_z     BIGINT NOT NULL
-  publico     BOOLEAN DEFAULT true   ← aparece no universo ou não
-  nome        TEXT                   ← nome do espaço (opcional)
-  tipo        TEXT DEFAULT 'pessoa'  ← 'pessoa' ou 'empresa'
-  plano       TEXT DEFAULT 'perm'    ← 'anual' ou 'permanente'
-  valido_ate  TIMESTAMPTZ            ← NULL=permanente, data=anual (expira)
-  url_conteudo TEXT                  ← URL do conteúdo no iframe (opcional)
-  criado_em   TIMESTAMPTZ DEFAULT NOW()
+  id           SERIAL PRIMARY KEY
+  carteira     TEXT UNIQUE NOT NULL
+  coord_x      BIGINT NOT NULL
+  coord_y      BIGINT NOT NULL
+  coord_z      BIGINT NOT NULL
+  publico      BOOLEAN DEFAULT true
+  nome         TEXT
+  tipo         TEXT   → 'pessoa' ou 'empresa'
+  plano        TEXT   → 'anual', 'permanente' ou 'beta'
+  valido_ate   TIMESTAMPTZ  → NULL=permanente, data=anual
+  url_conteudo TEXT   → URL de site/app (abre em iframe)
+  url_3d       TEXT   → URL de arquivo .glb (objeto 3D nativo no universo)
+  criado_em    TIMESTAMPTZ DEFAULT NOW()
 
 TABELA: pagamentos
-  id          SERIAL PRIMARY KEY
-  referencia  TEXT UNIQUE NOT NULL   ← keypair público Solana como ID único
-  carteira    TEXT NOT NULL
-  tipo        TEXT DEFAULT 'pessoa'
-  plano       TEXT DEFAULT 'permanente'
-  nome        TEXT                   ← nome da empresa (quando tipo=empresa)
-  status      TEXT DEFAULT 'pendente' ← 'pendente', 'confirmado', 'expirado'
-  criado_em   TIMESTAMPTZ DEFAULT NOW()
+  id, referencia (UNIQUE), carteira, tipo, plano, nome, status, criado_em
 
-TABELA: marketplace (criada, ainda sem UI)
-  id          SERIAL PRIMARY KEY
-  registro_id INT REFERENCES registros(id)
-  vendedor    TEXT NOT NULL
-  preco_sol   NUMERIC NOT NULL
-  ativo       BOOLEAN DEFAULT true
-  criado_em   TIMESTAMPTZ DEFAULT NOW()
+TABELA: marketplace (criada, sem UI ainda)
+  id, registro_id, vendedor, preco_sol, ativo, criado_em
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  GARANTIA DE UNICIDADE DAS COORDENADAS
+  SISTEMA DE CONTEÚDO — TRÊS TIPOS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-COMO É GARANTIDO QUE NUNCA DUAS PESSOAS TÊM A MESMA COORD:
+TIPO 1 — PÁGINA WEB (url_conteudo):
+  Qualquer URL HTTPS → abre em iframe full-screen na coordenada.
+  Sandbox: allow-scripts allow-same-origin allow-forms allow-popups.
+  Tela com moldura (barra do COSM no topo).
+  Scroll e eventos funcionam normalmente dentro do iframe.
 
-1. CONSTRAINT DO BANCO: carteira TEXT UNIQUE — uma carteira = uma coord.
-   O banco rejeita duplicata na camada de dados, não só na aplicação.
+TIPO 2 — OBJETO 3D NATIVO (url_3d):
+  Arquivo .glb/.gltf → carregado via GLTFLoader direto na cena Three.js.
+  SEM moldura. SEM iframe. O objeto FAZ PARTE do universo.
+  Animações tocam automaticamente via AnimationMixer.
+  Posição atualizada todo frame via floating origin (coordBase).
+  Escala padrão: 500 unidades.
+  Usuário hospeda o .glb em qualquer CDN com CORS aberto.
 
-2. ALOCAÇÃO SEQUENCIAL: a coordenada é calculada com base no COUNT
-   de registros existentes. O próximo índice nunca repete porque o
-   registro anterior já foi inserido antes.
-
-3. PLANO ANUAL — coordenada nunca volta ao pool automaticamente:
-   Quando o plano anual vence (valido_ate < NOW()), o registro PERMANECE
-   no banco com status "expirado" implícito. A coordenada continua ocupada.
-   Isso é intencional: evita que a coord seja dada para outro enquanto
-   o dono pode querer renovar. Futuramente, um job de limpeza pode mover
-   coordenadas expiradas há mais de 90 dias para um "pool de renovação"
-   — mas isso ainda não existe. Por enquanto, coord anual vencida = bloqueada.
-
-4. RACE CONDITION (risco atual):
-   Se dois usuários enviarem pagamento ao mesmo tempo, ambos podem consultar
-   COUNT() antes de qualquer um inserir → mesma coordenada gerada.
-   Solução futura: SELECT FOR UPDATE ou transação serializable no PostgreSQL.
-   Por enquanto: tráfego é baixo, risco é real mas improvável.
-
-REGRA FUNDAMENTAL:
-  Uma coordenada alocada = coordenada ocupada para sempre (ou até job futuro).
-  Nunca duas coordenadas iguais para carteiras diferentes.
-  Nunca a mesma carteira recebe duas coordenadas.
+TIPO 3 — CÓDIGO AO VIVO (em desenvolvimento):
+  Editor de código dentro do universo.
+  Usuário escreve Three.js → objeto aparece no espaço instantaneamente.
+  Sem hospedar arquivo. Sem deploy. Roda na engine do COSM.
+  Retorna THREE.Object3D → adicionado à cena na posição atual.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  SISTEMA DE COORDENADAS — TÉCNICO
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-FLOATING ORIGIN (anti-imprecisão):
-  Three.js usa float32. A partir de ~1M unidades, objetos tremem.
-  Solução: coordBase avança com a câmera.
-  Posição real COSM = coordBase + camera.position
-  A câmera nunca se afasta muito do zero Three.js.
-
-Para posicionar beacon em coordenada COSM (cx, cy, cz) no espaço 3D:
-  beacon.position.set(cx - coordBase.x, cy - coordBase.y, cz - coordBase.z)
-  Atualizar todo frame (coordBase muda durante o voo).
-
-ESCALA:
-  LOCAL    → 0 a 999 (metros)
-  PESSOAL  → 1k a 999k (quilômetros)
-  SETOR    → 1S a 999S (setores = milhões)
-  ANOS-LUZ → 1A+ (bilhões)
-
-WORMHOLE em 0:0:0:
-  Posicionado em -coordBase no espaço Three.js.
-  Raio de ejeção: 150 unidades.
-  Zona gravitacional: 3000 unidades.
-  Ejeção: flash → coordenadas aleatórias 50M-500M unidades.
-
-ALOCAÇÃO ESPIRAL ÁUREA (pessoas):
-  theta = n * 2.39996322972  (ângulo áureo)
-  r     = 10_000_000 * sqrt(n+1)
-  x     = round(r * cos(theta))
-  z     = round(r * sin(theta))
-  y     = 0
-
-ALOCAÇÃO EMPRESA (prefixo no eixo X):
-  Empresa n → x = (n+1) * 1_000_000, y = 0, z = 0
-  Empresa 0 → 1.000.000 : 0 : 0
-  Empresa 1 → 2.000.000 : 0 : 0
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  API REST — ENDPOINTS ATIVOS
+  API REST — ENDPOINTS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 GET  /api/proxima                → preview da próxima coordenada
 GET  /api/coordenada/:carteira   → coordenada de uma carteira
-GET  /api/coordenadas            → todas as coords públicas (+ url_conteudo)
-POST /api/registrar              → registrar carteira → coord (body: carteira, tipo, plano, nome)
-PATCH /api/url                   → vincular URL de conteúdo (body: carteira, url)
-PATCH /api/nome                  → atualizar nome público (body: carteira, nome)
-PATCH /api/privacidade           → toggle público/privado (body: carteira, publico)
-POST /api/pagamento/iniciar      → gera QR Solana Pay (body: carteira, tipo, plano, nome)
+GET  /api/coordenadas            → todas as coords públicas (+ url_conteudo + url_3d)
+POST /api/registrar              → registrar (sem pagamento — uso interno/teste)
+PATCH /api/url                   → setar url_conteudo (iframe)
+PATCH /api/url3d                 → setar url_3d (objeto 3D nativo)
+PATCH /api/nome                  → atualizar nome público
+PATCH /api/privacidade           → toggle público/privado
+POST /api/pagamento/iniciar      → gera QR Solana Pay
 GET  /api/pagamento/verificar/:ref → verifica pagamento na blockchain
+GET  /api/beta                   → lista 10 slots beta (livre/ocupado)
+POST /api/beta/claim             → reivindica slot beta (sem pagamento)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  COORDENADAS ESPECIAIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+0:0:0             → Wormhole (centro do universo, fixo)
+0:777777:0        → Zona de teste (robot animado de demonstração)
+0:2000000:0       → Beta slot 1
+500000:2000000:0  → Beta slot 2
+-500000:2000000:0 → Beta slot 3
+... (10 slots no cluster Y=2M/2.5M, ver BETA_COORDS no server.js)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   SISTEMA DE PAGAMENTO — SOLANA PAY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Fluxo completo:
-  1. Frontend chama POST /api/pagamento/iniciar
-  2. Servidor gera Keypair.generate() → referencia (base58)
-  3. Salva pagamento no banco (status: pendente)
-  4. Gera URL Solana Pay + QR code
-  5. Frontend exibe QR, inicia polling a cada 4s
-  6. GET /api/pagamento/verificar/:ref consulta blockchain
-  7. getSignaturesForAddress(refPubkey) → se encontrou → confirmado
-  8. Servidor registra coordenada automaticamente
-  9. Frontend mostra step 3 com a coordenada
-
-STATUS ATUAL DO PAGAMENTO:
-  → Implementado e deployado
-  → NUNCA TESTADO COM SOL REAL
-  → Renner planeja fazer o primeiro teste de compra
-  → Risco: pode haver bug na verificação blockchain
-
-PLANOS E PREÇOS:
-  PESSOA ANUAL:      0.01 SOL/ano  (não pode revender, expira)
-  PESSOA PERMANENTE: 1 SOL         (pode revender, para sempre)
-  EMPRESA ANUAL:     0.1 SOL/ano   (não pode revender, expira)
-  EMPRESA PERMANENTE: 10 SOL       (pode revender, para sempre)
-
-ROYALTY DE REVENDA:
-  10% de toda revenda vai para o COSM automaticamente.
-  Tabela marketplace criada, UI não implementada ainda.
+Status: implementado e deployado. NUNCA TESTADO com SOL real.
+Renner planeja fazer o primeiro teste de compra.
+Fluxo: POST /iniciar → QR code → polling a cada 4s → /verificar → registro.
+Plano 'beta' = gratuito, sem pagamento, via /api/beta/claim.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  MODAL DE REGISTRO — FLUXO DE 4 STEPS
+  BOTÕES E MODAIS DO UNIVERSO
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Step 0: Seleção de TIPO (PESSOA/EMPRESA) e PLANO (ANUAL/PERMANENTE)
-        Preço atualiza dinamicamente
-Step 1: Página de produto — o que você está comprando, o que pode fazer,
-        box de valorização para permanente (Meta, PlayStation, Apple),
-        box de alerta para anual (é aluguel, sem revenda)
-        Campo carteira + campo nome empresa (se empresa)
-Step 2: QR code Solana Pay + polling de blockchain a cada 4s
-Step 3: Confirmação com coordenada + info sobre plano + royalty (se perm)
+Botão COSM:// (esquerda) → modal de informações do produto
+  Seções: O que é, Para quem, Escala, Visão futura
+  Rodapé: rennercbp@gmail.com
 
-Botões no universo:
-  COSM://   (top left) → abre modal de informações do produto
-  REGISTRAR (top right) → abre modal de registro
+Botão TESTAR (centro-direita) → Zona do Desenvolvedor
+  Seção 1: Documentação técnica dos 3 tipos de conteúdo
+  Seção 2: 6 exemplos concretos (campo de futebol, cidade 3D, etc.)
+  Seção 3: Input de URL para testar + botão VOAR PARA ZONA DE TESTE
+  Seção 4: Grid beta 10 vagas — claim gratuito, permanente
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  SISTEMA DE BEACONS E IFRAME
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Beacons:
-  Esferas luminosas no universo marcando coordenadas registradas.
-  Azul = pessoa, Roxo = empresa. Pulsam suavemente.
-  Posição atualizada todo frame: beacon.position = coord - coordBase.
-  Só aparecem se url_conteudo estiver preenchido.
-
-Iframe overlay:
-  Ao chegar a <2000 unidades de beacon com URL, aparece prompt.
-  Clicar abre iframe full-screen com barra de navegação.
-  Iframe sandbox: allow-scripts, allow-same-origin, allow-forms, allow-popups.
-  Canvas fica com pointer-events:none enquanto iframe aberto.
-  Botão "← VOLTAR AO UNIVERSO" fecha o iframe e retorna.
-
-ISOLAMENTO TOTAL:
-  O iframe é uma caixa separada. Events do canvas (wheel, mouse)
-  não entram no iframe. O conteúdo do usuário funciona 100% livre.
+Botão REGISTRAR (direita) → Modal de compra 4 steps
+  Step 0: Seleção PESSOA/EMPRESA + ANUAL/PERMANENTE
+  Step 1: Página de produto (o que está comprando, valorização)
+  Step 2: QR code Solana Pay + polling blockchain
+  Step 3: Coordenada confirmada + botão IR PARA LÁ
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  CORREÇÕES DE BUGS DESTA SESSÃO (para nunca repetir)
+  TIPOGRAFIA
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-BUG 1 — Scroll bloqueado nos modais:
-  Causa: document.addEventListener('wheel', e => e.preventDefault())
-  capturava TODOS os eventos, mesmo com modal aberto.
-  Fix: if (modalAberto()) return; antes do preventDefault.
-  Lembrar: sempre checar modalAberto() nos event listeners globais.
-
-BUG 2 — Fechar modal exigia reload da página:
-  Causa: canvas com pointer-events:auto capturava cliques do backdrop.
-  Fix: bloquearCanvas(true) ao abrir modal, bloquearCanvas(false) ao fechar.
-  Onclick no backdrop: if (event.target===this) fechar().
-
-BUG 3 — Universo preto, botões sem resposta:
-  Causa: const beacons = [] declarado DEPOIS de loop() ser chamado.
-  const não é hoisted. ReferenceError matava o render a cada frame.
-  Fix: mover TODAS as declarações const de beacons para ANTES do loop().
-  Regra: qualquer variável usada dentro de loop() deve ser declarada antes de loop().
-
-BUG 4 — Funções de registro não respondiam (sessão anterior):
-  Causa: funções dentro de type="module" não ficam no window.
-  onclick="minhaFuncao()" não encontrava.
-  Fix: expor todas as funções chamadas por HTML com window.minhaFuncao = function(){}.
+Space Grotesk (Google Fonts) → texto geral, modais, descrições
+Space Mono (Google Fonts)    → coordenadas, código, botões, HUD
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  O QUE ESTÁ FUNCIONANDO (estado em 2026-06-28)
+  O QUE ESTÁ FUNCIONANDO (2026-07-02)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-✓ Universo 3D navegável (scroll=voo, arrastar=rotação, sem gimbal lock)
-✓ Teleporte COSM://X:Y:Z instantâneo com efeito warp
-✓ Wormhole em 0:0:0 (galáxia interior GLSL, Einstein ring)
+✓ Universo 3D navegável (scroll=voo, arrastar=rotação)
+✓ Wormhole em 0:0:0 com shader GLSL + Einstein ring
 ✓ Campo gravitacional + ejeção ao entrar no wormhole
 ✓ HUD com escala dinâmica (LOCAL/PESSOAL/SETOR/ANOS-LUZ)
-✓ Botão COSM:// (top left) → modal de informações completo
-✓ Botão REGISTRAR (top right) → modal 4 steps
-✓ Seleção PESSOA/EMPRESA + ANUAL/PERMANENTE com preços dinâmicos
-✓ Página de produto no Step 1 (o que compra, o que pode fazer, valorização)
-✓ Pagamento Solana Pay (implementado, não testado com SOL real)
-✓ Registro automático ao confirmar pagamento na blockchain
-✓ Beacons 3D nas coordenadas com conteúdo (azul=pessoa, roxo=empresa)
-✓ Iframe isolado para conteúdo das coordenadas
-✓ Scroll nos modais funciona (wheel handler verifica modalAberto())
-✓ Fechar modal clicando fora funciona
+✓ Teleporte COSM://X:Y:Z com efeito warp + flash
+✓ Floating origin (anti-imprecisão float32)
+✓ Beacons 3D nas coordenadas (azul=pessoa, roxo=empresa)
+✓ iframe para conteúdo web (tela full-screen com barra)
+✓ GLTFLoader: objetos .glb nativos no universo sem moldura
+✓ AnimationMixer: animações dos .glb tocam automaticamente
+✓ Robot animado em COSM://0:777777:0 (demo permanente)
+✓ Botão TESTAR → Zona do Desenvolvedor (docs + beta)
+✓ Beta developers: 10 vagas gratuitas permanentes
+✓ Registro via Solana Pay (implementado, não testado)
+✓ Tipos PESSOA/EMPRESA + planos ANUAL/PERMANENTE/BETA
+✓ Royalty 10% em revendas (tabela marketplace criada)
 ✓ Backend Express + PostgreSQL no Railway
-✓ Auto-deploy via GitHub → Railway
-✓ boas-vindas.html (manual de usuário)
-✓ manual-tecnico.html (documentação para devs)
+✓ Fontes: Space Grotesk + Space Mono
+✓ Email: rennercbp@gmail.com
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  O QUE ESTÁ PENDENTE (prioridade para próximas sessões)
+  PENDENTE — PRÓXIMAS SESSÕES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-PRIORIDADE ALTA (antes de aceitar dinheiro de estranhos):
-
-  → TESTAR PAGAMENTO REAL
-    Renner vai comprar uma coordenada com sua própria carteira.
-    Verificar: QR aparece, pagamento detectado, coord gerada, step 3 OK.
-    Se falhar: diagnosticar e corrigir o fluxo de verificação blockchain.
-
-  → PAINEL DO USUÁRIO (após registro)
-    Hoje não existe UI para o usuário gerenciar seu espaço.
-    Precisam: ver coordenada, definir URL, mudar nome, toggle privacidade.
-    Rota PATCH /api/url existe mas não há UI para chamar.
-
-  → SEGURANÇA DA API (assinatura de carteira)
-    Hoje qualquer um que conhece a carteira alheia pode chamar
-    PATCH /api/url e mudar o conteúdo do espaço.
-    Solução: verificar assinatura Solana (o usuário assina com chave privada).
-    Sem isso, a API é pública e insegura para dados de terceiros.
-
-  → RACE CONDITION na alocação
-    Dois registros simultâneos podem pegar o mesmo COUNT() e gerar
-    mesma coordenada. Solução: SELECT FOR UPDATE ou transação serializable.
+PRIORIDADE ALTA:
+  → Testar pagamento real (Renner compra uma coordenada com SOL)
+  → Auto-detectar .glb vs URL no modal de teste (já há input único)
+  → Campo para url_3d no Step 3 do registro (após pagamento)
+  → Painel "meu espaço" (setar url_conteudo, url_3d, nome, privacidade)
 
 PRIORIDADE MÉDIA:
-
-  → RENOVAÇÃO ANUAL
-    Não existe fluxo de renovação. Usuário com plano anual que vence
-    não tem como renovar hoje.
-    Implementar: Renner detecta (consulta DB), envia link de renovação.
-
-  → MARKETPLACE DE REVENDA
-    Tabela criada. UI não existe.
-    Usuário não consegue listar sua coordenada para venda ainda.
-
-  → COORDENADAS PREMIUM (futuro especulativo)
-    Coordenadas "redondas" (1:0:0, 1000:0:0) poderiam ter valor especial.
-    Por leilão ou preço fixo maior. Não implementado.
-
-  → NOTIFICAÇÕES DE OFERTA
-    Empresas querem comprar coordenadas de usuários.
-    Sistema de oferta: empresa faz oferta → usuário recebe notificação.
-    Não existe ainda.
+  → Editor de código ao vivo (Tipo 3) — caixa estilo terminal
+  → Objetos aparecem gradualmente ao se aproximar (névoa de distância)
+  → Som ambiente que muda por zona
+  → Segurança da API (verificação assinatura Solana)
+  → Race condition na alocação de coordenadas
 
 PRIORIDADE BAIXA (visão futura):
-
-  → SDK COSM para comunicação iframe↔universo (postMessage)
-  → Rede de nós distribuídos (sem Railway)
-  → Token COSM
-  → App nativo (Electron)
-  → Suporte a óculos VR (Meta Quest, Apple Vision Pro)
-  → IA pessoal dentro do espaço (API key do usuário)
+  → Outros usuários visíveis ao mesmo tempo (WebSocket/avatares)
+  → SDK COSM (postMessage iframe↔universo)
+  → Marketplace UI para revenda de coordenadas
+  → Suporte VR (Meta Quest, Apple Vision Pro)
+  → IA pessoal dentro do espaço
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  POSTURA DO CLAUDE NESTE PROJETO (obrigatório)
+  BUGS CONHECIDOS E COMO EVITAR
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-→ Ao abrir sessão: ler estas notas, verificar estado do código, reportar.
-→ Pensar como CTO: colocar-se no lugar do Renner E do usuário final.
-→ Antes de qualquer mudança conceitual: perguntar e explicar primeiro.
-→ Nunca corrigir algo conceitual sem alinhar antes.
-→ Se detectar problema técnico que pode afetar experiência: avisar.
-→ Ao corrigir bugs: apagar o bloco antigo, escrever do zero.
-→ Nunca colocar código novo por cima do antigo sem remover o anterior.
-→ Toda variável usada no loop de animação deve ser declarada ANTES de loop().
-→ Toda função chamada por onclick HTML deve estar em window.funcao = function(){}.
-→ Canvas deve ter pointer-events:none sempre que qualquer overlay estiver ativo.
+1. const antes de loop(): TODA variável usada no loop() deve ser
+   declarada ANTES da função loop(). const não é hoisted.
+   ReferenceError dentro do loop = tela preta, sem erro visível.
 
-COMO O RENNER TRABALHA:
-  → Descreve o que quer em linguagem visual e de experiência
-  → Não programa — nunca pedir para ele editar código
-  → Gosta de ver resultado rápido
-  → Pensa grande — visão de negócio clara e original
-  → Testa no browser e reporta o que vê
-  → Commits e pushes: sempre o Claude faz
+2. Scroll bloqueado: o wheel handler global tem
+   if (modalAberto()) return; ANTES do preventDefault.
+   Se remover isso, scroll dos modais para de funcionar.
+
+3. Canvas bloqueando cliques: bloquearCanvas(true) ao abrir qualquer
+   modal ou iframe. bloquearCanvas(false) só quando TUDO estiver fechado.
+   modalAberto() verifica modal-info, modal-reg E modal-teste.
+
+4. Funções no onclick HTML: toda função chamada por onclick deve estar
+   em window.funcao = function(){}. Funções dentro de type="module"
+   não ficam no escopo global automaticamente.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  POSTURA DO CLAUDE NESTE PROJETO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+→ Sempre ler o código real antes de qualquer adição
+→ Para cada feature: "pode ter versão 3D nativa além do iframe?"
+→ Pensar como CTO: colocar-se no lugar do Renner E do usuário
+→ Antes de alterar conceito: perguntar e alinhar primeiro
+→ Sem gambiarras: apagar o bloco antigo, reescrever do zero
+→ O Renner não programa — nunca pedir para ele editar código
+→ Commits e pushes: sempre o Claude faz
 
 ===============================================================
