@@ -153,9 +153,34 @@
   #modal-teste.ativo{opacity:1;pointer-events:all;}
   #painel-teste{
     background:#08080f;border:1px solid rgba(80,255,180,0.1);
-    border-radius:14px;padding:36px;width:500px;max-width:94vw;
-    max-height:90vh;overflow-y:auto;font-family:'Courier New',monospace;
+    border-radius:14px;padding:40px 48px;width:720px;max-width:96vw;
+    max-height:92vh;overflow-y:auto;font-family:'Courier New',monospace;
     scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.08) transparent;
+  }
+  .dev-tipo{
+    border:1px solid rgba(255,255,255,0.07);border-radius:8px;
+    padding:16px 20px;margin-bottom:12px;
+  }
+  .dev-tipo-tag{
+    font-size:8px;letter-spacing:5px;margin-bottom:6px;display:block;
+  }
+  .dev-tipo-titulo{
+    font-size:13px;color:#fff;letter-spacing:2px;margin-bottom:6px;
+  }
+  .dev-tipo-desc{
+    font-size:10px;color:rgba(255,255,255,0.4);line-height:1.9;
+  }
+  .dev-tipo-code{
+    font-size:10px;color:rgba(80,255,180,0.6);background:rgba(80,255,180,0.04);
+    border:1px solid rgba(80,255,180,0.1);border-radius:4px;
+    padding:6px 10px;margin-top:8px;display:block;letter-spacing:1px;
+  }
+  .dev-ex{
+    display:flex;gap:8px;align-items:flex-start;margin-bottom:10px;
+  }
+  .dev-ex-tag{
+    font-size:9px;letter-spacing:2px;padding:3px 8px;border-radius:4px;
+    white-space:nowrap;flex-shrink:0;margin-top:1px;
   }
 
   /* ── Banner de modo teste no iframe ── */
@@ -513,46 +538,132 @@
   </div>
 </div>
 
-<!-- ── Modal teste ── -->
+<!-- ── Modal teste / zona do desenvolvedor ── -->
 <div id="modal-teste" onclick="if(event.target===this)fecharTeste()">
   <div id="painel-teste" onclick="event.stopPropagation()">
 
-    <div style="margin-bottom:28px;">
-      <div style="font-size:9px;letter-spacing:5px;color:rgba(80,255,180,0.35);margin-bottom:12px;">ZONA DE DEMONSTRAÇÃO</div>
-      <div style="font-size:18px;letter-spacing:6px;color:#fff;margin-bottom:10px;">TESTE SEU ESPAÇO</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.35);line-height:2;letter-spacing:1px;">
-        A zona de teste já tem um <span style="color:rgba(80,255,180,0.7)">personagem 3D animado</span> flutuando no espaço.<br>
-        Clique em VOAR para ver. Você também pode colocar qualquer site lá.<br>
-        Tudo some ao fechar — permanente só com registro.
+    <!-- Cabeçalho -->
+    <div style="margin-bottom:32px;">
+      <div style="font-size:9px;letter-spacing:5px;color:rgba(80,255,180,0.4);margin-bottom:14px;">ZONA DO DESENVOLVEDOR</div>
+      <div style="font-size:22px;letter-spacing:6px;color:#fff;margin-bottom:12px;">O QUE CABE NA SUA COORDENADA</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.35);line-height:2;">
+        Uma coordenada COSM é um <em style="color:rgba(255,255,255,0.7)">ponto permanente no universo 3D</em> que você controla completamente.
+        O que você coloca lá fica visível para qualquer pessoa que voar até aquela coordenada —
+        sem servidor próprio obrigatório, sem domínio, sem intermediário.
       </div>
     </div>
 
-    <div style="font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.22);margin-bottom:10px;">COLE A URL DO SEU SITE</div>
+    <div style="height:1px;background:rgba(255,255,255,0.06);margin-bottom:24px;"></div>
+
+    <!-- Tipo 1: Web -->
+    <div style="font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.2);margin-bottom:14px;">TIPOS DE CONTEÚDO</div>
+
+    <div class="dev-tipo">
+      <span class="dev-tipo-tag" style="color:rgba(100,200,255,0.6);">TIPO 01 — PÁGINA WEB</span>
+      <div class="dev-tipo-titulo">Qualquer URL HTTPS renderizada em tela cheia</div>
+      <div class="dev-tipo-desc">
+        Portfólio, loja (Shopify, WooCommerce), app React/Vue/Svelte hospedado no Vercel ou Netlify,
+        dashboard interno, Notion público, Google Sites, vídeo embed, mapa interativo.
+        Funciona via iframe com sandbox — seus eventos de scroll, clique e teclado funcionam normalmente dentro do espaço.
+      </div>
+      <code class="dev-tipo-code">url_conteudo: "https://meusite.vercel.app"</code>
+    </div>
+
+    <!-- Tipo 2: 3D nativo -->
+    <div class="dev-tipo">
+      <span class="dev-tipo-tag" style="color:rgba(80,255,180,0.6);">TIPO 02 — OBJETO 3D NATIVO (.glb / .gltf)</span>
+      <div class="dev-tipo-titulo">Modelo 3D solto no universo — sem moldura, sem bordas</div>
+      <div class="dev-tipo-desc">
+        O arquivo é carregado diretamente na cena Three.js do COSM. O objeto flutua no espaço como se fosse
+        parte do universo — igual o wormhole existe no centro. Animações do arquivo tocam automaticamente.
+        Exporte do Blender, Unity, Unreal, Spline ou qualquer ferramenta que gere .glb.
+      </div>
+      <code class="dev-tipo-code">url_3d: "https://meucdn.com/cidade.glb" &nbsp;·&nbsp; escala, posição e rotação configuráveis</code>
+    </div>
+
+    <!-- Tipo 3: Código ao vivo -->
+    <div class="dev-tipo" style="border-color:rgba(180,140,255,0.15);">
+      <span class="dev-tipo-tag" style="color:rgba(180,140,255,0.6);">TIPO 03 — CÓDIGO AO VIVO (EM BREVE)</span>
+      <div class="dev-tipo-titulo">Escreva Three.js diretamente — o objeto aparece no universo</div>
+      <div class="dev-tipo-desc">
+        Um editor de código dentro do COSM. Você escreve, dá enter, o objeto aparece na sua coordenada em tempo real.
+        Sem hospedar arquivo. Sem deploy. O código roda na engine do COSM com acesso a THREE, geometrias,
+        materiais, luzes, física e animações procedurais.
+      </div>
+      <code class="dev-tipo-code" style="color:rgba(180,140,255,0.6);border-color:rgba(180,140,255,0.1);background:rgba(180,140,255,0.04);">
+        const geo = new THREE.TorusKnotGeometry(100, 30)<br>
+        const mat = new THREE.MeshStandardMaterial({ color: 0xff6600 })<br>
+        return new THREE.Mesh(geo, mat) &nbsp;→&nbsp; aparece no espaço
+      </code>
+    </div>
+
+    <div style="height:1px;background:rgba(255,255,255,0.06);margin:24px 0;"></div>
+
+    <!-- Exemplos concretos -->
+    <div style="font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.2);margin-bottom:16px;">EXEMPLOS DO QUE VOCÊ PODE CONSTRUIR</div>
+
+    <div class="dev-ex">
+      <span class="dev-ex-tag" style="background:rgba(100,200,255,0.08);color:rgba(100,200,255,0.7);border:1px solid rgba(100,200,255,0.15);">WEB</span>
+      <div style="font-size:10px;color:rgba(255,255,255,0.45);line-height:1.8;">
+        <strong style="color:rgba(255,255,255,0.7)">Showroom de produto</strong> — loja 3D completa com catálogo, carrinho e checkout dentro da coordenada da empresa
+      </div>
+    </div>
+    <div class="dev-ex">
+      <span class="dev-ex-tag" style="background:rgba(80,255,180,0.08);color:rgba(80,255,180,0.7);border:1px solid rgba(80,255,180,0.15);">3D</span>
+      <div style="font-size:10px;color:rgba(255,255,255,0.45);line-height:1.8;">
+        <strong style="color:rgba(255,255,255,0.7)">Cidade corporativa</strong> — a PlayStation registra COSM://1000000:0:0 e coloca uma cidade inteira em .glb. Quem voa até lá vê os prédios aparecerem no espaço ao redor
+      </div>
+    </div>
+    <div class="dev-ex">
+      <span class="dev-ex-tag" style="background:rgba(100,200,255,0.08);color:rgba(100,200,255,0.7);border:1px solid rgba(100,200,255,0.15);">WEB</span>
+      <div style="font-size:10px;color:rgba(255,255,255,0.45);line-height:1.8;">
+        <strong style="color:rgba(255,255,255,0.7)">Portal para jogo</strong> — a coordenada abre um jogo Unity WebGL completo. O visitante entra no jogo sem sair do universo COSM
+      </div>
+    </div>
+    <div class="dev-ex">
+      <span class="dev-ex-tag" style="background:rgba(80,255,180,0.08);color:rgba(80,255,180,0.7);border:1px solid rgba(80,255,180,0.15);">3D</span>
+      <div style="font-size:10px;color:rgba(255,255,255,0.45);line-height:1.8;">
+        <strong style="color:rgba(255,255,255,0.7)">Campo de futebol sem gravidade</strong> — um .glb com campo, bola e física customizada. O dono da coordenada define as regras: gravidade zero, paredes invisíveis, colisão ativa. O universo dentro do seu espaço obedece você
+      </div>
+    </div>
+    <div class="dev-ex">
+      <span class="dev-ex-tag" style="background:rgba(180,140,255,0.08);color:rgba(180,140,255,0.7);border:1px solid rgba(180,140,255,0.15);">CÓDIGO</span>
+      <div style="font-size:10px;color:rgba(255,255,255,0.45);line-height:1.8;">
+        <strong style="color:rgba(255,255,255,0.7)">Pista de corrida procedural</strong> — código Three.js gera a pista dinamicamente, coloca carros em movimento com lerp, ajusta velocidade por parâmetro. Zero arquivo externo
+      </div>
+    </div>
+    <div class="dev-ex">
+      <span class="dev-ex-tag" style="background:rgba(100,200,255,0.08);color:rgba(100,200,255,0.7);border:1px solid rgba(100,200,255,0.15);">WEB</span>
+      <div style="font-size:10px;color:rgba(255,255,255,0.45);line-height:1.8;">
+        <strong style="color:rgba(255,255,255,0.7)">Projeto hospedado para o futuro</strong> — registre a coordenada hoje, coloque seu projeto em desenvolvimento lá. O endereço nunca muda. Quando o projeto estiver pronto, o universo já tem o ponto fixo esperando
+      </div>
+    </div>
+
+    <div style="height:1px;background:rgba(255,255,255,0.06);margin:24px 0;"></div>
+
+    <!-- Try it -->
+    <div style="font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.22);margin-bottom:10px;">TESTAR AGORA — ZONA COSM://0:777777:0</div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.28);margin-bottom:12px;line-height:1.8;">
+      A zona de teste já tem um personagem 3D animado flutuando no espaço.<br>
+      Cole uma URL para ver seu conteúdo lá também. Tudo some ao fechar — permanente só com registro.
+    </div>
     <input id="teste-url-input" class="reg-input" type="text"
-      placeholder="https://meusite.com ou notion.so/..."
+      placeholder="URL do site ou arquivo .glb (opcional)"
       spellcheck="false"
       onkeydown="if(event.key==='Enter')renderizarTeste()"/>
-    <p class="reg-hint" style="margin-bottom:18px;">Qualquer site HTTPS funciona: portfólio, loja, jogo, documento, vídeo, mapa...</p>
 
-    <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:14px 16px;margin-bottom:22px;">
-      <div style="font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.2);margin-bottom:10px;">EXEMPLOS DO QUE CABE NO SEU ESPAÇO</div>
-      <div style="font-size:10px;color:rgba(255,255,255,0.4);line-height:2.4;">
-        <span style="color:rgba(80,255,180,0.6)">→</span> Portfólio pessoal ou empresarial<br>
-        <span style="color:rgba(80,255,180,0.6)">→</span> Loja virtual (Shopify, WooCommerce...)<br>
-        <span style="color:rgba(80,255,180,0.6)">→</span> Página no Notion, Carrd, Google Sites<br>
-        <span style="color:rgba(80,255,180,0.6)">→</span> Jogo feito em Three.js, Unity WebGL<br>
-        <span style="color:rgba(80,255,180,0.6)">→</span> Galeria de fotos ou vídeos<br>
-        <span style="color:rgba(80,255,180,0.6)">→</span> Dashboard, painel interno da empresa<br>
-        <span style="color:rgba(80,255,180,0.6)">→</span> Qualquer coisa que roda num navegador
+    <div style="display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:20px;">
+      <button class="reg-btn" onclick="fecharTeste()">FECHAR</button>
+      <div style="display:flex;gap:10px;">
+        <button class="reg-btn" onclick="fecharTeste();abrirRegistro();"
+          style="border-color:rgba(100,200,255,0.3);color:rgba(100,200,255,0.7);">
+          REGISTRAR MINHA COORDENADA →
+        </button>
+        <button class="reg-btn" onclick="renderizarTeste()"
+          style="border-color:rgba(80,255,180,0.4);color:rgba(80,255,180,0.85);">
+          VOAR PARA A ZONA DE TESTE →
+        </button>
       </div>
-    </div>
-
-    <div style="display:flex;gap:10px;justify-content:space-between;align-items:center;">
-      <button class="reg-btn" onclick="fecharTeste()">CANCELAR</button>
-      <button class="reg-btn" onclick="renderizarTeste()"
-        style="border-color:rgba(80,255,180,0.4);color:rgba(80,255,180,0.85);">
-        VOAR E RENDERIZAR →
-      </button>
     </div>
 
   </div>
