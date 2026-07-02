@@ -47,6 +47,12 @@ async function initDB() {
   await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS url_conteudo TEXT`);
   await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS url_3d      TEXT`);
 
+  // Garantir que nenhuma coordenada seja alocada duas vezes
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS registros_coord_unique
+    ON registros (coord_x, coord_y, coord_z)
+  `);
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS pagamentos (
       id         SERIAL PRIMARY KEY,
@@ -120,37 +126,52 @@ app.get('/api/proxima', async (req, res) => {
   }
 });
 
+// Aloca a próxima coordenada disponível dentro de uma transação já aberta.
+// O advisory lock 42 serializa todas as alocações — sem race condition.
+async function alocarProximaCoord(client, tipo) {
+  await client.query('SELECT pg_advisory_xact_lock(42)');
+  if (tipo === 'empresa') {
+    const { rows } = await client.query("SELECT COUNT(*) AS total FROM registros WHERE tipo='empresa'");
+    return alocarCoordenadaEmpresa(parseInt(rows[0].total));
+  } else {
+    const { rows } = await client.query("SELECT COUNT(*) AS total FROM registros WHERE tipo='pessoa' AND plano <> 'beta'");
+    return alocarCoordenada(parseInt(rows[0].total));
+  }
+}
+
 // Registrar coordenada para uma carteira
 // Body: { carteira, tipo: 'pessoa'|'empresa', nome }
 app.post('/api/registrar', async (req, res) => {
+  const client = await pool.connect();
   try {
     const { carteira, tipo = 'pessoa', plano = 'permanente', nome = null } = req.body;
     if (!carteira) return res.status(400).json({ erro: 'carteira obrigatoria' });
 
-    const existente = await pool.query('SELECT * FROM registros WHERE carteira = $1', [carteira]);
-    if (existente.rows.length > 0) return res.json({ coordenada: existente.rows[0], nova: false });
+    await client.query('BEGIN');
 
-    let coord;
-    if (tipo === 'empresa') {
-      const { rows: cnt } = await pool.query("SELECT COUNT(*) AS total FROM registros WHERE tipo='empresa'");
-      coord = alocarCoordenadaEmpresa(parseInt(cnt[0].total));
-    } else {
-      const { rows: cnt } = await pool.query("SELECT COUNT(*) AS total FROM registros WHERE tipo='pessoa'");
-      coord = alocarCoordenada(parseInt(cnt[0].total));
+    const existente = await client.query('SELECT * FROM registros WHERE carteira = $1', [carteira]);
+    if (existente.rows.length > 0) {
+      await client.query('ROLLBACK');
+      return res.json({ coordenada: existente.rows[0], nova: false });
     }
 
+    const coord = await alocarProximaCoord(client, tipo);
     const validoAte = plano === 'anual'
       ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
       : null;
 
-    const { rows } = await pool.query(
+    const { rows } = await client.query(
       `INSERT INTO registros (carteira, coord_x, coord_y, coord_z, nome, tipo, plano, valido_ate)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
       [carteira, coord.x, coord.y, coord.z, nome, tipo, plano, validoAte]
     );
+    await client.query('COMMIT');
     res.json({ coordenada: rows[0], nova: true });
   } catch (e) {
+    await client.query('ROLLBACK');
     res.status(500).json({ erro: e.message });
+  } finally {
+    client.release();
   }
 });
 
@@ -349,30 +370,44 @@ app.get('/api/pagamento/verificar/:referencia', async (req, res) => {
     const sigs = await connection.getSignaturesForAddress(refPubkey, { limit: 1 });
 
     if (sigs.length > 0) {
-      await pool.query('UPDATE pagamentos SET status = $1 WHERE referencia = $2', ['confirmado', referencia]);
-
       const { carteira, tipo = 'pessoa', plano = 'permanente', nome = null } = pag.rows[0];
-      let coord;
-      if (tipo === 'empresa') {
-        const { rows: cnt } = await pool.query("SELECT COUNT(*) AS total FROM registros WHERE tipo='empresa'");
-        coord = alocarCoordenadaEmpresa(parseInt(cnt[0].total));
-      } else {
-        const { rows: cnt } = await pool.query("SELECT COUNT(*) AS total FROM registros WHERE tipo='pessoa'");
-        coord = alocarCoordenada(parseInt(cnt[0].total));
+
+      // Verificar se já foi registrado (polling pode chamar múltiplas vezes)
+      const jaReg = await pool.query('SELECT * FROM registros WHERE carteira = $1', [carteira]);
+      if (jaReg.rows.length > 0) {
+        await pool.query('UPDATE pagamentos SET status=$1 WHERE referencia=$2', ['confirmado', referencia]);
+        return res.json({ status: 'confirmado', coordenada: jaReg.rows[0] });
       }
 
-      const validoAte = plano === 'anual'
-        ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-        : null;
+      // Alocar coordenada com lock para evitar duplicatas
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        await client.query('UPDATE pagamentos SET status=$1 WHERE referencia=$2', ['confirmado', referencia]);
 
-      const { rows } = await pool.query(
-        `INSERT INTO registros (carteira, coord_x, coord_y, coord_z, nome, tipo, plano, valido_ate)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-         ON CONFLICT (carteira) DO UPDATE SET carteira = EXCLUDED.carteira
-         RETURNING *`,
-        [carteira, coord.x, coord.y, coord.z, nome, tipo, plano, validoAte]
-      );
-      return res.json({ status: 'confirmado', coordenada: rows[0] });
+        const coord = await alocarProximaCoord(client, tipo);
+        const validoAte = plano === 'anual'
+          ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          : null;
+
+        const { rows } = await client.query(
+          `INSERT INTO registros (carteira, coord_x, coord_y, coord_z, nome, tipo, plano, valido_ate)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+           ON CONFLICT (carteira) DO NOTHING
+           RETURNING *`,
+          [carteira, coord.x, coord.y, coord.z, nome, tipo, plano, validoAte]
+        );
+        await client.query('COMMIT');
+
+        // Se ON CONFLICT suprimiu o insert, buscar o registro existente
+        const coordenada = rows[0] || (await pool.query('SELECT * FROM registros WHERE carteira=$1', [carteira])).rows[0];
+        return res.json({ status: 'confirmado', coordenada });
+      } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+      } finally {
+        client.release();
+      }
     }
 
     // Expirado após 30 minutos?
