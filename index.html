@@ -654,16 +654,68 @@
 
     <div style="display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:20px;">
       <button class="reg-btn" onclick="fecharTeste()">FECHAR</button>
+      <button class="reg-btn" onclick="renderizarTeste()"
+        style="border-color:rgba(80,255,180,0.4);color:rgba(80,255,180,0.85);">
+        VOAR PARA A ZONA DE TESTE →
+      </button>
+    </div>
+
+    <div style="height:1px;background:rgba(255,255,255,0.06);margin:28px 0;"></div>
+
+    <!-- Beta Developers -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:9px;letter-spacing:5px;color:rgba(255,200,80,0.5);margin-bottom:10px;">BETA DEVELOPERS</div>
+      <div style="font-size:15px;letter-spacing:4px;color:#fff;margin-bottom:10px;">10 VAGAS · GRÁTIS · PERMANENTES</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.35);line-height:2;">
+        Registre sua coordenada agora, sem pagar nada.<br>
+        O que você colocar lá fica para sempre — sua coordenada, seu projeto, seu endereço no universo.<br>
+        <span style="color:rgba(255,200,80,0.6)">Use para divulgar seu projeto e o COSM juntos.</span>
+      </div>
+    </div>
+
+    <!-- Grid dos 10 slots -->
+    <div id="beta-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px;">
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.2);padding:20px 0;grid-column:1/-1;">
+        Carregando vagas...
+      </div>
+    </div>
+
+    <!-- Formulário de claim (oculto até clicar numa vaga) -->
+    <div id="beta-form" style="display:none;background:rgba(255,200,80,0.03);border:1px solid rgba(255,200,80,0.12);border-radius:10px;padding:20px;">
+      <div style="font-size:9px;letter-spacing:4px;color:rgba(255,200,80,0.5);margin-bottom:14px;">
+        REIVINDICAR VAGA <span id="beta-slot-label"></span>
+      </div>
+      <input id="beta-carteira" class="reg-input" type="text"
+        placeholder="Sua chave pública Solana (Phantom, Solflare...)"
+        spellcheck="false" style="margin-bottom:10px;"/>
+      <input id="beta-nome" class="reg-input" type="text"
+        placeholder="Nome do seu projeto (opcional)"
+        spellcheck="false" style="margin-bottom:10px;"/>
+      <input id="beta-url" class="reg-input" type="text"
+        placeholder="URL do seu site ou arquivo .glb (pode preencher depois)"
+        spellcheck="false" style="margin-bottom:14px;"/>
+      <div id="beta-erro" style="font-size:10px;color:rgba(255,100,80,0.8);margin-bottom:10px;display:none;"></div>
       <div style="display:flex;gap:10px;">
-        <button class="reg-btn" onclick="fecharTeste();abrirRegistro();"
-          style="border-color:rgba(100,200,255,0.3);color:rgba(100,200,255,0.7);">
-          REGISTRAR MINHA COORDENADA →
-        </button>
-        <button class="reg-btn" onclick="renderizarTeste()"
-          style="border-color:rgba(80,255,180,0.4);color:rgba(80,255,180,0.85);">
-          VOAR PARA A ZONA DE TESTE →
+        <button class="reg-btn" onclick="document.getElementById('beta-form').style.display='none'">CANCELAR</button>
+        <button class="reg-btn" onclick="claimarBeta()"
+          style="border-color:rgba(255,200,80,0.4);color:rgba(255,200,80,0.85);">
+          CONFIRMAR VAGA →
         </button>
       </div>
+    </div>
+
+    <!-- Confirmação após claim -->
+    <div id="beta-ok" style="display:none;text-align:center;padding:20px;">
+      <div style="font-size:10px;letter-spacing:3px;color:rgba(80,255,180,0.8);margin-bottom:10px;">✓ VAGA CONFIRMADA</div>
+      <div id="beta-ok-coord" style="font-size:14px;color:#fff;letter-spacing:2px;margin-bottom:16px;"></div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:16px;line-height:1.8;">
+        Esta coordenada é sua para sempre.<br>
+        Coloque seu conteúdo lá e compartilhe o endereço COSM:// com o mundo.
+      </div>
+      <button class="reg-btn" onclick="irParaBetaCoord()"
+        style="border-color:rgba(80,255,180,0.4);color:rgba(80,255,180,0.85);">
+        IR PARA MINHA COORDENADA →
+      </button>
     </div>
 
   </div>
@@ -1262,10 +1314,120 @@ function modalAberto() {
          document.getElementById('modal-teste').classList.contains('ativo');
 }
 
-// ─── Zona de Teste ───────────────────────────────────────
+// ─── Zona de Teste + Beta Developers ─────────────────────
+let betaSlotSelecionado = null;
+let betaCoordConfirmada = null;
+
 window.abrirTeste = function() {
   document.getElementById('modal-teste').classList.add('ativo');
   bloquearCanvas(true);
+  carregarBeta();
+};
+
+async function carregarBeta() {
+  const grid = document.getElementById('beta-grid');
+  try {
+    const resp  = await fetch('/api/beta');
+    const slots = await resp.json();
+    const livres = slots.filter(s => !s.ocupado).length;
+
+    grid.innerHTML = slots.map(s => {
+      if (s.ocupado) {
+        return `<div style="
+          background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
+          border-radius:8px;padding:12px 8px;text-align:center;cursor:default;">
+          <div style="font-size:8px;letter-spacing:2px;color:rgba(255,255,255,0.2);margin-bottom:4px;">VAGA ${s.slot}</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.35);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            ${s.nome ? s.nome.toUpperCase() : 'EM CONSTRUÇÃO'}
+          </div>
+          <div style="font-size:8px;color:rgba(80,255,180,0.4);margin-top:4px;">● OCUPADA</div>
+        </div>`;
+      }
+      return `<div onclick="selecionarBetaSlot(${s.slot},${s.x},${s.y},${s.z})" style="
+        background:rgba(255,200,80,0.04);border:1px solid rgba(255,200,80,0.2);
+        border-radius:8px;padding:12px 8px;text-align:center;cursor:pointer;
+        transition:all 0.2s;"
+        onmouseover="this.style.borderColor='rgba(255,200,80,0.5)';this.style.background='rgba(255,200,80,0.08)'"
+        onmouseout="this.style.borderColor='rgba(255,200,80,0.2)';this.style.background='rgba(255,200,80,0.04)'">
+        <div style="font-size:8px;letter-spacing:2px;color:rgba(255,200,80,0.4);margin-bottom:4px;">VAGA ${s.slot}</div>
+        <div style="font-size:9px;color:rgba(255,200,80,0.7);">LIVRE</div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.2);margin-top:4px;">CLIQUE</div>
+      </div>`;
+    }).join('');
+
+    // Contador de vagas
+    const counter = document.createElement('div');
+    counter.style.cssText = 'grid-column:1/-1;text-align:center;font-size:9px;letter-spacing:3px;color:rgba(255,255,255,0.2);margin-top:4px;';
+    counter.textContent = `${livres} DE 10 VAGAS DISPONÍVEIS`;
+    grid.appendChild(counter);
+
+  } catch (_) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;font-size:10px;color:rgba(255,100,80,0.5);padding:20px 0;">Erro ao carregar vagas</div>';
+  }
+}
+
+window.selecionarBetaSlot = function(slot, x, y, z) {
+  betaSlotSelecionado = { slot, x, y, z };
+  document.getElementById('beta-slot-label').textContent = `#${slot} — COSM://${x}:${y}:${z}`;
+  document.getElementById('beta-form').style.display = 'block';
+  document.getElementById('beta-ok').style.display = 'none';
+  document.getElementById('beta-erro').style.display = 'none';
+  document.getElementById('beta-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+};
+
+window.claimarBeta = async function() {
+  const carteira = document.getElementById('beta-carteira').value.trim();
+  const nome     = document.getElementById('beta-nome').value.trim();
+  const url      = document.getElementById('beta-url').value.trim();
+  const erroEl   = document.getElementById('beta-erro');
+
+  if (!carteira) { erroEl.textContent = 'Informe sua carteira Solana.'; erroEl.style.display='block'; return; }
+  if (!betaSlotSelecionado) return;
+
+  erroEl.style.display = 'none';
+
+  try {
+    const resp = await fetch('/api/beta/claim', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ carteira, slot: betaSlotSelecionado.slot, nome: nome||null, url: url||null })
+    });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      erroEl.textContent = data.erro === 'slot ja ocupado' ? 'Esta vaga acabou de ser ocupada. Escolha outra.' :
+                           data.erro === 'carteira ja registrada' ? 'Esta carteira já tem uma coordenada registrada.' :
+                           data.erro;
+      erroEl.style.display = 'block';
+      if (data.erro === 'slot ja ocupado') carregarBeta();
+      return;
+    }
+
+    betaCoordConfirmada = betaSlotSelecionado;
+    document.getElementById('beta-form').style.display = 'none';
+    document.getElementById('beta-ok-coord').textContent =
+      `COSM://${betaSlotSelecionado.x} : ${betaSlotSelecionado.y} : ${betaSlotSelecionado.z}`;
+    document.getElementById('beta-ok').style.display = 'block';
+    document.getElementById('beta-ok').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    carregarBeta();
+
+    // Carrega o objeto 3D se URL .glb foi informada
+    if (url && (url.endsWith('.glb') || url.endsWith('.gltf'))) {
+      carregarObjeto3D(betaSlotSelecionado.x, betaSlotSelecionado.y, betaSlotSelecionado.z, url);
+    }
+
+  } catch (_) {
+    erroEl.textContent = 'Erro de conexão. Tente novamente.';
+    erroEl.style.display = 'block';
+  }
+};
+
+window.irParaBetaCoord = function() {
+  if (!betaCoordConfirmada) return;
+  fecharTeste();
+  document.getElementById('coord-input').value =
+    `${betaCoordConfirmada.x} : ${betaCoordConfirmada.y} : ${betaCoordConfirmada.z}`;
+  irParaCoordenada();
 };
 
 window.fecharTeste = function() {

@@ -197,6 +197,61 @@ app.patch('/api/url', async (req, res) => {
   }
 });
 
+// ─── Beta Developers — 10 vagas permanentes e gratuitas ─────
+const BETA_COORDS = [
+  {x:       0, y: 2000000, z:       0},
+  {x:  500000, y: 2000000, z:       0},
+  {x: -500000, y: 2000000, z:       0},
+  {x:  250000, y: 2000000, z:  433000},
+  {x: -250000, y: 2000000, z:  433000},
+  {x:  250000, y: 2000000, z: -433000},
+  {x: -250000, y: 2000000, z: -433000},
+  {x:  500000, y: 2500000, z:  500000},
+  {x: -500000, y: 2500000, z:  500000},
+  {x:       0, y: 2500000, z:  500000},
+];
+
+// Lista os 10 slots com status livre/ocupado
+app.get('/api/beta', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT coord_x, coord_y, coord_z, nome FROM registros WHERE plano = 'beta'`
+    );
+    const slots = BETA_COORDS.map((c, i) => {
+      const ocp = rows.find(r => r.coord_x === c.x && r.coord_y === c.y && r.coord_z === c.z);
+      return { slot: i + 1, x: c.x, y: c.y, z: c.z, ocupado: !!ocp, nome: ocp?.nome || null };
+    });
+    res.json(slots);
+  } catch (e) { res.status(500).json({ erro: e.message }); }
+});
+
+// Reivindicar um slot beta
+// Body: { carteira, slot (1-10), nome, url, url_3d }
+app.post('/api/beta/claim', async (req, res) => {
+  try {
+    const { carteira, slot, nome, url, url_3d } = req.body;
+    if (!carteira || !slot) return res.status(400).json({ erro: 'carteira e slot obrigatorios' });
+    const idx = parseInt(slot) - 1;
+    if (idx < 0 || idx >= BETA_COORDS.length) return res.status(400).json({ erro: 'slot invalido' });
+    const coord = BETA_COORDS[idx];
+    const { rows: taken } = await pool.query(
+      `SELECT id FROM registros WHERE coord_x=$1 AND coord_y=$2 AND coord_z=$3`,
+      [coord.x, coord.y, coord.z]
+    );
+    if (taken.length > 0) return res.status(409).json({ erro: 'slot ja ocupado' });
+    const { rows: exist } = await pool.query(
+      `SELECT id FROM registros WHERE carteira=$1`, [carteira]
+    );
+    if (exist.length > 0) return res.status(409).json({ erro: 'carteira ja registrada' });
+    const { rows } = await pool.query(
+      `INSERT INTO registros (carteira, coord_x, coord_y, coord_z, nome, tipo, plano, url_conteudo, url_3d)
+       VALUES ($1,$2,$3,$4,$5,'pessoa','beta',$6,$7) RETURNING *`,
+      [carteira, coord.x, coord.y, coord.z, nome || null, url || null, url_3d || null]
+    );
+    res.json({ ok: true, coordenada: rows[0] });
+  } catch (e) { res.status(500).json({ erro: e.message }); }
+});
+
 // Definir objeto 3D nativo (.glb) para uma coordenada
 // Body: { carteira, url }
 app.patch('/api/url3d', async (req, res) => {
