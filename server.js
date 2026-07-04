@@ -84,7 +84,7 @@ async function initDB() {
 }
 
 // ─── Alocação de coordenadas ─────────────────────────────────
-const GAP = 10_000_000;
+const GAP = 1_000_000;
 
 // Espiral áurea — para pessoas físicas
 function alocarCoordenada(totalPessoas) {
