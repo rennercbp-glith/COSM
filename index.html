@@ -1320,6 +1320,7 @@ let velDir      = new THREE.Vector3(0, 0, -1); // direção travada do voo
 let voando          = false;
 let alvoVoo         = null;
 let alvoVooRotacao  = null;
+let gamepadAtivo    = false;
 let arrastando  = false;
 let mouseMoved  = false;
 let lastX       = 0, lastY = 0;
@@ -2045,7 +2046,6 @@ canvas.addEventListener('touchend', e => {
 }, { passive: false });
 
 // ── Gamepad ──────────────────────────────────────────
-let gamepadAtivo = false;
 
 window.addEventListener('gamepadconnected', e => {
   gamepadAtivo = true;
