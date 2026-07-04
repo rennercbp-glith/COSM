@@ -487,6 +487,11 @@
     </div>
   </div>
   <!-- Registrar -->
+  <!-- Meu espaço — só aparece se tiver coord salva no dispositivo -->
+  <div id="menu-meu-espaco" class="menu-item" onclick="fecharMenu();irParaMeuEspacoSalvo()" style="display:none;">
+    <span class="menu-item-icon">◈</span>
+    <span class="menu-item-label">MEU ESPAÇO</span>
+  </div>
   <div class="menu-item" onclick="fecharMenu();abrirRegistro()">
     <span class="menu-item-icon">✦</span>
     <span class="menu-item-label">REGISTRAR</span>
@@ -551,6 +556,17 @@
 
 <!-- Beacon prompt: aparece quando perto de coordenada com conteúdo -->
 <div id="beacon-prompt" onclick="abrirConteudoBeacon()"></div>
+
+<!-- Prompt de reconhecimento de coord em novo dispositivo -->
+<div id="prompt-reconhecer" style="display:none;position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#08080f;border:1px solid rgba(100,255,180,0.3);border-radius:10px;padding:14px 20px;z-index:50;font-family:'Space Mono',monospace;text-align:center;max-width:340px;width:90vw;">
+  <div style="font-size:10px;letter-spacing:2px;color:rgba(100,255,180,0.7);margin-bottom:6px;">COORDENADA RECONHECIDA</div>
+  <div id="prompt-reconhecer-coord" style="font-size:13px;color:#fff;margin-bottom:10px;"></div>
+  <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:12px;">Esta coordenada está registrada. É a sua?</div>
+  <div style="display:flex;gap:8px;justify-content:center;">
+    <button onclick="fecharReconhecimento()" style="font-family:'Space Mono',monospace;font-size:10px;background:transparent;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.4);padding:6px 14px;border-radius:6px;cursor:pointer;">NÃO</button>
+    <button onclick="confirmarReconhecimento()" style="font-family:'Space Mono',monospace;font-size:10px;background:rgba(100,255,180,0.1);border:1px solid rgba(100,255,180,0.3);color:rgba(100,255,180,0.9);padding:6px 14px;border-radius:6px;cursor:pointer;">SIM — SALVAR NESTE DISPOSITIVO</button>
+  </div>
+</div>
 
 <!-- ── Modal CONTROLES ── -->
 <div id="modal-controles" onclick="if(event.target===this)fecharControles()">
@@ -901,17 +917,39 @@
     <!-- Step 3: confirmado -->
     <div id="reg-s3" style="display:none;text-align:center;">
       <div class="reg-label" style="text-align:center;">COORDENADA REGISTRADA</div>
-      <div style="font-size:11px;color:rgba(100,255,180,0.8);letter-spacing:3px;margin-bottom:16px;">✓ PAGAMENTO CONFIRMADO</div>
-      <p style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:8px;">SEU ENDEREÇO NO UNIVERSO</p>
-      <div id="reg-coord" style="font-size:15px;letter-spacing:2px;color:#fff;margin:16px 0;padding:16px;background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.1);"></div>
-      <div id="reg-s3-plano" style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.25);margin-bottom:8px;"></div>
+      <div style="font-size:11px;color:rgba(100,255,180,0.8);letter-spacing:3px;margin-bottom:20px;">✓ PAGAMENTO CONFIRMADO</div>
+
+      <!-- AVISO ANOTE -->
+      <div style="background:rgba(255,60,60,0.08);border:1px solid rgba(255,60,60,0.3);border-radius:10px;padding:14px 16px;margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:700;color:rgba(255,100,100,0.9);letter-spacing:2px;margin-bottom:6px;">⚠ ANOTE AGORA</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);line-height:1.7;">
+          Esta é a <strong style="color:rgba(255,255,255,0.8)">única vez</strong> que o COSM exibe sua coordenada desta forma.<br>
+          Sem ela, nenhum dispositivo novo reconhece você.
+        </div>
+      </div>
+
+      <!-- COORDENADA GRANDE -->
+      <p style="font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.3);margin-bottom:8px;">SEU ENDEREÇO NO UNIVERSO</p>
+      <div id="reg-coord" style="font-size:22px;font-family:'Space Mono',monospace;letter-spacing:3px;color:#fff;margin:0 0 10px;padding:20px 16px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(100,255,180,0.25);word-break:break-all;"></div>
+      <button onclick="copiarMinhaCoord()" style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;background:rgba(100,255,180,0.08);border:1px solid rgba(100,255,180,0.2);color:rgba(100,255,180,0.8);padding:8px 20px;border-radius:6px;cursor:pointer;margin-bottom:20px;">
+        COPIAR COORDENADA
+      </button>
+
+      <div id="reg-s3-plano" style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.25);margin-bottom:12px;"></div>
       <div id="reg-s3-royalty" style="display:none;font-size:10px;color:rgba(255,200,80,0.5);letter-spacing:1px;padding:8px 12px;background:rgba(255,200,80,0.04);border:1px solid rgba(255,200,80,0.1);border-radius:6px;margin:0 0 16px;line-height:1.8;">
         Este espaço pode ser vendido no marketplace COSM.<br>
         Em toda revenda, 10% vai automaticamente para o COSM.
       </div>
-      <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;">
+
+      <!-- CONFIRMAÇÃO QUE ANOTOU -->
+      <label style="display:flex;align-items:center;gap:10px;justify-content:center;cursor:pointer;margin-bottom:16px;font-size:11px;color:rgba(255,255,255,0.4);">
+        <input type="checkbox" id="reg-confirmou-anotar" onchange="atualizarBtnIrParaLa()" style="width:16px;height:16px;accent-color:rgba(100,255,180,0.8);">
+        Anotei minha coordenada
+      </label>
+
+      <div style="display:flex;gap:10px;justify-content:center;">
         <button class="reg-btn" onclick="fecharRegistro()">FECHAR</button>
-        <button class="reg-btn reg-btn-destaque" onclick="irParaMeuEspaco()">IR PARA LÁ →</button>
+        <button id="btn-ir-para-la" class="reg-btn reg-btn-destaque" onclick="irParaMeuEspaco()" disabled style="opacity:0.35;cursor:not-allowed;">IR PARA LÁ →</button>
       </div>
     </div>
 
@@ -1435,7 +1473,14 @@ window.irParaCoordenada = function() {
     flashEl.style.transition = 'opacity 0.60s';
     flashEl.style.opacity = '0';
     flashEl.style.background = '#ffffff';
-    setTimeout(() => { warping = false; }, 800);
+    setTimeout(() => {
+      warping = false;
+      // Checar se é uma coord registrada (reconhecimento em novo dispositivo)
+      fetch(`/api/minha-coord/${Math.round(cx)}/${Math.round(cy)}/${Math.round(cz)}`)
+        .then(r => r.json())
+        .then(d => { if (d.existe) mostrarReconhecimento(Math.round(cx), Math.round(cy), Math.round(cz)); })
+        .catch(() => {});
+    }, 800);
   }, 240);
 };
 
@@ -2361,17 +2406,24 @@ function mostrarConfirmado(coord) {
   document.getElementById('reg-s2').style.display = 'none';
   document.getElementById('reg-s3').style.display = 'block';
 
-  const isEmpresa   = coord.tipo === 'empresa';
+  // Resetar checkbox e botão
+  const cb = document.getElementById('reg-confirmou-anotar');
+  cb.checked = false;
+  const btn = document.getElementById('btn-ir-para-la');
+  btn.disabled = true; btn.style.opacity = '0.35'; btn.style.cursor = 'not-allowed';
+
+  const isEmpresa    = coord.tipo === 'empresa';
   const isPermanente = coord.plano === 'permanente';
-  const coordEl = document.getElementById('reg-coord');
+  const coordEl      = document.getElementById('reg-coord');
+  const cx = coord.coord_x, cy = coord.coord_y, cz = coord.coord_z;
 
   if (isEmpresa) {
     coordEl.innerHTML =
-      `COSM://${coord.coord_x} : ${coord.coord_y} : ${coord.coord_z}<br>` +
+      `${cx} : ${cy} : ${cz}<br>` +
       `<span style="font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:2px;display:block;margin-top:8px;">` +
-      `PREFIXO EXCLUSIVO — ${coord.coord_x}:X:X é o seu espaço</span>`;
+      `PREFIXO EXCLUSIVO — ${cx}:X:X é o seu espaço</span>`;
   } else {
-    coordEl.textContent = `${coord.coord_x} : ${coord.coord_y} : ${coord.coord_z}`;
+    coordEl.textContent = `${cx} : ${cy} : ${cz}`;
   }
 
   const planoEl   = document.getElementById('reg-s3-plano');
@@ -2380,24 +2432,28 @@ function mostrarConfirmado(coord) {
     planoEl.textContent = '✦ PLANO PERMANENTE — este espaço é seu para sempre';
     planoEl.style.color = 'rgba(255,200,80,0.5)';
     royaltyEl.style.display = 'block';
-  } else {
+  } else if (coord.plano === 'anual') {
     planoEl.textContent = 'PLANO ANUAL — renove antes do vencimento para manter o espaço';
     planoEl.style.color = 'rgba(255,255,255,0.25)';
     royaltyEl.style.display = 'none';
+  } else {
+    planoEl.textContent = 'ACESSO LIVRE — entre pelo menos 1x por mês para não perder o espaço';
+    planoEl.style.color = 'rgba(255,180,80,0.5)';
+    royaltyEl.style.display = 'none';
   }
+
+  // Salvar no dispositivo imediatamente
+  salvarMinhaCoord(cx, cy, cz);
 }
 
 window.irParaMeuEspaco = function() {
   if (!minhaCoordReg) return;
   fecharRegistro();
   const cx = minhaCoordReg.coord_x, cy = minhaCoordReg.coord_y, cz = minhaCoordReg.coord_z;
-  document.getElementById('coord-input').value = `${cx} : ${cy} : ${cz}`;
-  irParaCoordenada();
-  setTimeout(() => mostrarAvisoCoord(
-    'Você acaba de registrar este endereço no universo. Sem ele, ninguém — nem você — encontra este lugar de novo.',
-    `COSM://${cx}:${cy}:${cz}`,
-    'sua'
-  ), 2000);
+  // Navega direto sem warp — é o próprio espaço do usuário
+  coordBase.x = cx; coordBase.y = cy; coordBase.z = cz;
+  camera.position.set(0, 0, 1800);
+  velCruz = 0; voando = false; alvoVoo = null;
 };
 
 // ═══════════════════════════════════════════════════════
@@ -2420,6 +2476,103 @@ function mostrarAvisoCoord(msg, coordStr, tipo) {
 window.fecharAvisoCoord = function() {
   const el = document.getElementById('aviso-coord');
   el.classList.remove('visivel');
+};
+
+// ═══════════════════════════════════════════════════════
+//  MEU ESPAÇO — localStorage + reconhecimento
+// ═══════════════════════════════════════════════════════
+const COORD_KEY = 'cosm_minha_coord'; // formato "X:Y:Z"
+let _coordPendente = null; // coord aguardando confirmação de reconhecimento
+
+function salvarMinhaCoord(x, y, z) {
+  localStorage.setItem(COORD_KEY, `${x}:${y}:${z}`);
+  document.getElementById('menu-meu-espaco').style.display = 'flex';
+  fetch('/api/acesso', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ x, y, z })
+  }).catch(() => {});
+}
+
+function minhaCoordSalva() {
+  const s = localStorage.getItem(COORD_KEY);
+  if (!s) return null;
+  const [x, y, z] = s.split(':').map(Number);
+  if ([x, y, z].some(isNaN)) { localStorage.removeItem(COORD_KEY); return null; }
+  return { x, y, z };
+}
+
+// Chamado no load — se tiver coord salva, verifica e navega
+async function autoNavegaMeuEspaco() {
+  const c = minhaCoordSalva();
+  if (!c) return;
+  document.getElementById('menu-meu-espaco').style.display = 'flex';
+  try {
+    const r = await fetch(`/api/minha-coord/${c.x}/${c.y}/${c.z}`);
+    const d = await r.json();
+    if (!d.existe) {
+      localStorage.removeItem(COORD_KEY);
+      document.getElementById('menu-meu-espaco').style.display = 'none';
+      notif('Sua coordenada expirou por inatividade — espaço liberado');
+      return;
+    }
+    // Navega direto sem animação de warp
+    coordBase.x = c.x; coordBase.y = c.y; coordBase.z = c.z;
+    camera.position.set(0, 0, 1800);
+    velCruz = 0; voando = false; alvoVoo = null;
+    notif(`MEU ESPAÇO — ${c.x} : ${c.y} : ${c.z}`);
+    salvarMinhaCoord(c.x, c.y, c.z); // renova ultimo_acesso
+  } catch (_) {}
+}
+setTimeout(autoNavegaMeuEspaco, 800);
+
+// Botão "MEU ESPAÇO" no menu
+window.irParaMeuEspacoSalvo = function() {
+  const c = minhaCoordSalva();
+  if (!c) return;
+  coordBase.x = c.x; coordBase.y = c.y; coordBase.z = c.z;
+  camera.position.set(0, 0, 1800);
+  velCruz = 0; voando = false; alvoVoo = null;
+  salvarMinhaCoord(c.x, c.y, c.z);
+  notif(`MEU ESPAÇO — ${c.x} : ${c.y} : ${c.z}`);
+};
+
+// Copiar coordenada no reg-s3
+window.copiarMinhaCoord = function() {
+  const txt = document.getElementById('reg-coord').textContent;
+  navigator.clipboard.writeText(txt).catch(() => {});
+  const btn = event.currentTarget;
+  btn.textContent = '✓ COPIADO';
+  setTimeout(() => { btn.textContent = 'COPIAR COORDENADA'; }, 2000);
+};
+
+// Checkbox "anotei" habilita o botão IR PARA LÁ
+window.atualizarBtnIrParaLa = function() {
+  const ok = document.getElementById('reg-confirmou-anotar').checked;
+  const btn = document.getElementById('btn-ir-para-la');
+  btn.disabled = !ok;
+  btn.style.opacity = ok ? '1' : '0.35';
+  btn.style.cursor  = ok ? 'pointer' : 'not-allowed';
+};
+
+// Reconhecimento em novo dispositivo
+let _reconhecerCoord = null;
+function mostrarReconhecimento(x, y, z) {
+  if (minhaCoordSalva()) return; // já tem coord salva
+  _reconhecerCoord = { x, y, z };
+  document.getElementById('prompt-reconhecer-coord').textContent = `${x} : ${y} : ${z}`;
+  document.getElementById('prompt-reconhecer').style.display = 'block';
+}
+window.fecharReconhecimento = function() {
+  document.getElementById('prompt-reconhecer').style.display = 'none';
+  _reconhecerCoord = null;
+};
+window.confirmarReconhecimento = function() {
+  if (!_reconhecerCoord) return;
+  const { x, y, z } = _reconhecerCoord;
+  salvarMinhaCoord(x, y, z);
+  fecharReconhecimento();
+  notif('Dispositivo reconhecido — MEU ESPAÇO salvo aqui');
 };
 
 // ═══════════════════════════════════════════════════════

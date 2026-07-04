@@ -44,8 +44,9 @@ async function initDB() {
   await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS tipo        TEXT DEFAULT 'pessoa'`);
   await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS plano       TEXT DEFAULT 'permanente'`);
   await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS valido_ate  TIMESTAMPTZ`);
-  await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS url_conteudo TEXT`);
-  await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS url_3d      TEXT`);
+  await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS url_conteudo  TEXT`);
+  await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS url_3d       TEXT`);
+  await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS ultimo_acesso TIMESTAMPTZ DEFAULT NOW()`);
 
   // Garantir que nenhuma coordenada seja alocada duas vezes
   await pool.query(`
@@ -191,14 +192,52 @@ app.get('/api/coordenada/:carteira', async (req, res) => {
   }
 });
 
-// Listar todas as coordenadas públicas (para exibir no mapa espacial)
+// Listar coordenadas públicas ATIVAS (pagas ou acessadas há <30 dias)
 app.get('/api/coordenadas', async (req, res) => {
   try {
     const { rows } = await pool.query(
       `SELECT carteira, coord_x, coord_y, coord_z, nome, tipo, url_conteudo, url_3d
-       FROM registros WHERE publico = true ORDER BY id`
+       FROM registros
+       WHERE publico = true
+         AND (plano IN ('permanente','anual') OR ultimo_acesso > NOW() - INTERVAL '30 days')
+       ORDER BY id`
     );
     res.json(rows);
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+// Registrar acesso a uma coordenada (renova os 30 dias)
+// Body: { x, y, z }
+app.post('/api/acesso', async (req, res) => {
+  const { x, y, z } = req.body;
+  if (x == null || y == null || z == null) return res.status(400).json({ erro: 'coords obrigatorias' });
+  try {
+    const { rowCount } = await pool.query(
+      `UPDATE registros SET ultimo_acesso = NOW()
+       WHERE coord_x=$1 AND coord_y=$2 AND coord_z=$3`,
+      [parseInt(x), parseInt(y), parseInt(z)]
+    );
+    res.json({ ok: rowCount > 0 });
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+// Verificar se uma coordenada está ativa e retornar seus dados
+app.get('/api/minha-coord/:x/:y/:z', async (req, res) => {
+  const { x, y, z } = req.params;
+  try {
+    const { rows } = await pool.query(
+      `SELECT coord_x, coord_y, coord_z, nome, tipo, plano, valido_ate, url_conteudo, url_3d
+       FROM registros
+       WHERE coord_x=$1 AND coord_y=$2 AND coord_z=$3
+         AND (plano IN ('permanente','anual') OR ultimo_acesso > NOW() - INTERVAL '30 days')`,
+      [parseInt(x), parseInt(y), parseInt(z)]
+    );
+    if (!rows.length) return res.json({ existe: false });
+    res.json({ existe: true, ...rows[0] });
   } catch (e) {
     res.status(500).json({ erro: e.message });
   }
