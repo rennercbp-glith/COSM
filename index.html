@@ -1276,6 +1276,7 @@ canvas.addEventListener('mousemove', e => {
 canvas.addEventListener('mouseup', () => {
   arrastando = false;
   canvas.style.cursor = 'crosshair';
+  if (!mouseMoved) velCruz = 0;
 });
 
 canvas.addEventListener('contextmenu', e => e.preventDefault());
