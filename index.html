@@ -1028,9 +1028,6 @@
       <div style="font-size:11px;letter-spacing:1px;color:rgba(255,200,80,0.7);margin-bottom:14px;">
         REIVINDICAR VAGA <span id="beta-slot-label"></span>
       </div>
-      <input id="beta-carteira" class="reg-input" type="text"
-        placeholder="Sua chave pública Solana (Phantom, Solflare...)"
-        spellcheck="false" style="margin-bottom:10px;"/>
       <input id="beta-nome" class="reg-input" type="text"
         placeholder="Nome do seu projeto (opcional)"
         spellcheck="false" style="margin-bottom:10px;"/>
@@ -1698,15 +1695,18 @@ window.selecionarBetaSlot = function(slot, x, y, z) {
 };
 
 window.claimarBeta = async function() {
-  const carteira = document.getElementById('beta-carteira').value.trim();
-  const nome     = document.getElementById('beta-nome').value.trim();
-  const url      = document.getElementById('beta-url').value.trim();
-  const erroEl   = document.getElementById('beta-erro');
+  const nome   = document.getElementById('beta-nome').value.trim();
+  const url    = document.getElementById('beta-url').value.trim();
+  const erroEl = document.getElementById('beta-erro');
 
-  if (!carteira) { erroEl.textContent = 'Informe sua carteira Solana.'; erroEl.style.display='block'; return; }
   if (!betaSlotSelecionado) return;
-
   erroEl.style.display = 'none';
+
+  let carteira = localStorage.getItem('cosm_id');
+  if (!carteira) {
+    carteira = crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2);
+    localStorage.setItem('cosm_id', carteira);
+  }
 
   try {
     const resp = await fetch('/api/beta/claim', {
@@ -1718,7 +1718,7 @@ window.claimarBeta = async function() {
 
     if (!resp.ok) {
       erroEl.textContent = data.erro === 'slot ja ocupado' ? 'Esta vaga acabou de ser ocupada. Escolha outra.' :
-                           data.erro === 'carteira ja registrada' ? 'Esta carteira já tem uma coordenada registrada.' :
+                           data.erro === 'carteira ja registrada' ? 'Este dispositivo já tem uma vaga beta registrada.' :
                            data.erro;
       erroEl.style.display = 'block';
       if (data.erro === 'slot ja ocupado') carregarBeta();
