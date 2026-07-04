@@ -250,6 +250,55 @@
     text-align:center;flex-shrink:0;
   }
 
+  /* ── Modal CONTROLES ── */
+  #modal-controles{
+    position:fixed;inset:0;z-index:200;display:flex;
+    align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.88);backdrop-filter:blur(12px);
+    opacity:0;pointer-events:none;transition:opacity 0.3s;
+  }
+  #modal-controles.ativo{opacity:1;pointer-events:all;}
+  #painel-controles{
+    background:#08080f;border:1px solid rgba(255,255,255,0.1);
+    border-radius:14px;padding:36px 40px;width:560px;max-width:96vw;
+    max-height:90vh;overflow-y:auto;font-family:'Space Grotesk',sans-serif;
+    scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.08) transparent;
+  }
+  .ctrl-device{
+    border:1px solid rgba(255,255,255,0.07);border-radius:10px;
+    padding:16px 20px;margin-bottom:12px;
+  }
+  .ctrl-device-titulo{
+    font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;
+    color:rgba(255,255,255,0.5);margin-bottom:10px;display:flex;
+    align-items:center;gap:10px;
+  }
+  .ctrl-badge{
+    font-size:10px;padding:2px 8px;border-radius:20px;
+    background:rgba(100,255,180,0.12);color:rgba(100,255,180,0.8);
+    border:1px solid rgba(100,255,180,0.2);
+  }
+  .ctrl-badge.inativo{
+    background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);
+    border-color:rgba(255,255,255,0.08);
+  }
+  .ctrl-lista{
+    display:grid;grid-template-columns:1fr 1fr;gap:6px;
+  }
+  .ctrl-item{
+    display:flex;gap:8px;align-items:center;font-size:12px;
+    color:rgba(255,255,255,0.55);
+  }
+  .ctrl-key{
+    font-family:'Space Mono',monospace;font-size:10px;
+    background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+    border-radius:5px;padding:2px 7px;color:rgba(255,255,255,0.7);white-space:nowrap;
+  }
+  #ctrl-gamepad-status{
+    margin-top:8px;font-size:12px;color:rgba(255,255,255,0.35);
+    font-family:'Space Mono',monospace;
+  }
+
   /* ── Modal INSERIR ── */
   #modal-inserir{
     position:fixed;inset:0;z-index:200;display:flex;
@@ -452,6 +501,11 @@
     <span class="menu-item-icon">+</span>
     <span class="menu-item-label">INSERIR</span>
   </div>
+  <!-- Controles -->
+  <div class="menu-item" onclick="fecharMenu();abrirControles()">
+    <span class="menu-item-icon">⚙</span>
+    <span class="menu-item-label">CONTROLES</span>
+  </div>
   <!-- O que é o COSM -->
   <div class="menu-item" onclick="fecharMenu();abrirInfo()">
     <span class="menu-item-icon">?</span>
@@ -497,6 +551,65 @@
 
 <!-- Beacon prompt: aparece quando perto de coordenada com conteúdo -->
 <div id="beacon-prompt" onclick="abrirConteudoBeacon()"></div>
+
+<!-- ── Modal CONTROLES ── -->
+<div id="modal-controles" onclick="if(event.target===this)fecharControles()">
+  <div id="painel-controles">
+    <div class="reg-label" style="text-align:center;margin-bottom:20px;">CONTROLES</div>
+
+    <!-- PC Mouse -->
+    <div class="ctrl-device">
+      <div class="ctrl-device-titulo">🖱 MOUSE <span class="ctrl-badge">PC</span></div>
+      <div class="ctrl-lista">
+        <div class="ctrl-item"><span class="ctrl-key">Scroll ↑</span> Voar para frente</div>
+        <div class="ctrl-item"><span class="ctrl-key">Scroll ↓</span> Voar para trás</div>
+        <div class="ctrl-item"><span class="ctrl-key">Arrastar</span> Girar câmera</div>
+        <div class="ctrl-item"><span class="ctrl-key">Clique</span> Parar</div>
+      </div>
+    </div>
+
+    <!-- Teclado -->
+    <div class="ctrl-device">
+      <div class="ctrl-device-titulo">⌨ TECLADO <span class="ctrl-badge">PC · TV</span></div>
+      <div class="ctrl-lista">
+        <div class="ctrl-item"><span class="ctrl-key">W / ↑</span> Frente</div>
+        <div class="ctrl-item"><span class="ctrl-key">S / ↓</span> Trás</div>
+        <div class="ctrl-item"><span class="ctrl-key">A / ←</span> Esquerda</div>
+        <div class="ctrl-item"><span class="ctrl-key">D / →</span> Direita</div>
+        <div class="ctrl-item"><span class="ctrl-key">Q</span> Subir</div>
+        <div class="ctrl-item"><span class="ctrl-key">E</span> Descer</div>
+        <div class="ctrl-item"><span class="ctrl-key">Shift</span> Turbo</div>
+        <div class="ctrl-item"><span class="ctrl-key">Esc</span> Parar</div>
+      </div>
+    </div>
+
+    <!-- Mobile -->
+    <div class="ctrl-device">
+      <div class="ctrl-device-titulo">📱 CELULAR <span class="ctrl-badge">TOQUE</span></div>
+      <div class="ctrl-lista">
+        <div class="ctrl-item"><span class="ctrl-key">1 dedo</span> Girar câmera</div>
+        <div class="ctrl-item"><span class="ctrl-key">2 dedos ↑</span> Voar frente</div>
+        <div class="ctrl-item"><span class="ctrl-key">2 dedos ↓</span> Voar trás</div>
+        <div class="ctrl-item"><span class="ctrl-key">Toque rápido</span> Parar</div>
+      </div>
+    </div>
+
+    <!-- Gamepad -->
+    <div class="ctrl-device">
+      <div class="ctrl-device-titulo">🎮 CONTROLE <span id="ctrl-gamepad-badge" class="ctrl-badge inativo">DESCONECTADO</span></div>
+      <div class="ctrl-lista">
+        <div class="ctrl-item"><span class="ctrl-key">L ↕</span> Frente / Trás</div>
+        <div class="ctrl-item"><span class="ctrl-key">L ↔</span> Esquerda / Direita</div>
+        <div class="ctrl-item"><span class="ctrl-key">R ↔↕</span> Girar câmera</div>
+        <div class="ctrl-item"><span class="ctrl-key">X / A</span> Parar</div>
+        <div class="ctrl-item"><span class="ctrl-key">L2 / R2</span> Subir / Descer</div>
+      </div>
+      <div id="ctrl-gamepad-status">Conecte um controle PS3, PS4, PS5 ou Xbox</div>
+    </div>
+
+    <button class="reg-btn" onclick="fecharControles()" style="width:100%;margin-top:8px;">FECHAR</button>
+  </div>
+</div>
 
 <!-- ── Modal INSERIR ── -->
 <div id="modal-inserir" onclick="if(event.target===this)fecharInserir()">
@@ -1432,6 +1545,7 @@ function atualizarObjetos3D(dt) {
 // ═══════════════════════════════════════════════════════
 function loop() {
   requestAnimationFrame(loop);
+  processarGamepad();
 
   // Voo de teletransporte
   if (voando && alvoVoo) {
@@ -1587,7 +1701,8 @@ function modalAberto() {
   return document.getElementById('modal-info').classList.contains('ativo') ||
          document.getElementById('modal-reg').classList.contains('ativo') ||
          document.getElementById('modal-teste').classList.contains('ativo') ||
-         document.getElementById('modal-inserir').classList.contains('ativo');
+         document.getElementById('modal-inserir').classList.contains('ativo') ||
+         document.getElementById('modal-controles').classList.contains('ativo');
 }
 
 // ─── Zona de Teste + Beta Developers ─────────────────────
@@ -1892,6 +2007,122 @@ const INS_TIPOS = {
     placeholder: 'https://exemplo.com/objeto.glb'
   }
 };
+
+// ═══════════════════════════════════════════════════════
+//  CONTROLES — modal + touch + gamepad
+// ═══════════════════════════════════════════════════════
+
+window.abrirControles = function() {
+  document.getElementById('modal-controles').classList.add('ativo');
+  bloquearCanvas(true);
+};
+window.fecharControles = function() {
+  document.getElementById('modal-controles').classList.remove('ativo');
+  bloquearCanvas(false);
+};
+
+// ── Touch (celular) ──────────────────────────────────
+let touchStart = null;
+let touchLastY  = 0;
+let touchTap    = false;
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  touchTap = true;
+  if (e.touches.length === 1) {
+    touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+  } else if (e.touches.length === 2) {
+    touchLastY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  touchTap = false;
+  if (e.touches.length === 1) {
+    const dx = e.touches[0].clientX - lastX;
+    const dy = e.touches[0].clientY - lastY;
+    lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+    _qRot.setFromAxisAngle(_axY, -dx * 0.004);
+    camera.quaternion.premultiply(_qRot);
+    _qRot.setFromAxisAngle(_axX, -dy * 0.004);
+    camera.quaternion.multiply(_qRot);
+    camera.quaternion.normalize();
+  } else if (e.touches.length === 2) {
+    const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+    const diff = touchLastY - midY;
+    touchLastY = midY;
+    if (Math.abs(diff) > 1) {
+      const novaVel = Math.max(-VEL_MAX, Math.min(VEL_MAX, velCruz + diff * 2));
+      if (Math.sign(novaVel) !== Math.sign(velCruz) || Math.abs(velCruz) < 1) {
+        velDir.set(0, 0, -1).applyQuaternion(camera.quaternion).normalize();
+      }
+      velCruz = novaVel;
+    }
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  if (touchTap && e.changedTouches.length === 1 && e.touches.length === 0) {
+    velCruz = 0;
+  }
+}, { passive: false });
+
+// ── Gamepad ──────────────────────────────────────────
+let gamepadAtivo = false;
+
+window.addEventListener('gamepadconnected', e => {
+  gamepadAtivo = true;
+  const badge  = document.getElementById('ctrl-gamepad-badge');
+  const status = document.getElementById('ctrl-gamepad-status');
+  if (badge)  { badge.textContent = 'CONECTADO'; badge.classList.remove('inativo'); }
+  if (status) status.textContent = `✓ ${e.gamepad.id.substring(0, 40)}`;
+});
+window.addEventListener('gamepaddisconnected', () => {
+  gamepadAtivo = false;
+  const badge  = document.getElementById('ctrl-gamepad-badge');
+  const status = document.getElementById('ctrl-gamepad-status');
+  if (badge)  { badge.textContent = 'DESCONECTADO'; badge.classList.add('inativo'); }
+  if (status) status.textContent = 'Conecte um controle PS3, PS4, PS5 ou Xbox';
+});
+
+function processarGamepad() {
+  if (!gamepadAtivo) return;
+  const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+  const gp = Array.from(gamepads).find(g => g);
+  if (!gp) return;
+
+  const LX = Math.abs(gp.axes[0]) > 0.12 ? gp.axes[0] : 0; // analógico esq ↔
+  const LY = Math.abs(gp.axes[1]) > 0.12 ? gp.axes[1] : 0; // analógico esq ↕
+  const RX = Math.abs(gp.axes[2]) > 0.12 ? gp.axes[2] : 0; // analógico dir ↔
+  const RY = Math.abs(gp.axes[3]) > 0.12 ? gp.axes[3] : 0; // analógico dir ↕
+
+  // Analógico direito = câmera
+  if (RX !== 0 || RY !== 0) {
+    _qRot.setFromAxisAngle(_axY, -RX * 0.04);
+    camera.quaternion.premultiply(_qRot);
+    _qRot.setFromAxisAngle(_axX, -RY * 0.04);
+    camera.quaternion.multiply(_qRot);
+    camera.quaternion.normalize();
+  }
+
+  // Analógico esquerdo = movimento
+  if (LX !== 0 || LY !== 0) {
+    const dir = new THREE.Vector3(-LX, 0, LY).normalize().applyQuaternion(camera.quaternion);
+    camera.position.addScaledVector(dir, 60);
+  }
+
+  // L2/R2 = subir/descer (botões 6 e 7)
+  const L2 = gp.buttons[6]?.value || 0;
+  const R2 = gp.buttons[7]?.value || 0;
+  if (R2 > 0.1) camera.position.y += 60 * R2;
+  if (L2 > 0.1) camera.position.y -= 60 * L2;
+
+  // X (PS) ou A (Xbox) = parar
+  if (gp.buttons[0]?.pressed) velCruz = 0;
+}
 
 let insTipoAtual = null;
 
