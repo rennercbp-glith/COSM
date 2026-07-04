@@ -658,10 +658,9 @@
         <div class="ins-card-icone">📦</div>
         <div class="ins-card-nome">OBJETO 3D</div>
       </div>
-      <div class="ins-card em-breve" title="Em breve">
+      <div class="ins-card" onclick="selecionarTipoInserir('codigo')" style="--ins-cor:rgba(180,140,255,0.5)">
         <div class="ins-card-icone">🔮</div>
         <div class="ins-card-nome">CÓDIGO</div>
-        <div style="font-size:9px;letter-spacing:1px;color:rgba(255,255,255,0.25);margin-top:4px;">EM BREVE</div>
       </div>
     </div>
 
@@ -672,6 +671,8 @@
         <input id="ins-url" type="text" spellcheck="false"
           placeholder="Cole a URL aqui..."
           onkeydown="if(event.key==='Enter')testarInserir()"/>
+        <textarea id="ins-codigo" spellcheck="false" style="display:none;width:100%;min-height:220px;background:#060610;border:1px solid rgba(180,140,255,0.25);border-radius:8px;color:rgba(200,180,255,0.9);font-family:'Space Mono',monospace;font-size:11.5px;line-height:1.7;padding:14px;box-sizing:border-box;resize:vertical;outline:none;tab-size:2;" placeholder="// Escreva Three.js aqui..."></textarea>
+        <div id="ins-codigo-erro" style="display:none;font-size:11px;color:rgba(255,120,80,0.9);background:rgba(255,80,40,0.06);border:1px solid rgba(255,80,40,0.2);border-radius:6px;padding:8px 12px;margin-top:8px;font-family:'Space Mono',monospace;white-space:pre-wrap;"></div>
         <button id="ins-btn-testar" onclick="testarInserir()">
           TESTAR NA ZONA COSM://0:777777:0 →
         </button>
@@ -1079,6 +1080,12 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 const scene  = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 100000000);
 const clock  = new THREE.Clock();
+
+// Luz ambiente para suportar MeshStandardMaterial em objetos do usuário
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+const _dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+_dirLight.position.set(1, 2, 3);
+scene.add(_dirLight);
 
 camera.position.set(0, 0, 1800); // começa 1800 unidades do centro (0:0:0)
 
@@ -1592,6 +1599,9 @@ function loop() {
     }
   }
 
+  // Hooks de animação para objetos do editor de código
+  if (window._cosmAnimHooks) window._cosmAnimHooks.forEach(fn => { try { fn(); } catch(_){} });
+
   atualizarHUD();
   atualizarBeacons();
   atualizarObjetos3D(clock.getDelta());
@@ -1926,6 +1936,43 @@ const INS_TIPOS = {
         <div class="ins-passo-txt">No <strong>GitHub</strong>: suba o arquivo .glb num repositório público → clique no arquivo → botão <strong>Raw</strong> → copie o URL.</div>
       </div>`,
     placeholder: 'https://exemplo.com/objeto.glb'
+  },
+  codigo: {
+    cor: 'rgba(180,140,255,0.7)',
+    instrucoes: `
+      <div class="ins-passo">
+        <div class="ins-passo-num">1</div>
+        <div class="ins-passo-txt">Escreva <strong>JavaScript com Three.js</strong>. Seu código roda direto na engine do COSM — você tem acesso a <code style="color:rgba(180,140,255,0.9);font-size:11px">THREE</code>, <code style="color:rgba(180,140,255,0.9);font-size:11px">scene</code> e <code style="color:rgba(180,140,255,0.9);font-size:11px">camera</code>.</div>
+      </div>
+      <div class="ins-passo">
+        <div class="ins-passo-num">2</div>
+        <div class="ins-passo-txt"><strong>Retorne um <code style="color:rgba(180,140,255,0.9);font-size:11px">THREE.Object3D</code></strong> e ele aparece no universo na sua posição atual. Para animação, adicione uma função em <code style="color:rgba(180,140,255,0.9);font-size:11px">window._cosmAnimHooks</code>.</div>
+      </div>
+      <div class="ins-passo">
+        <div class="ins-passo-num">!</div>
+        <div class="ins-passo-txt" style="color:rgba(255,255,255,0.35)">O objeto some ao recarregar. Para salvar permanente registre sua coordenada e use url_3d com um .glb hospedado.</div>
+      </div>`,
+    defaultCode:
+`// Esfera pulsante no universo
+const geo = new THREE.SphereGeometry(80, 32, 32);
+const mat = new THREE.MeshStandardMaterial({
+  color: 0x8844ff,
+  emissive: 0x330088,
+  roughness: 0.3,
+  metalness: 0.6
+});
+const esfera = new THREE.Mesh(geo, mat);
+
+// Animação: registre funções aqui para rodar todo frame
+if (!window._cosmAnimHooks) window._cosmAnimHooks = [];
+let _t = 0;
+window._cosmAnimHooks.push(() => {
+  _t += 0.02;
+  esfera.scale.setScalar(1 + Math.sin(_t) * 0.12);
+  esfera.rotation.y += 0.008;
+});
+
+return esfera;`
   }
 };
 
@@ -2063,17 +2110,35 @@ window.fecharInserir = function() {
 window.selecionarTipoInserir = function(tipo) {
   insTipoAtual = tipo;
   const cfg = INS_TIPOS[tipo];
-  document.querySelectorAll('.ins-card:not(.em-breve)').forEach(c => c.classList.remove('selecionado'));
+  document.querySelectorAll('.ins-card').forEach(c => c.classList.remove('selecionado'));
   event.currentTarget.classList.add('selecionado');
   document.getElementById('ins-detalhe-corpo').innerHTML = cfg.instrucoes;
-  document.getElementById('ins-url').placeholder = cfg.placeholder;
-  document.getElementById('ins-url').value = '';
+  document.getElementById('ins-codigo-erro').style.display = 'none';
+
+  const urlInput   = document.getElementById('ins-url');
+  const codeArea   = document.getElementById('ins-codigo');
+  const btnTestar  = document.getElementById('ins-btn-testar');
+
+  if (tipo === 'codigo') {
+    urlInput.style.display = 'none';
+    codeArea.style.display = 'block';
+    if (!codeArea.value) codeArea.value = cfg.defaultCode;
+    btnTestar.textContent = 'EXECUTAR NO UNIVERSO →';
+  } else {
+    urlInput.style.display = 'block';
+    codeArea.style.display = 'none';
+    urlInput.placeholder = cfg.placeholder;
+    urlInput.value = '';
+    btnTestar.textContent = 'TESTAR NA ZONA COSM://0:777777:0 →';
+  }
+
   const detalhe = document.getElementById('ins-detalhe');
   detalhe.classList.add('visivel');
   setTimeout(() => detalhe.scrollIntoView({behavior:'smooth',block:'nearest'}), 50);
 };
 
 window.testarInserir = function() {
+  if (insTipoAtual === 'codigo') { executarCodigo(); return; }
   let url = document.getElementById('ins-url').value.trim();
   if (!url) return;
   if (!url.startsWith('http')) url = 'https://' + url;
@@ -2087,6 +2152,36 @@ window.testarInserir = function() {
     else abrirIframeTeste(src, 'MODO TESTE');
   }, 1600);
 };
+
+function executarCodigo() {
+  const codigo = document.getElementById('ins-codigo').value.trim();
+  const erroEl = document.getElementById('ins-codigo-erro');
+  erroEl.style.display = 'none';
+  if (!codigo) return;
+  try {
+    const fn  = new Function('THREE', 'scene', 'camera', 'coordBase', codigo);
+    const obj = fn(THREE, scene, camera, coordBase);
+    if (obj instanceof THREE.Object3D) {
+      // Posiciona ~300u à frente da câmera na posição atual
+      const frente = new THREE.Vector3(0, 0, -300).applyQuaternion(camera.quaternion);
+      obj.position.copy(camera.position).add(frente);
+      scene.add(obj);
+      fecharInserir();
+      notif('Objeto adicionado ao universo');
+    } else if (Array.isArray(obj) && obj.length) {
+      const frente = new THREE.Vector3(0, 0, -300).applyQuaternion(camera.quaternion);
+      obj.forEach(o => { if (o instanceof THREE.Object3D) { o.position.copy(camera.position).add(frente); scene.add(o); } });
+      fecharInserir();
+      notif(`${obj.length} objetos adicionados`);
+    } else {
+      fecharInserir();
+      notif('Código executado');
+    }
+  } catch(e) {
+    erroEl.style.display = 'block';
+    erroEl.textContent = '✕ ' + e.message;
+  }
+}
 
 // ═══════════════════════════════════════════════════════
 //  MENU COSM://
