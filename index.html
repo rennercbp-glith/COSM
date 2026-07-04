@@ -1703,34 +1703,77 @@ window.fecharTeste = function() {
   if (!modalAberto()) bloquearCanvas(false);
 };
 
+// ─── Prepara URL antes de renderizar ────────────────────
+// Converte links normais (YouTube, Vimeo, Drive, imagem)
+// em links que realmente funcionam dentro do COSM.
+function prepararUrl(url, tipo) {
+  // GLB nativo
+  if (tipo === 'glb' || /\.glb(\?.*)?$/i.test(url)) {
+    return { src: url, eh3d: true };
+  }
+
+  // Imagem — envolve em página escura centralizada
+  if (tipo === 'imagem' || /\.(jpe?g|png|gif|webp|svg|bmp|avif)(\?.*)?$/i.test(url)) {
+    const html = `<!DOCTYPE html><html><body style="margin:0;background:#050508;display:flex;
+align-items:center;justify-content:center;min-height:100vh">
+<img src="${url.replace(/"/g,'%22')}" style="max-width:100%;max-height:100vh;object-fit:contain">
+</body></html>`;
+    return { src: 'data:text/html,' + encodeURIComponent(html), eh3d: false };
+  }
+
+  // YouTube — aceita qualquer formato de link do YouTube
+  const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if (yt) return { src: `https://www.youtube.com/embed/${yt[1]}?autoplay=1`, eh3d: false };
+
+  // Vimeo
+  const vim = url.match(/vimeo\.com\/(\d+)/);
+  if (vim) return { src: `https://player.vimeo.com/video/${vim[1]}?autoplay=1`, eh3d: false };
+
+  // Google Drive — /view → /preview
+  const gd = url.match(/drive\.google\.com\/file\/d\/([^/?#]+)/);
+  if (gd) return { src: `https://drive.google.com/file/d/${gd[1]}/preview`, eh3d: false };
+
+  // Google Docs / Sheets / Slides
+  if (/docs\.google\.com\/(document|spreadsheets|presentation)/.test(url)) {
+    return { src: url.replace(/\/(edit|pub).*$/, '/preview'), eh3d: false };
+  }
+
+  // PDF direto — envolve em viewer inline
+  if (/\.pdf(\?.*)?$/i.test(url)) {
+    return { src: `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`, eh3d: false };
+  }
+
+  return { src: url, eh3d: false };
+}
+
+function abrirIframeTeste(src, titulo) {
+  document.getElementById('iframe-titulo').textContent = titulo || 'ZONA DE TESTE';
+  document.getElementById('iframe-coord').textContent = 'COSM://0:777777:0 — DEMONSTRAÇÃO';
+  document.getElementById('iframe-content').src = src;
+  document.getElementById('iframe-teste-banner').style.display = 'block';
+  document.getElementById('iframe-overlay').classList.add('ativo');
+  bloquearCanvas(true);
+  mostrarAvisoCoord(
+    'Você está na zona de demonstração. Quando registrar seu próprio espaço, anote as coordenadas — elas são o único mapa num universo infinito.',
+    'COSM://0:777777:0', 'teste'
+  );
+}
+
 window.renderizarTeste = function() {
   let url = document.getElementById('teste-url-input').value.trim();
   if (!url) return;
   if (!url.startsWith('http')) url = 'https://' + url;
-
   fecharTeste();
-
-  // Voa para a coordenada de teste
   document.getElementById('coord-input').value =
     `${COORD_TESTE.x} : ${COORD_TESTE.y} : ${COORD_TESTE.z}`;
   irParaCoordenada();
-
-  // Após o warp, abre o iframe com o banner de modo teste
+  const { src, eh3d } = prepararUrl(url, url.endsWith('.glb') ? 'glb' : 'site');
   setTimeout(() => {
-    document.getElementById('iframe-titulo').textContent = 'ZONA DE TESTE';
-    document.getElementById('iframe-coord').textContent =
-      `COSM://0:777777:0 — DEMONSTRAÇÃO`;
-    document.getElementById('iframe-content').src = url;
-    document.getElementById('iframe-teste-banner').style.display = 'block';
-    document.getElementById('iframe-overlay').classList.add('ativo');
-    bloquearCanvas(true);
-    mostrarAvisoCoord(
-      'Você está na zona de demonstração. Quando registrar seu próprio espaço, anote as coordenadas — elas são o único mapa num universo infinito.',
-      'COSM://0:777777:0',
-      'teste'
-    );
+    if (eh3d) carregarObjeto3D(COORD_TESTE.x, COORD_TESTE.y, COORD_TESTE.z, url, 300);
+    else abrirIframeTeste(src, 'ZONA DE TESTE');
   }, 1600);
 };
+
 function bloquearCanvas(sim) {
   canvas.style.pointerEvents = sim ? 'none' : 'auto';
 }
@@ -1783,24 +1826,24 @@ const INS_TIPOS = {
     instrucoes: `
       <div class="ins-passo">
         <div class="ins-passo-num">1</div>
-        <div class="ins-passo-txt">Para vídeos do <strong>YouTube</strong>: abra o vídeo → clique em <strong>Compartilhar</strong> → <strong>Incorporar</strong> → copie apenas a URL dentro de <em>src="..."</em>.</div>
+        <div class="ins-passo-txt">Cole o link normal do <strong>YouTube</strong> ou <strong>Vimeo</strong> — o COSM converte automaticamente para o formato correto.</div>
       </div>
       <div class="ins-passo">
         <div class="ins-passo-num">2</div>
-        <div class="ins-passo-txt">Para <strong>Vimeo</strong>: abra o vídeo → clique em <strong>Compartilhar</strong> → copie o link de <strong>Embed</strong>.</div>
-      </div>
-      <div class="ins-passo">
-        <div class="ins-passo-num">3</div>
-        <div class="ins-passo-txt">Também funciona qualquer URL direta de arquivo <strong>.mp4</strong> hospedado publicamente.</div>
+        <div class="ins-passo-txt">Exemplos que funcionam:<br>
+          <code style="font-size:11px;color:rgba(255,255,255,0.4)">https://youtube.com/watch?v=abc123</code><br>
+          <code style="font-size:11px;color:rgba(255,255,255,0.4)">https://youtu.be/abc123</code><br>
+          <code style="font-size:11px;color:rgba(255,255,255,0.4)">https://vimeo.com/123456789</code>
+        </div>
       </div>`,
-    placeholder: 'https://www.youtube.com/embed/ID_DO_VIDEO'
+    placeholder: 'https://youtube.com/watch?v=...'
   },
   pdf: {
     cor: 'rgba(255,255,100,0.7)',
     instrucoes: `
       <div class="ins-passo">
         <div class="ins-passo-num">1</div>
-        <div class="ins-passo-txt">No <strong>Google Drive</strong>: abra o PDF → clique em <strong>Compartilhar</strong> → <em>Qualquer pessoa com o link</em> → depois vá em <strong>Abrir em nova aba</strong> e copie o URL da barra do navegador.</div>
+        <div class="ins-passo-txt">No <strong>Google Drive</strong>: abra o PDF → clique em <strong>Compartilhar</strong> → <em>Qualquer pessoa com o link</em> → copie o link. O COSM converte automaticamente para visualização.</div>
       </div>
       <div class="ins-passo">
         <div class="ins-passo-num">2</div>
@@ -1870,29 +1913,14 @@ window.testarInserir = function() {
   let url = document.getElementById('ins-url').value.trim();
   if (!url) return;
   if (!url.startsWith('http')) url = 'https://' + url;
+  const { src, eh3d } = prepararUrl(url, insTipoAtual);
   fecharInserir();
-
   document.getElementById('coord-input').value =
     `${COORD_TESTE.x} : ${COORD_TESTE.y} : ${COORD_TESTE.z}`;
   irParaCoordenada();
-
-  const eh3d = insTipoAtual === 'glb';
   setTimeout(() => {
-    if (eh3d) {
-      carregarObjeto3D(COORD_TESTE.x, COORD_TESTE.y, COORD_TESTE.z, url, 300);
-    } else {
-      document.getElementById('iframe-titulo').textContent = 'MODO TESTE';
-      document.getElementById('iframe-coord').textContent = 'COSM://0:777777:0 — DEMONSTRAÇÃO';
-      document.getElementById('iframe-content').src = url;
-      document.getElementById('iframe-teste-banner').style.display = 'block';
-      document.getElementById('iframe-overlay').classList.add('ativo');
-      bloquearCanvas(true);
-    }
-    mostrarAvisoCoord(
-      'Você está na zona de demonstração. Quando registrar seu próprio espaço, anote as coordenadas — elas são o único mapa num universo infinito.',
-      'COSM://0:777777:0',
-      'teste'
-    );
+    if (eh3d) carregarObjeto3D(COORD_TESTE.x, COORD_TESTE.y, COORD_TESTE.z, url, 300);
+    else abrirIframeTeste(src, 'MODO TESTE');
   }, 1600);
 };
 
