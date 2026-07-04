@@ -492,7 +492,7 @@
     <button id="iframe-fechar" onclick="fecharIframe()">← VOLTAR AO UNIVERSO</button>
   </div>
   <div id="iframe-teste-banner">⚠ MODO TESTE — este conteúdo some quando você fechar ou atualizar a página · Compre para fixar para sempre</div>
-  <iframe id="iframe-content" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+  <iframe id="iframe-content" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-popups-to-escape-sandbox" allow="autoplay; fullscreen; picture-in-picture"></iframe>
 </div>
 
 <!-- Beacon prompt: aparece quando perto de coordenada com conteúdo -->
@@ -691,6 +691,9 @@
 
       <p style="font-size:11px;color:rgba(255,255,255,0.4);margin:14px 0 6px;letter-spacing:1px;">Plano:</p>
       <div class="reg-tipo-sel">
+        <button id="btn-plano-mensal" class="reg-tipo-btn" onclick="selecionarPlano('mensal')">
+          MENSAL<span id="txt-preco-mensal">0.002 SOL / mês</span>
+        </button>
         <button id="btn-plano-anual" class="reg-tipo-btn" onclick="selecionarPlano('anual')">
           ANUAL<span id="txt-preco-anual">0.01 SOL / ano</span>
         </button>
@@ -1544,20 +1547,23 @@ let regPlano = 'permanente';
 
 // Preços em SOL (espelham o servidor)
 const PRECOS = {
-  pessoa:  { anual: 0.01, permanente: 1   },
-  empresa: { anual: 0.1,  permanente: 10  }
+  pessoa:  { mensal: 0.002, anual: 0.01, permanente: 1   },
+  empresa: { mensal: 0.02,  anual: 0.1,  permanente: 10  }
 };
 
 function atualizarResumoPreco() {
   const preco = PRECOS[regTipo][regPlano];
-  const sufixo = regPlano === 'anual' ? ' SOL / ano' : ' SOL — para sempre';
+  const sufixo = regPlano === 'mensal'    ? ' SOL / mês'
+               : regPlano === 'anual'     ? ' SOL / ano'
+               : ' SOL — para sempre';
   document.getElementById('reg-preco-resumo').textContent = preco + sufixo;
 
-  // Atualiza labels nos botões de plano
+  const pm = PRECOS[regTipo].mensal;
   const pa = PRECOS[regTipo].anual;
   const pp = PRECOS[regTipo].permanente;
-  document.getElementById('txt-preco-anual').textContent = pa + ' SOL / ano';
-  document.getElementById('txt-preco-perm').textContent  = pp + ' SOL — para sempre';
+  document.getElementById('txt-preco-mensal').textContent = pm + ' SOL / mês';
+  document.getElementById('txt-preco-anual').textContent  = pa + ' SOL / ano';
+  document.getElementById('txt-preco-perm').textContent   = pp + ' SOL — para sempre';
 }
 
 function atualizarInfoTipo() {
@@ -1723,11 +1729,11 @@ align-items:center;justify-content:center;min-height:100vh">
 
   // YouTube — aceita qualquer formato de link do YouTube
   const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  if (yt) return { src: `https://www.youtube.com/embed/${yt[1]}?autoplay=1`, eh3d: false };
+  if (yt) return { src: `https://www.youtube-nocookie.com/embed/${yt[1]}`, eh3d: false };
 
   // Vimeo
   const vim = url.match(/vimeo\.com\/(\d+)/);
-  if (vim) return { src: `https://player.vimeo.com/video/${vim[1]}?autoplay=1`, eh3d: false };
+  if (vim) return { src: `https://player.vimeo.com/video/${vim[1]}`, eh3d: false };
 
   // Google Drive — /view → /preview
   const gd = url.match(/drive\.google\.com\/file\/d\/([^/?#]+)/);
@@ -1996,6 +2002,7 @@ window.selecionarTipo = function(tipo) {
 
 window.selecionarPlano = function(plano) {
   regPlano = plano;
+  document.getElementById('btn-plano-mensal').classList.toggle('ativo', plano === 'mensal');
   document.getElementById('btn-plano-anual').classList.toggle('ativo', plano === 'anual');
   document.getElementById('btn-plano-permanente').classList.toggle('ativo', plano === 'permanente');
   atualizarResumoPreco();
@@ -2018,9 +2025,11 @@ window.irParaS1 = function() {
     isEmp ? 'PREFIXO EXCLUSIVO NO UNIVERSO COSM'
           : 'COORDENADA NO UNIVERSO COSM';
 
+  const labelPlano = regPlano === 'mensal' ? 'PLANO MENSAL — renovável todo mês'
+                   : regPlano === 'anual'  ? 'PLANO ANUAL — renovável todo ano'
+                   : 'PLANO PERMANENTE — para sempre';
   document.getElementById('reg-resumo-sub').textContent =
-    (isEmp ? 'EMPRESA · ' : 'PESSOA · ') +
-    (isPerm ? 'PLANO PERMANENTE — para sempre' : 'PLANO ANUAL — renovável');
+    (isEmp ? 'EMPRESA · ' : 'PESSOA · ') + labelPlano;
 
   document.getElementById('reg-resumo-desc').innerHTML = isEmp
     ? `Um bloco exclusivo de coordenadas no eixo X do universo —
@@ -2031,9 +2040,13 @@ window.irParaS1 = function() {
       ? `Uma coordenada tridimensional permanente no universo COSM.
          Endereço único que nunca some, não depende de nenhum servidor externo.
          Guarde o que quiser, compartilhe com quem quiser, construa o que quiser.`
-      : `Uma coordenada tridimensional no universo COSM por 1 ano.
+      : regPlano === 'anual'
+      ? `Uma coordenada tridimensional no universo COSM por 1 ano.
          Endereço ativo enquanto a assinatura estiver em dia.
-         Ideal para experimentar o universo antes de comprar permanente.`;
+         Ideal para experimentar o universo antes de comprar permanente.`
+      : `Uma coordenada tridimensional no universo COSM por 30 dias.
+         Perfeito para criar algo temporário, testar uma ideia, guardar um conteúdo por um mês.
+         Quando expirar, a coordenada some — e você pode renovar ou deixar ir.`;
 
   // O que pode fazer
   const acoes = isPerm
@@ -2042,6 +2055,11 @@ window.irParaS1 = function() {
        ✓ &nbsp;Construir experiências, mundos ou conteúdo no seu espaço<br>
        ✓ &nbsp;${isEmp ? 'Alocar sub-coordenadas para clientes ou projetos' : 'Listar no marketplace e vender para quem quiser'}<br>
        ✓ &nbsp;Receber ofertas de empresas que queiram seu espaço`
+    : regPlano === 'mensal'
+    ? `✓ &nbsp;Guardar arquivos, senhas e conteúdo privado por 30 dias<br>
+       ✓ &nbsp;Compartilhar seu endereço COSM:// com qualquer pessoa<br>
+       ✓ &nbsp;Renovar a qualquer momento para manter o espaço<br>
+       ✗ &nbsp;<span style="color:rgba(255,255,255,0.25)">Revenda não disponível no plano mensal</span>`
     : `✓ &nbsp;Guardar arquivos, senhas e conteúdo privado<br>
        ✓ &nbsp;Compartilhar seu endereço COSM:// com qualquer pessoa<br>
        ✓ &nbsp;Construir experiências no seu espaço<br>
@@ -2050,7 +2068,7 @@ window.irParaS1 = function() {
 
   // Boxes condicionais
   document.getElementById('reg-box-invest').style.display = isPerm ? 'block' : 'none';
-  document.getElementById('reg-box-anual').style.display  = isPerm ? 'none'  : 'block';
+  document.getElementById('reg-box-anual').style.display  = (isPerm || regPlano === 'mensal') ? 'none' : 'block';
   document.getElementById('reg-preco-invest').textContent = preco + ' SOL';
 
   // Campo nome empresa

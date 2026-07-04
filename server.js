@@ -20,8 +20,8 @@ const connection = new Connection(SOLANA_RPC, 'confirmed');
 
 // Preços em SOL por combinação tipo × plano
 const PRECOS = {
-  pessoa:  { anual: parseFloat(process.env.PRECO_PESSOA_ANUAL   || '0.01'), permanente: parseFloat(process.env.PRECO_PESSOA_PERM    || '1'  ) },
-  empresa: { anual: parseFloat(process.env.PRECO_EMPRESA_ANUAL  || '0.1' ), permanente: parseFloat(process.env.PRECO_EMPRESA_PERM   || '10' ) }
+  pessoa:  { mensal: parseFloat(process.env.PRECO_PESSOA_MES    || '0.002'), anual: parseFloat(process.env.PRECO_PESSOA_ANUAL || '0.01'), permanente: parseFloat(process.env.PRECO_PESSOA_PERM  || '1'  ) },
+  empresa: { mensal: parseFloat(process.env.PRECO_EMPRESA_MES   || '0.02' ), anual: parseFloat(process.env.PRECO_EMPRESA_ANUAL|| '0.1' ), permanente: parseFloat(process.env.PRECO_EMPRESA_PERM || '10' ) }
 };
 const ROYALTY_PERC = parseFloat(process.env.ROYALTY_PERC || '0.10'); // 10% sobre revendas
 
@@ -386,7 +386,9 @@ app.get('/api/pagamento/verificar/:referencia', async (req, res) => {
         await client.query('UPDATE pagamentos SET status=$1 WHERE referencia=$2', ['confirmado', referencia]);
 
         const coord = await alocarProximaCoord(client, tipo);
-        const validoAte = plano === 'anual'
+        const validoAte = plano === 'mensal'
+          ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          : plano === 'anual'
           ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
           : null;
 
@@ -422,7 +424,24 @@ app.get('/api/pagamento/verificar/:referencia', async (req, res) => {
   }
 });
 
+// ─── Liberar coordenadas expiradas ───────────────────────────
+async function liberarExpirados() {
+  try {
+    const { rowCount } = await pool.query(
+      `DELETE FROM registros
+       WHERE plano IN ('mensal','anual')
+         AND valido_ate IS NOT NULL
+         AND valido_ate < NOW()`
+    );
+    if (rowCount > 0) console.log(`${rowCount} coordenada(s) expirada(s) liberada(s)`);
+  } catch (e) {
+    console.error('Erro ao liberar expirados:', e.message);
+  }
+}
+
 // ─── Start ───────────────────────────────────────────────────
 initDB().then(() => {
   app.listen(PORT, () => console.log(`COSM backend na porta ${PORT}`));
+  liberarExpirados(); // roda uma vez ao iniciar
+  setInterval(liberarExpirados, 6 * 60 * 60 * 1000); // e a cada 6 horas
 });
