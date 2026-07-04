@@ -1229,6 +1229,7 @@ function coordAtual() {
 // ═══════════════════════════════════════════════════════
 const VEL_MAX   = 1200;
 let velCruz     = 0;
+let velDir      = new THREE.Vector3(0, 0, -1); // direção travada do voo
 let voando          = false;
 let alvoVoo         = null;
 let alvoVooRotacao  = null;
@@ -1284,7 +1285,12 @@ canvas.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('wheel', e => {
   if (modalAberto()) return;
   e.preventDefault();
-  velCruz = Math.max(-VEL_MAX, Math.min(VEL_MAX, velCruz - e.deltaY * 0.6));
+  const novaVel = Math.max(-VEL_MAX, Math.min(VEL_MAX, velCruz - e.deltaY * 0.6));
+  // Trava direção no momento do scroll (foguete)
+  if (Math.sign(novaVel) !== Math.sign(velCruz) || Math.abs(velCruz) < 1) {
+    velDir.set(0, 0, -1).applyQuaternion(camera.quaternion).normalize();
+  }
+  velCruz = novaVel;
 }, {passive: false});
 
 document.addEventListener('keydown', e => {
@@ -1444,12 +1450,10 @@ function loop() {
     }
   }
 
-  // Cruzeiro — velocidade estável (cruise control)
-  // Scroll define velocidade, mantém até scroll contrário ou Escape
+  // Cruzeiro — voo em linha reta na direção travada (foguete)
+  // Câmera pode girar livremente sem mudar a rota
   if (!voando && Math.abs(velCruz) > 0.5) {
-    _fwd.set(0, 0, -1).applyQuaternion(camera.quaternion);
-    camera.position.addScaledVector(_fwd, velCruz);
-    // Sem atrito — snap para zero só quando muito lento
+    camera.position.addScaledVector(velDir, velCruz);
     if (Math.abs(velCruz) < 1) velCruz = 0;
   }
 
