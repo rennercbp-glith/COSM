@@ -1,6 +1,6 @@
 ===============================================================
   COSM — NOTAS TÉCNICAS (para Claude ler no futuro)
-  Última atualização: 2026-07-04 (v9 — controles, touch, gamepad, bug crítico corrigido)
+  Última atualização: 2026-07-04 (v10 — registro gratuito, coord por dispositivo, 30 dias)
   Pasta: C:\Users\renne\Projetos\COSM\
   Deploy: cosm-production.up.railway.app
   GitHub: https://github.com/rennercbp-glith/COSM.git
@@ -110,6 +110,7 @@ TABELA: registros
   url_conteudo TEXT   → URL de site/app (abre em iframe)
   url_3d       TEXT   → URL de arquivo .glb (objeto 3D nativo no universo)
   criado_em    TIMESTAMPTZ DEFAULT NOW()
+  ultimo_acesso TIMESTAMPTZ DEFAULT NOW()  → renovado a cada visita (30 dias de inatividade = coord liberada)
 
 TABELA: pagamentos
   id, referencia (UNIQUE), carteira, tipo, plano, nome, status, criado_em
@@ -157,6 +158,8 @@ POST /api/pagamento/iniciar      → gera QR Solana Pay
 GET  /api/pagamento/verificar/:ref → verifica pagamento na blockchain
 GET  /api/beta                   → lista 10 slots beta (livre/ocupado)
 POST /api/beta/claim             → reivindica slot beta (sem pagamento)
+POST /api/acesso                 → renova ultimo_acesso da coord (30 dias)
+GET  /api/minha-coord/:x/:y/:z   → verifica se coord está ativa (filtro 30 dias)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   COORDENADAS ESPECIAIS
@@ -192,11 +195,11 @@ Botão TESTAR (centro-direita) → Zona do Desenvolvedor
   Seção 3: Input de URL para testar + botão VOAR PARA ZONA DE TESTE
   Seção 4: Grid beta 10 vagas — claim gratuito, permanente
 
-Botão REGISTRAR (direita) → Modal de compra 4 steps
-  Step 0: Seleção PESSOA/EMPRESA + ANUAL/PERMANENTE
-  Step 1: Página de produto (o que está comprando, valorização)
-  Step 2: QR code Solana Pay + polling blockchain
-  Step 3: Coordenada confirmada + botão IR PARA LÁ
+Botão REGISTRAR (direita) → Modal de cadastro (fase beta gratuita)
+  Step 0: Seleção PESSOA/EMPRESA + nome opcional → botão REGISTRAR
+          (pagamento removido da UI — plano='beta', sem QR code)
+          Sistema de pagamento ainda existe no server.js para reativar depois.
+  Step 3: ANOTE AGORA (fundo vermelho) + coord grande + COPIAR + checkbox → IR PARA LÁ
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   TIPOGRAFIA
@@ -238,6 +241,14 @@ Space Mono (Google Fonts)    → coordenadas, código, botões, HUD
 ✓ Modal CONTROLES: instruções para mouse, teclado, celular, gamepad
 ✓ Touch mobile: 1 dedo=câmera, 2 dedos=voo, toque=parar
 ✓ Gamepad PS/Xbox: analógico esq=mover, dir=câmera, L2/R2=subir/descer
+✓ Registro GRATUITO (fase beta) — sem pagamento, sem Solana wallet
+✓ UUID como identificador de dispositivo (localStorage cosm_id)
+✓ Coordenada salva no dispositivo via localStorage (cosm_minha_coord)
+✓ 30 dias de inatividade → coord liberada para outro usuário
+✓ Auto-navegação ao MEU ESPAÇO ao carregar a página (setTimeout 800ms)
+✓ "MEU ESPAÇO" no menu lateral (visível só quando coord salva no dispositivo)
+✓ Tela ANOTE AGORA: coord grande + botão COPIAR + checkbox obrigatório → habilita IR PARA LÁ
+✓ Prompt de reconhecimento: ao teleportar para coord registrada em novo dispositivo
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   PENDENTE — PRÓXIMAS SESSÕES
@@ -472,6 +483,53 @@ SOLANA PAY — fluxo de pagamento
   GET /api/pagamento/verificar/:ref → busca txn na blockchain (memo)
   Confirmado → chama /api/registrar internamente
   Status: implementado no server.js. NUNCA TESTADO com SOL real.
+
+───────────────────────────────────────────────────────────────
+
+COORDENADA POR DISPOSITIVO — localStorage + 30 dias
+  Chaves localStorage:
+    cosm_minha_coord  → "X:Y:Z" da coordenada registrada neste dispositivo
+    cosm_id           → UUID gerado client-side (substitui Solana wallet no beta)
+
+  A coordenada É a senha. Quem anota e digita num novo dispositivo prova que é dono.
+
+  function salvarMinhaCoord(x, y, z) {
+    localStorage.setItem('cosm_minha_coord', `${x}:${y}:${z}`);
+    document.getElementById('menu-meu-espaco').style.display = 'flex';
+    fetch('/api/acesso', { method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({x,y,z}) }).catch(()=>{});
+  }
+
+  function minhaCoordSalva() {
+    const s = localStorage.getItem('cosm_minha_coord');
+    if (!s) return null;
+    const [x,y,z] = s.split(':').map(Number);
+    if ([x,y,z].some(isNaN)) { localStorage.removeItem('cosm_minha_coord'); return null; }
+    return {x,y,z};
+  }
+
+  // UUID gerado na hora do registro (se ainda não existe):
+  let carteira = localStorage.getItem('cosm_id');
+  if (!carteira) {
+    carteira = crypto.randomUUID ? crypto.randomUUID()
+             : Date.now()+'-'+Math.random().toString(36).slice(2);
+    localStorage.setItem('cosm_id', carteira);
+  }
+
+  // Auto-navegar ao carregar página:
+  setTimeout(autoNavegaMeuEspaco, 800);
+
+  // Verificar atividade no servidor (filtro 30 dias):
+  // GET /api/minha-coord/:x/:y/:z → {existe: true/false}
+  // POST /api/acesso {x,y,z} → renova ultimo_acesso
+
+  // Prompt de reconhecimento (após teleporte para coord registrada):
+  // irParaCoordenada() chama /api/minha-coord → se existe → mostrarReconhecimento()
+  // Botão SIM → salvarMinhaCoord() → MEU ESPAÇO aparece no menu
+
+  // Funções removidas (pagamento — PRESERVADAS no server.js):
+  // selecionarPlano, irParaS1, voltarParaS0, iniciarPagamento,
+  // verificarPagamento, atualizarResumoPreco, PRECOS, regPlano
 
 ───────────────────────────────────────────────────────────────
 
