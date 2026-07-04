@@ -86,14 +86,16 @@ async function initDB() {
 // ─── Alocação de coordenadas ─────────────────────────────────
 const GAP = 1_000_000;
 
-// Espiral áurea — para pessoas físicas
+// Esfera de Fibonacci — distribui em todas as direções (X, Y, Z)
 function alocarCoordenada(totalPessoas) {
-  const theta = totalPessoas * 2.39996322972;
-  const r     = GAP * Math.sqrt(totalPessoas + 1);
+  const i     = totalPessoas;
+  const phi   = Math.acos(1 - 2 * (i + 0.5) / 10000);
+  const theta = i * 2.39996322972;
+  const r     = GAP * Math.sqrt(i + 1);
   return {
-    x: Math.round(r * Math.cos(theta)),
-    y: 0,
-    z: Math.round(r * Math.sin(theta))
+    x: Math.round(r * Math.sin(phi) * Math.cos(theta)),
+    y: Math.round(r * Math.cos(phi)),
+    z: Math.round(r * Math.sin(phi) * Math.sin(theta))
   };
 }
 
