@@ -1378,12 +1378,13 @@ canvas.addEventListener('mousemove', e => {
   const dy = e.clientY - lastY;
   if (Math.abs(dx) + Math.abs(dy) > 2) mouseMoved = true;
   lastX = e.clientX; lastY = e.clientY;
-  // Yaw: eixo Y MUNDIAL — esq/dir sem roll independente da orientação
-  _qRot.setFromAxisAngle(_axY, -dx * 0.003);
+  // Eixos locais da câmera — 360° sem gimbal lock (universo sem gravidade)
+  const localRight = new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);
+  const localUp    = new THREE.Vector3(0,1,0).applyQuaternion(camera.quaternion);
+  _qRot.setFromAxisAngle(localRight, -dy * 0.003);
   camera.quaternion.premultiply(_qRot);
-  // Pitch: eixo X LOCAL da câmera — cima/baixo 360° sem trava
-  _qRot.setFromAxisAngle(_axX, -dy * 0.003);
-  camera.quaternion.multiply(_qRot);
+  _qRot.setFromAxisAngle(localUp, -dx * 0.003);
+  camera.quaternion.premultiply(_qRot);
   camera.quaternion.normalize();
 });
 
