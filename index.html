@@ -250,6 +250,79 @@
     text-align:center;flex-shrink:0;
   }
 
+  /* ── Modal INSERIR ── */
+  #modal-inserir{
+    position:fixed;inset:0;z-index:200;display:flex;
+    align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.88);backdrop-filter:blur(12px);
+    opacity:0;pointer-events:none;transition:opacity 0.3s;
+  }
+  #modal-inserir.ativo{opacity:1;pointer-events:all;}
+  #painel-inserir{
+    background:#08080f;border:1px solid rgba(255,255,255,0.1);
+    border-radius:14px;padding:36px 40px;width:680px;max-width:96vw;
+    max-height:90vh;overflow-y:auto;font-family:'Space Grotesk',sans-serif;
+    scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.08) transparent;
+  }
+  /* Grid de tipos de conteúdo */
+  #ins-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0;
+  }
+  .ins-card{
+    border:1px solid rgba(255,255,255,0.08);border-radius:10px;
+    padding:16px 14px;cursor:pointer;transition:all 0.18s;text-align:center;
+    background:rgba(255,255,255,0.02);
+  }
+  .ins-card:hover{background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.18);}
+  .ins-card.selecionado{background:rgba(255,255,255,0.06);border-color:var(--ins-cor,rgba(255,255,255,0.4));}
+  .ins-card-icone{font-size:22px;margin-bottom:8px;}
+  .ins-card-nome{font-size:11px;letter-spacing:1px;color:rgba(255,255,255,0.65);font-weight:500;}
+  .ins-card.em-breve{opacity:0.35;cursor:default;}
+  .ins-card.em-breve:hover{background:rgba(255,255,255,0.02);border-color:rgba(255,255,255,0.08);}
+  /* Painel de instrução (expande ao selecionar um tipo) */
+  #ins-detalhe{
+    display:none;margin-top:4px;
+    border:1px solid rgba(255,255,255,0.08);border-radius:10px;
+    padding:22px 24px;background:rgba(255,255,255,0.02);
+  }
+  #ins-detalhe.visivel{display:block;}
+  .ins-passo{
+    display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;
+  }
+  .ins-passo-num{
+    width:22px;height:22px;border-radius:50%;
+    background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    font-size:11px;color:rgba(255,255,255,0.5);font-family:'Space Mono',monospace;margin-top:1px;
+  }
+  .ins-passo-txt{font-size:13px;color:rgba(255,255,255,0.6);line-height:1.8;}
+  .ins-passo-txt strong{color:rgba(255,255,255,0.9);font-weight:500;}
+  .ins-servicos{
+    display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px;
+  }
+  .ins-servico{
+    font-size:11px;padding:4px 10px;border-radius:4px;
+    border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.5);
+    font-family:'Space Mono',monospace;
+  }
+  #ins-input-area{margin-top:16px;}
+  #ins-url{
+    width:100%;background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.14);border-radius:6px;
+    padding:11px 14px;color:#fff;
+    font-family:'Space Mono',monospace;font-size:12px;
+    letter-spacing:0.5px;outline:none;box-sizing:border-box;
+  }
+  #ins-url::placeholder{color:rgba(255,255,255,0.2);}
+  #ins-btn-testar{
+    margin-top:10px;width:100%;
+    background:transparent;border:1px solid rgba(255,255,255,0.2);
+    border-radius:6px;color:rgba(255,255,255,0.6);cursor:pointer;
+    font-family:'Space Grotesk',sans-serif;font-size:12px;letter-spacing:1px;
+    padding:10px;transition:all 0.2s;
+  }
+  #ins-btn-testar:hover{border-color:rgba(255,255,255,0.5);color:#fff;}
+
   /* ── Modal info ── */
   #modal-info{
     position:fixed;inset:0;z-index:200;display:flex;
@@ -374,6 +447,11 @@
     <span class="menu-item-icon">◎</span>
     <span class="menu-item-label">TESTAR</span>
   </div>
+  <!-- Inserir conteúdo -->
+  <div class="menu-item" onclick="fecharMenu();abrirInserir()">
+    <span class="menu-item-icon">+</span>
+    <span class="menu-item-label">INSERIR</span>
+  </div>
   <!-- O que é o COSM -->
   <div class="menu-item" onclick="fecharMenu();abrirInfo()">
     <span class="menu-item-icon">?</span>
@@ -419,6 +497,63 @@
 
 <!-- Beacon prompt: aparece quando perto de coordenada com conteúdo -->
 <div id="beacon-prompt" onclick="abrirConteudoBeacon()"></div>
+
+<!-- ── Modal INSERIR ── -->
+<div id="modal-inserir" onclick="if(event.target===this)fecharInserir()">
+  <div id="painel-inserir">
+    <div class="reg-label" style="text-align:center;margin-bottom:6px;">INSERIR CONTEÚDO</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.45);text-align:center;line-height:1.8;margin-bottom:4px;">
+      Qualquer coisa pode existir no seu espaço COSM.<br>
+      Escolha o tipo de conteúdo para ver como colocar.
+    </div>
+
+    <!-- Grid de tipos -->
+    <div id="ins-grid">
+      <div class="ins-card" onclick="selecionarTipoInserir('site')" style="--ins-cor:rgba(100,180,255,0.5)">
+        <div class="ins-card-icone">🌐</div>
+        <div class="ins-card-nome">SITE / APP</div>
+      </div>
+      <div class="ins-card" onclick="selecionarTipoInserir('imagem')" style="--ins-cor:rgba(255,180,80,0.5)">
+        <div class="ins-card-icone">🖼</div>
+        <div class="ins-card-nome">IMAGEM</div>
+      </div>
+      <div class="ins-card" onclick="selecionarTipoInserir('video')" style="--ins-cor:rgba(255,80,80,0.5)">
+        <div class="ins-card-icone">🎬</div>
+        <div class="ins-card-nome">VÍDEO</div>
+      </div>
+      <div class="ins-card" onclick="selecionarTipoInserir('pdf')" style="--ins-cor:rgba(255,255,100,0.5)">
+        <div class="ins-card-icone">📄</div>
+        <div class="ins-card-nome">PDF / DOC</div>
+      </div>
+      <div class="ins-card" onclick="selecionarTipoInserir('glb')" style="--ins-cor:rgba(80,255,180,0.5)">
+        <div class="ins-card-icone">📦</div>
+        <div class="ins-card-nome">OBJETO 3D</div>
+      </div>
+      <div class="ins-card em-breve" title="Em breve">
+        <div class="ins-card-icone">🔮</div>
+        <div class="ins-card-nome">CÓDIGO</div>
+        <div style="font-size:9px;letter-spacing:1px;color:rgba(255,255,255,0.25);margin-top:4px;">EM BREVE</div>
+      </div>
+    </div>
+
+    <!-- Detalhe do tipo selecionado -->
+    <div id="ins-detalhe">
+      <div id="ins-detalhe-corpo"></div>
+      <div id="ins-input-area">
+        <input id="ins-url" type="text" spellcheck="false"
+          placeholder="Cole a URL aqui..."
+          onkeydown="if(event.key==='Enter')testarInserir()"/>
+        <button id="ins-btn-testar" onclick="testarInserir()">
+          TESTAR NA ZONA COSM://0:777777:0 →
+        </button>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:20px;">
+      <button class="reg-btn" onclick="fecharInserir()">FECHAR</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── Modal info ── -->
 <div id="modal-info" onclick="if(event.target===this)fecharInfo()">
@@ -1438,7 +1573,8 @@ function atualizarInfoTipo() {
 function modalAberto() {
   return document.getElementById('modal-info').classList.contains('ativo') ||
          document.getElementById('modal-reg').classList.contains('ativo') ||
-         document.getElementById('modal-teste').classList.contains('ativo');
+         document.getElementById('modal-teste').classList.contains('ativo') ||
+         document.getElementById('modal-inserir').classList.contains('ativo');
 }
 
 // ─── Zona de Teste + Beta Developers ─────────────────────
@@ -1598,6 +1734,167 @@ window.renderizarTeste = function() {
 function bloquearCanvas(sim) {
   canvas.style.pointerEvents = sim ? 'none' : 'auto';
 }
+
+// ═══════════════════════════════════════════════════════
+//  MODAL INSERIR
+// ═══════════════════════════════════════════════════════
+const INS_TIPOS = {
+  site: {
+    cor: 'rgba(100,180,255,0.7)',
+    instrucoes: `
+      <div class="ins-passo">
+        <div class="ins-passo-num">1</div>
+        <div class="ins-passo-txt">Qualquer <strong>site, portfólio, loja ou app</strong> que tenha um endereço na internet funciona aqui. Precisa começar com <strong>https://</strong></div>
+      </div>
+      <div class="ins-passo">
+        <div class="ins-passo-num">2</div>
+        <div class="ins-passo-txt">Cole o endereço do site no campo abaixo e clique em TESTAR para ver como fica no universo.</div>
+      </div>
+      <div class="ins-passo">
+        <div class="ins-passo-num">!</div>
+        <div class="ins-passo-txt" style="color:rgba(255,255,255,0.35)">Alguns sites bloqueiam incorporação por segurança. Nesse caso, tente outro domínio ou use uma URL de embed.</div>
+      </div>`,
+    placeholder: 'https://seusite.com'
+  },
+  imagem: {
+    cor: 'rgba(255,180,80,0.7)',
+    instrucoes: `
+      <div class="ins-passo">
+        <div class="ins-passo-num">1</div>
+        <div class="ins-passo-txt">Suba sua imagem em um serviço gratuito de hospedagem:</div>
+      </div>
+      <div class="ins-servicos">
+        <span class="ins-servico">imgur.com</span>
+        <span class="ins-servico">postimages.org</span>
+        <span class="ins-servico">imgbb.com</span>
+      </div>
+      <div class="ins-passo" style="margin-top:10px">
+        <div class="ins-passo-num">2</div>
+        <div class="ins-passo-txt">Após subir, clique com o botão direito na imagem → <strong>Copiar endereço da imagem</strong>. O link deve terminar em <strong>.jpg .png .gif .webp</strong> ou similar.</div>
+      </div>
+      <div class="ins-passo">
+        <div class="ins-passo-num">3</div>
+        <div class="ins-passo-txt">Cole o link direto da imagem no campo abaixo.</div>
+      </div>`,
+    placeholder: 'https://i.imgur.com/exemplo.jpg'
+  },
+  video: {
+    cor: 'rgba(255,80,80,0.7)',
+    instrucoes: `
+      <div class="ins-passo">
+        <div class="ins-passo-num">1</div>
+        <div class="ins-passo-txt">Para vídeos do <strong>YouTube</strong>: abra o vídeo → clique em <strong>Compartilhar</strong> → <strong>Incorporar</strong> → copie apenas a URL dentro de <em>src="..."</em>.</div>
+      </div>
+      <div class="ins-passo">
+        <div class="ins-passo-num">2</div>
+        <div class="ins-passo-txt">Para <strong>Vimeo</strong>: abra o vídeo → clique em <strong>Compartilhar</strong> → copie o link de <strong>Embed</strong>.</div>
+      </div>
+      <div class="ins-passo">
+        <div class="ins-passo-num">3</div>
+        <div class="ins-passo-txt">Também funciona qualquer URL direta de arquivo <strong>.mp4</strong> hospedado publicamente.</div>
+      </div>`,
+    placeholder: 'https://www.youtube.com/embed/ID_DO_VIDEO'
+  },
+  pdf: {
+    cor: 'rgba(255,255,100,0.7)',
+    instrucoes: `
+      <div class="ins-passo">
+        <div class="ins-passo-num">1</div>
+        <div class="ins-passo-txt">No <strong>Google Drive</strong>: abra o PDF → clique em <strong>Compartilhar</strong> → <em>Qualquer pessoa com o link</em> → depois vá em <strong>Abrir em nova aba</strong> e copie o URL da barra do navegador.</div>
+      </div>
+      <div class="ins-passo">
+        <div class="ins-passo-num">2</div>
+        <div class="ins-passo-txt">Também funciona qualquer link direto de arquivo <strong>.pdf</strong> disponível publicamente.</div>
+      </div>
+      <div class="ins-servicos">
+        <span class="ins-servico">drive.google.com</span>
+        <span class="ins-servico">dropbox.com</span>
+        <span class="ins-servico">link direto .pdf</span>
+      </div>`,
+    placeholder: 'https://drive.google.com/file/d/ID/view'
+  },
+  glb: {
+    cor: 'rgba(80,255,180,0.7)',
+    instrucoes: `
+      <div class="ins-passo">
+        <div class="ins-passo-num">1</div>
+        <div class="ins-passo-txt">Arquivo <strong>.glb</strong> é um objeto 3D — personagem, carro, planeta, cidade, qualquer coisa. Ele flutua <strong>solto no universo</strong>, sem moldura, sem tela.</div>
+      </div>
+      <div class="ins-passo">
+        <div class="ins-passo-num">2</div>
+        <div class="ins-passo-txt">Você precisa de um URL público para o arquivo. Onde hospedar:</div>
+      </div>
+      <div class="ins-servicos">
+        <span class="ins-servico">sketchfab.com</span>
+        <span class="ins-servico">github.com (raw)</span>
+        <span class="ins-servico">seu servidor</span>
+      </div>
+      <div class="ins-passo" style="margin-top:10px">
+        <div class="ins-passo-num">3</div>
+        <div class="ins-passo-txt">No <strong>GitHub</strong>: suba o arquivo .glb num repositório público → clique no arquivo → botão <strong>Raw</strong> → copie o URL.</div>
+      </div>`,
+    placeholder: 'https://exemplo.com/objeto.glb'
+  }
+};
+
+let insTipoAtual = null;
+
+window.abrirInserir = function() {
+  insTipoAtual = null;
+  document.querySelectorAll('.ins-card').forEach(c => c.classList.remove('selecionado'));
+  document.getElementById('ins-detalhe').classList.remove('visivel');
+  document.getElementById('ins-url').value = '';
+  document.getElementById('modal-inserir').classList.add('ativo');
+  bloquearCanvas(true);
+};
+
+window.fecharInserir = function() {
+  document.getElementById('modal-inserir').classList.remove('ativo');
+  if (!modalAberto()) bloquearCanvas(false);
+};
+
+window.selecionarTipoInserir = function(tipo) {
+  insTipoAtual = tipo;
+  const cfg = INS_TIPOS[tipo];
+  document.querySelectorAll('.ins-card:not(.em-breve)').forEach(c => c.classList.remove('selecionado'));
+  event.currentTarget.classList.add('selecionado');
+  document.getElementById('ins-detalhe-corpo').innerHTML = cfg.instrucoes;
+  document.getElementById('ins-url').placeholder = cfg.placeholder;
+  document.getElementById('ins-url').value = '';
+  const detalhe = document.getElementById('ins-detalhe');
+  detalhe.classList.add('visivel');
+  setTimeout(() => detalhe.scrollIntoView({behavior:'smooth',block:'nearest'}), 50);
+};
+
+window.testarInserir = function() {
+  let url = document.getElementById('ins-url').value.trim();
+  if (!url) return;
+  if (!url.startsWith('http')) url = 'https://' + url;
+  fecharInserir();
+
+  document.getElementById('coord-input').value =
+    `${COORD_TESTE.x} : ${COORD_TESTE.y} : ${COORD_TESTE.z}`;
+  irParaCoordenada();
+
+  const eh3d = insTipoAtual === 'glb';
+  setTimeout(() => {
+    if (eh3d) {
+      carregarObjeto3D(COORD_TESTE.x, COORD_TESTE.y, COORD_TESTE.z, url, 300);
+    } else {
+      document.getElementById('iframe-titulo').textContent = 'MODO TESTE';
+      document.getElementById('iframe-coord').textContent = 'COSM://0:777777:0 — DEMONSTRAÇÃO';
+      document.getElementById('iframe-content').src = url;
+      document.getElementById('iframe-teste-banner').style.display = 'block';
+      document.getElementById('iframe-overlay').classList.add('ativo');
+      bloquearCanvas(true);
+    }
+    mostrarAvisoCoord(
+      'Você está na zona de demonstração. Quando registrar seu próprio espaço, anote as coordenadas — elas são o único mapa num universo infinito.',
+      'COSM://0:777777:0',
+      'teste'
+    );
+  }, 1600);
+};
 
 // ═══════════════════════════════════════════════════════
 //  MENU COSM://
