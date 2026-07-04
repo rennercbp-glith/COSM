@@ -1443,11 +1443,13 @@ function loop() {
     }
   }
 
-  // Cruzeiro — scroll acumula velocidade, decai com atrito
+  // Cruzeiro — velocidade estável (cruise control)
+  // Scroll define velocidade, mantém até scroll contrário ou Escape
   if (!voando && Math.abs(velCruz) > 0.5) {
     _fwd.set(0, 0, -1).applyQuaternion(camera.quaternion);
     camera.position.addScaledVector(_fwd, velCruz);
-    velCruz *= 0.96;
+    // Sem atrito — snap para zero só quando muito lento
+    if (Math.abs(velCruz) < 1) velCruz = 0;
   }
 
   // WASD — movimento na direção atual da câmera

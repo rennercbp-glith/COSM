@@ -1,6 +1,6 @@
 ===============================================================
   COSM — NOTAS TÉCNICAS (para Claude ler no futuro)
-  Última atualização: 2026-07-02 (v7 — sessão completa)
+  Última atualização: 2026-07-04 (v8 — organização de coordenadas + loop viral)
   Pasta: C:\Users\renne\Projetos\COSM\
   Deploy: cosm-production.up.railway.app
   GitHub: https://github.com/rennercbp-glith/COSM.git
@@ -13,6 +13,39 @@ INSTRUÇÃO PARA CLAUDE AO ABRIR ESTA SESSÃO:
   3. Para cada coisa nova que for adicionar: pergunte se pode ter versão 3D nativa
   4. Confirme ao Renner: "Li as notas e o código. Estado atual: [resumo]."
   5. Nunca implemente nada sem o Renner pedir
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  LOOP VIRAL — IDEIA DE CRESCIMENTO (2026-07-04)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CONCEITO:
+  A coordenada É o link. Sem login, sem identificação.
+  Você cria algo no COSM, compartilha COSM://X:Y:Z com um amigo,
+  ele voa até lá e vê exatamente o que você colocou.
+  Ele quer o seu. Registra. Compartilha com outro.
+  É o loop viral do COSM.
+
+FRASE DE MARKETING (rascunho):
+  "Crie seu espaço no universo. Compartilhe a coordenada.
+   Seu amigo voa até lá e vê o que você fez —
+   sem cadastro, sem senha. Só a coordenada."
+
+  Variação curta:
+  "Sua coordenada. Seu universo. Compartilha e eles chegam lá."
+
+ESTRATÉGIA DE CRESCIMENTO:
+  → Fase 1: Registro GRATUITO — sem pagamento, sem barreira
+  → Fase 2: Quando popular — novos registros voltam a ser pagos
+  → Usuários da fase 1 ficam com coordenada para sempre (early adopters)
+  → Isso cria urgência: "registre agora que é de graça"
+
+  Proteção anti-spam: limite por IP ou por wallet (não por pagamento)
+
+PRIORIDADE PARA IMPLEMENTAR:
+  1. Organização das coordenadas (usuário ESCOLHE, não é aleatório)
+  2. Facilitar para usuário simples colocar conteúdo no espaço
+     (não precisa saber de programação — só colar um link ou texto)
+  3. Botão de compartilhar coordenada (copia COSM://X:Y:Z com 1 clique)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   VISÃO — NUNCA MUDAR SEM ALINHAMENTO
