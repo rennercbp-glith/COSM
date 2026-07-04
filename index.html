@@ -9,35 +9,12 @@
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:#080810;overflow:hidden;font-family:'Space Grotesk',sans-serif;color:#aaccff;}
-  code,#coord-input,#coord-label,#txt-pos,#txt-vel,.painel-valor,
+  code,#coord-input,#txt-pos,#txt-vel,.painel-valor,
   .dev-tipo-code,#iframe-coord,#iframe-titulo,#iframe-fechar,
-  #btn-ir,#btn-info,#btn-testar,#btn-registrar,
-  #beacon-prompt,#notif,#iframe-teste-banner{
+  #btn-menu,#beacon-prompt,#notif,#iframe-teste-banner{
     font-family:'Space Mono',monospace;
   }
   canvas{display:block;cursor:crosshair;}
-
-  #barra-destino{
-    position:fixed;top:20px;left:50%;transform:translateX(-50%);
-    display:flex;align-items:center;gap:8px;z-index:10;
-    background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.1);
-    border-radius:8px;padding:8px 14px;pointer-events:all;
-    backdrop-filter:blur(6px);
-  }
-  #coord-label{font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.4);}
-  #coord-input{
-    background:transparent;border:none;outline:none;
-    color:rgba(255,255,255,0.75);font-family:'Space Grotesk',sans-serif;
-    font-size:13px;letter-spacing:2px;width:170px;
-  }
-  #coord-input::placeholder{color:rgba(255,255,255,0.18);}
-  #btn-ir{
-    background:transparent;border:1px solid rgba(255,255,255,0.18);
-    border-radius:5px;color:rgba(255,255,255,0.5);cursor:pointer;
-    font-family:'Space Grotesk',sans-serif;font-size:10px;
-    letter-spacing:3px;padding:4px 12px;transition:all 0.2s;
-  }
-  #btn-ir:hover{border-color:rgba(255,255,255,0.45);color:#fff;}
 
   #hud-bottom{
     position:fixed;bottom:20px;left:0;right:0;
@@ -51,14 +28,98 @@
   .painel-label{font-size:11px;letter-spacing:1px;color:rgba(255,255,255,0.4);margin-bottom:5px;}
   .painel-valor{font-size:13px;color:rgba(255,255,255,0.65);letter-spacing:1px;}
 
-  #btn-registrar{
-    position:fixed;top:20px;right:20px;z-index:10;
-    background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.12);
-    border-radius:8px;padding:8px 16px;color:rgba(255,255,255,0.5);
-    cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:10px;
-    letter-spacing:3px;backdrop-filter:blur(6px);transition:all 0.2s;
+  /* ── Botão menu COSM:// ── */
+  #btn-menu{
+    position:fixed;top:20px;left:20px;z-index:100;
+    background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.14);
+    border-radius:8px;padding:9px 16px;color:rgba(255,255,255,0.6);
+    cursor:pointer;font-family:'Space Mono',monospace;font-size:11px;
+    letter-spacing:2px;backdrop-filter:blur(8px);transition:all 0.2s;
+    pointer-events:all;
   }
-  #btn-registrar:hover{border-color:rgba(100,200,255,0.5);color:rgba(100,200,255,0.9);}
+  #btn-menu:hover,#btn-menu.ativo{
+    border-color:rgba(180,140,255,0.5);color:rgba(180,140,255,0.95);
+  }
+
+  /* ── Painel menu lateral ── */
+  #cosm-panel{
+    position:fixed;top:58px;left:20px;z-index:99;
+    width:240px;
+    background:rgba(6,6,14,0.96);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:10px;
+    overflow:hidden;
+    backdrop-filter:blur(14px);
+    pointer-events:all;
+    transform:translateY(-8px) scaleY(0.92);
+    transform-origin:top left;
+    opacity:0;
+    transition:transform 0.22s cubic-bezier(.22,1,.36,1),opacity 0.18s;
+    pointer-events:none;
+  }
+  #cosm-panel.ativo{
+    transform:translateY(0) scaleY(1);
+    opacity:1;
+    pointer-events:all;
+  }
+  .menu-item{
+    display:flex;align-items:center;gap:10px;
+    padding:13px 18px;cursor:pointer;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+    transition:background 0.15s;
+    user-select:none;
+  }
+  .menu-item:last-child{border-bottom:none;}
+  .menu-item:hover{background:rgba(255,255,255,0.04);}
+  .menu-item-icon{
+    font-size:14px;width:18px;text-align:center;
+    color:rgba(255,255,255,0.35);flex-shrink:0;
+    font-family:'Space Mono',monospace;
+    transition:color 0.15s;
+  }
+  .menu-item:hover .menu-item-icon{color:rgba(255,255,255,0.7);}
+  .menu-item-label{
+    font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.55);
+    font-family:'Space Grotesk',sans-serif;font-weight:500;
+    transition:color 0.15s;
+  }
+  .menu-item:hover .menu-item-label{color:#fff;}
+  .menu-item-seta{
+    margin-left:auto;font-size:10px;
+    color:rgba(255,255,255,0.2);
+    font-family:'Space Mono',monospace;
+    transition:transform 0.2s,color 0.15s;
+  }
+  .menu-item.expandido .menu-item-seta{transform:rotate(90deg);color:rgba(255,255,255,0.5);}
+
+  /* ── Área de coordenada expandida ── */
+  #menu-coord-expand{
+    display:none;
+    padding:4px 14px 14px;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+    background:rgba(255,255,255,0.02);
+  }
+  #menu-coord-expand.aberto{display:block;}
+  #menu-coord-wrap{
+    display:flex;align-items:center;gap:8px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:6px;padding:8px 12px;
+  }
+  #coord-input{
+    flex:1;background:transparent;border:none;outline:none;
+    color:rgba(255,255,255,0.8);
+    font-family:'Space Mono',monospace;
+    font-size:12px;letter-spacing:1px;min-width:0;
+  }
+  #coord-input::placeholder{color:rgba(255,255,255,0.2);font-size:11px;}
+  #btn-ir{
+    background:transparent;border:1px solid rgba(255,255,255,0.2);
+    border-radius:4px;color:rgba(255,255,255,0.55);cursor:pointer;
+    font-family:'Space Mono',monospace;font-size:10px;
+    letter-spacing:1px;padding:4px 10px;transition:all 0.2s;flex-shrink:0;
+  }
+  #btn-ir:hover{border-color:rgba(255,255,255,0.5);color:#fff;}
 
   #modal-reg{
     position:fixed;inset:0;z-index:200;display:flex;
@@ -141,16 +202,6 @@
   }
   #beacon-prompt:hover{border-color:rgba(100,200,255,0.7);color:#fff;}
 
-  /* ── Botão TESTAR ── */
-  #btn-testar{
-    position:fixed;top:20px;right:140px;z-index:10;
-    background:rgba(0,0,0,0.55);border:1px solid rgba(80,255,180,0.2);
-    border-radius:8px;padding:8px 16px;color:rgba(80,255,180,0.55);
-    cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:10px;
-    letter-spacing:3px;backdrop-filter:blur(6px);transition:all 0.2s;
-  }
-  #btn-testar:hover{border-color:rgba(80,255,180,0.55);color:rgba(80,255,180,0.95);}
-
   /* ── Modal teste ── */
   #modal-teste{
     position:fixed;inset:0;z-index:200;display:flex;
@@ -198,16 +249,6 @@
     font-size:11px;letter-spacing:1px;color:rgba(80,255,180,0.8);
     text-align:center;flex-shrink:0;
   }
-
-  /* ── Botão COSM:// info ── */
-  #btn-info{
-    position:fixed;top:20px;left:20px;z-index:10;
-    background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.12);
-    border-radius:8px;padding:8px 16px;color:rgba(255,255,255,0.5);
-    cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:10px;
-    letter-spacing:3px;backdrop-filter:blur(6px);transition:all 0.2s;
-  }
-  #btn-info:hover{border-color:rgba(180,140,255,0.5);color:rgba(180,140,255,0.9);}
 
   /* ── Modal info ── */
   #modal-info{
@@ -306,10 +347,33 @@
 <body>
 <canvas id="c"></canvas>
 
-<div id="barra-destino">
-  <span id="coord-label">COSM://</span>
-  <input id="coord-input" type="text" placeholder="X : Y : Z" spellcheck="false"/>
-  <button id="btn-ir" onclick="irParaCoordenada()">IR</button>
+<!-- ── Menu principal COSM:// ── -->
+<button id="btn-menu" onclick="toggleMenu()">COSM://</button>
+
+<div id="cosm-panel">
+  <!-- Coordenadas -->
+  <div class="menu-item" onclick="toggleCoordExpand()" id="menu-item-coord">
+    <span class="menu-item-icon">⊕</span>
+    <span class="menu-item-label">COORDENADAS</span>
+    <span class="menu-item-seta">▶</span>
+  </div>
+  <div id="menu-coord-expand">
+    <div id="menu-coord-wrap">
+      <input id="coord-input" type="text" placeholder="X : Y : Z" spellcheck="false"
+        onkeydown="if(event.key==='Enter'){irParaCoordenada();fecharMenu();}"/>
+      <button id="btn-ir" onclick="irParaCoordenada();fecharMenu()">IR</button>
+    </div>
+  </div>
+  <!-- Registrar -->
+  <div class="menu-item" onclick="fecharMenu();abrirRegistro()">
+    <span class="menu-item-icon">✦</span>
+    <span class="menu-item-label">REGISTRAR</span>
+  </div>
+  <!-- Testar -->
+  <div class="menu-item" onclick="fecharMenu();abrirTeste()">
+    <span class="menu-item-icon">◎</span>
+    <span class="menu-item-label">TESTAR</span>
+  </div>
 </div>
 
 <div id="hud-bottom">
@@ -350,10 +414,6 @@
 
 <!-- Beacon prompt: aparece quando perto de coordenada com conteúdo -->
 <div id="beacon-prompt" onclick="abrirConteudoBeacon()"></div>
-
-<button id="btn-info" onclick="abrirInfo()">COSM://</button>
-<button id="btn-testar" onclick="abrirTeste()">TESTAR</button>
-<button id="btn-registrar" onclick="abrirRegistro()">REGISTRAR</button>
 
 <!-- ── Modal info ── -->
 <div id="modal-info" onclick="if(event.target===this)fecharInfo()">
@@ -1089,9 +1149,7 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('keyup', e => delete teclas[e.code]);
 
-document.getElementById('coord-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') irParaCoordenada();
-});
+// Enter no input de coord — tratado via onkeydown inline no HTML
 
 // ═══════════════════════════════════════════════════════
 //  TELETRANSPORTE — instantâneo com efeito de warp
@@ -1535,6 +1593,45 @@ window.renderizarTeste = function() {
 function bloquearCanvas(sim) {
   canvas.style.pointerEvents = sim ? 'none' : 'auto';
 }
+
+// ═══════════════════════════════════════════════════════
+//  MENU COSM://
+// ═══════════════════════════════════════════════════════
+window.toggleMenu = function() {
+  const panel = document.getElementById('cosm-panel');
+  const btn   = document.getElementById('btn-menu');
+  const aberto = panel.classList.toggle('ativo');
+  btn.classList.toggle('ativo', aberto);
+  if (!aberto) {
+    document.getElementById('menu-coord-expand').classList.remove('aberto');
+    document.getElementById('menu-item-coord').classList.remove('expandido');
+  }
+};
+
+window.fecharMenu = function() {
+  document.getElementById('cosm-panel').classList.remove('ativo');
+  document.getElementById('btn-menu').classList.remove('ativo');
+  document.getElementById('menu-coord-expand').classList.remove('aberto');
+  document.getElementById('menu-item-coord').classList.remove('expandido');
+};
+
+window.toggleCoordExpand = function() {
+  const expand = document.getElementById('menu-coord-expand');
+  const item   = document.getElementById('menu-item-coord');
+  const abrindo = !expand.classList.contains('aberto');
+  expand.classList.toggle('aberto', abrindo);
+  item.classList.toggle('expandido', abrindo);
+  if (abrindo) setTimeout(() => document.getElementById('coord-input').focus(), 50);
+};
+
+// Fechar menu ao clicar fora
+document.addEventListener('click', e => {
+  const panel = document.getElementById('cosm-panel');
+  const btn   = document.getElementById('btn-menu');
+  if (panel.classList.contains('ativo') && !panel.contains(e.target) && e.target !== btn) {
+    fecharMenu();
+  }
+});
 
 window.abrirInfo = function() {
   document.getElementById('modal-info').classList.add('ativo');
