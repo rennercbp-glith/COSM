@@ -1,6 +1,6 @@
 ===============================================================
   COSM — NOTAS TÉCNICAS (para Claude ler no futuro)
-  Última atualização: 2026-07-04 (v8 — organização de coordenadas + loop viral)
+  Última atualização: 2026-07-04 (v9 — controles, touch, gamepad, bug crítico corrigido)
   Pasta: C:\Users\renne\Projetos\COSM\
   Deploy: cosm-production.up.railway.app
   GitHub: https://github.com/rennercbp-glith/COSM.git
@@ -206,7 +206,7 @@ Space Grotesk (Google Fonts) → texto geral, modais, descrições
 Space Mono (Google Fonts)    → coordenadas, código, botões, HUD
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  O QUE ESTÁ FUNCIONANDO (2026-07-02)
+  O QUE ESTÁ FUNCIONANDO (2026-07-04)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ✓ Universo 3D navegável (scroll=voo, arrastar=rotação)
@@ -223,11 +223,21 @@ Space Mono (Google Fonts)    → coordenadas, código, botões, HUD
 ✓ Botão TESTAR → Zona do Desenvolvedor (docs + beta)
 ✓ Beta developers: 10 vagas gratuitas permanentes
 ✓ Registro via Solana Pay (implementado, não testado)
-✓ Tipos PESSOA/EMPRESA + planos ANUAL/PERMANENTE/BETA
+✓ Tipos PESSOA/EMPRESA + planos ANUAL/PERMANENTE/BETA/MENSAL
 ✓ Royalty 10% em revendas (tabela marketplace criada)
 ✓ Backend Express + PostgreSQL no Railway
 ✓ Fontes: Space Grotesk + Space Mono
 ✓ Email: rennercbp@gmail.com
+✓ Cruise control: scroll define velocidade estável (sem atrito)
+✓ Clique no vazio: para a nave instantaneamente
+✓ Voo em linha reta: direção travada no scroll (foguete)
+✓ Câmera livre: girar não muda a rota
+✓ Coordenadas 3D reais: esfera de Fibonacci (GAP=1M)
+✓ Coordenadas embaralhadas propositalmente (Fibonacci dá X,Y,Z distintos)
+✓ Universo limpo: estrelas removidas a pedido do Renner
+✓ Modal CONTROLES: instruções para mouse, teclado, celular, gamepad
+✓ Touch mobile: 1 dedo=câmera, 2 dedos=voo, toque=parar
+✓ Gamepad PS/Xbox: analógico esq=mover, dir=câmera, L2/R2=subir/descer
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   PENDENTE — PRÓXIMAS SESSÕES
@@ -257,9 +267,15 @@ PRIORIDADE BAIXA (visão futura):
   BUGS CONHECIDOS E COMO EVITAR
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. const antes de loop(): TODA variável usada no loop() deve ser
-   declarada ANTES da função loop(). const não é hoisted.
-   ReferenceError dentro do loop = tela preta, sem erro visível.
+1. let/const antes de loop(): TODA variável usada dentro do loop() —
+   ou em funções chamadas pelo loop() (ex: processarGamepad) — deve ser
+   declarada ANTES da linha loop() ser CHAMADA (linha ~1631).
+   let/const têm Temporal Dead Zone: acessar antes da declaração =
+   ReferenceError silencioso → tela preta, loop travado, nada funciona.
+   Variáveis com function declaration (hoisted) são seguras, mas as que
+   elas referenciam com let/const não são.
+   BUG JÁ ACONTECEU: gamepadAtivo declarado em linha 2048, loop() em 1631.
+   Fix: mover para junto das outras vars de navegação (linha ~1317).
 
 2. Scroll bloqueado: o wheel handler global tem
    if (modalAberto()) return; ANTES do preventDefault.
@@ -267,7 +283,8 @@ PRIORIDADE BAIXA (visão futura):
 
 3. Canvas bloqueando cliques: bloquearCanvas(true) ao abrir qualquer
    modal ou iframe. bloquearCanvas(false) só quando TUDO estiver fechado.
-   modalAberto() verifica modal-info, modal-reg E modal-teste.
+   modalAberto() verifica: modal-info, modal-reg, modal-teste,
+   modal-inserir E modal-controles. Atualizar sempre que adicionar modal.
 
 4. Funções no onclick HTML: toda função chamada por onclick deve estar
    em window.funcao = function(){}. Funções dentro de type="module"
@@ -284,5 +301,186 @@ PRIORIDADE BAIXA (visão futura):
 → Sem gambiarras: apagar o bloco antigo, reescrever do zero
 → O Renner não programa — nunca pedir para ele editar código
 → Commits e pushes: sempre o Claude faz
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CÓDIGOS IMPORTANTES — REFERÊNCIA FUTURA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FLOATING ORIGIN — por que existe e como funciona
+  Three.js usa float32. Acima de ~100.000 unidades, objetos tremem.
+  Solução: câmera sempre perto do (0,0,0) do Three.js.
+  Posição real = coordBase + camera.position
+  Ao teleportar: coordBase muda, camera.position fica perto de zero.
+
+  const coordBase = { x:0, y:0, z:0 };
+
+  function coordAtual() {
+    return {
+      x: coordBase.x + camera.position.x,
+      y: coordBase.y + camera.position.y,
+      z: coordBase.z + camera.position.z
+    };
+  }
+
+  // Reposicionar qualquer objeto na cena todo frame:
+  mesh.position.set(
+    obj.cx - coordBase.x,
+    obj.cy - coordBase.y,
+    obj.cz - coordBase.z
+  );
+
+  // Wormhole (sempre em 0:0:0 do universo):
+  wormholeGroup.position.set(-coordBase.x, -coordBase.y, -coordBase.z);
+
+───────────────────────────────────────────────────────────────
+
+ROTAÇÃO DE CÂMERA — yaw mundial + pitch local
+  Yaw (esq/dir) = eixo Y MUNDIAL → não acumula roll
+  Pitch (cima/baixo) = eixo X LOCAL da câmera
+  Ordem: yaw com premultiply, pitch com multiply
+  Gimbal lock acontece em ±90° no pitch — sem fix ainda.
+
+  const _qRot = new THREE.Quaternion();
+  const _axY  = new THREE.Vector3(0, 1, 0);
+  const _axX  = new THREE.Vector3(1, 0, 0);
+
+  // No mousemove / touchmove / gamepad:
+  _qRot.setFromAxisAngle(_axY, -dx * 0.003);
+  camera.quaternion.premultiply(_qRot);
+  _qRot.setFromAxisAngle(_axX, -dy * 0.003);
+  camera.quaternion.multiply(_qRot);
+  camera.quaternion.normalize();
+
+───────────────────────────────────────────────────────────────
+
+VOO EM LINHA RETA — foguete (velDir + velCruz)
+  velDir = direção travada no momento do scroll
+  velCruz = velocidade (negativa = ré)
+  Câmera pode girar sem mudar rota. Clique = para.
+  ATENÇÃO: velCruz, velDir e VEL_MAX devem ser declarados
+  ANTES do loop() ser chamado (linha ~1631). TDZ mata o loop.
+
+  // Declarações (antes do loop):
+  const VEL_MAX = 1200;
+  let velCruz   = 0;
+  let velDir    = new THREE.Vector3(0, 0, -1);
+
+  // Wheel handler:
+  const novaVel = Math.max(-VEL_MAX, Math.min(VEL_MAX, velCruz - e.deltaY*0.6));
+  if (Math.sign(novaVel) !== Math.sign(velCruz) || Math.abs(velCruz) < 1) {
+    velDir.set(0,0,-1).applyQuaternion(camera.quaternion).normalize();
+  }
+  velCruz = novaVel;
+
+  // No loop():
+  if (!voando && Math.abs(velCruz) > 0.5) {
+    camera.position.addScaledVector(velDir, velCruz);
+    if (Math.abs(velCruz) < 1) velCruz = 0;
+  }
+
+───────────────────────────────────────────────────────────────
+
+ESCALA DO HUD — formatCoord + zonaAtual
+  4 zonas: LOCAL (<1k) → PESSOAL (1k–1M) → SETOR (1M–1G) → ANOS-LUZ (>1G)
+
+  function formatCoord(v) {
+    const s = v < 0 ? '-' : '';
+    const a = Math.abs(v);
+    if (a >= 1e9) return s + (a/1e9).toFixed(2) + 'A'; // Anos-luz
+    if (a >= 1e6) return s + (a/1e6).toFixed(2) + 'S'; // Setor
+    if (a >= 1e3) return s + (a/1e3).toFixed(1) + 'k'; // Pessoal
+    return s + Math.round(a) + 'm';                      // Local
+  }
+
+  function zonaAtual(c) {
+    const m = Math.max(Math.abs(c.x), Math.abs(c.y), Math.abs(c.z));
+    if (m >= 1e9) return { label:'ANOS-LUZ', cor:'rgba(180,140,255,0.7)' };
+    if (m >= 1e6) return { label:'SETOR',    cor:'rgba(100,200,255,0.7)' };
+    if (m >= 1e3) return { label:'PESSOAL',  cor:'rgba(100,255,180,0.7)' };
+    return             { label:'LOCAL',     cor:'rgba(255,255,255,0.4)' };
+  }
+
+───────────────────────────────────────────────────────────────
+
+ALOCAÇÃO DE COORDENADAS — server.js
+  Pessoas: Esfera de Fibonacci → distribui em X, Y, Z (não espiral 2D)
+  Empresas: Eixo X exclusivo (bloco de 1M por empresa)
+  GAP = 1.000.000 → espaço enorme, coordenadas embaralhadas (intencional)
+  O embaralhamento vem da fórmula Fibonacci, não de aleatoriedade.
+
+  const GAP = 1_000_000;
+
+  function alocarCoordenada(totalPessoas) {
+    const i     = totalPessoas;
+    const phi   = Math.acos(1 - 2 * (i + 0.5) / 10000);
+    const theta = i * 2.39996322972; // ângulo áureo em radianos
+    const r     = GAP * Math.sqrt(i + 1);
+    return {
+      x: Math.round(r * Math.sin(phi) * Math.cos(theta)),
+      y: Math.round(r * Math.cos(phi)),
+      z: Math.round(r * Math.sin(phi) * Math.sin(theta))
+    };
+  }
+
+  function alocarCoordenadaEmpresa(n) {
+    return { x: (n + 1) * 1_000_000, y: 0, z: 0 };
+  }
+
+───────────────────────────────────────────────────────────────
+
+MODAL + CANVAS BLOQUEADO — padrão obrigatório
+  Ao abrir qualquer modal: bloquearCanvas(true)
+  Ao fechar: bloquearCanvas(false) SÓ SE !modalAberto()
+  Exceção: fecharControles chama bloquearCanvas(false) direto.
+  modalAberto() deve listar TODOS os modais — atualizar ao criar novos.
+
+  function bloquearCanvas(sim) {
+    canvas.style.pointerEvents = sim ? 'none' : 'auto';
+  }
+
+  function modalAberto() {
+    return ['modal-info','modal-reg','modal-teste',
+            'modal-inserir','modal-controles']
+      .some(id => document.getElementById(id).classList.contains('ativo'));
+  }
+
+───────────────────────────────────────────────────────────────
+
+SHADER DO WORMHOLE — não mexer sem entender
+  GLSL puro dentro do Three.js ShaderMaterial.
+  Fresnel → anel brilhante na borda da esfera
+  noise2D → galáxia interior animada
+  Uniforms: uTime (float), uCamPos (vec3), uProx (float 0–1)
+  uProx → efeito "horizonte de eventos" (blur + saturação no canvas)
+  Definido em <script id="wormhole-frag"> dentro do index.html.
+
+───────────────────────────────────────────────────────────────
+
+TELEPORTE COM EFEITO WARP — sequência exata
+  1. canvas.style.filter = blur+brightness por 0.22s
+  2. flashEl aparece (opacity 0.92, gradiente azul-branco)
+  3. setTimeout 280ms: coordBase muda, camera.position fica a 1800u
+  4. canvas.style.filter some, flash some em 1.2s
+  Posição de chegada: 1800u na direção oposta ao olhar
+  → usuário sempre chega "olhando para" o destino.
+
+───────────────────────────────────────────────────────────────
+
+SOLANA PAY — fluxo de pagamento
+  Carteira do Renner: 3vYnxHp12AV3ZUT4MiyBR33SmwEENSfDcZysaf7s4goK
+  POST /api/pagamento/iniciar → gera UUID → QR code → polling 4s
+  GET /api/pagamento/verificar/:ref → busca txn na blockchain (memo)
+  Confirmado → chama /api/registrar internamente
+  Status: implementado no server.js. NUNCA TESTADO com SOL real.
+
+───────────────────────────────────────────────────────────────
+
+FUNÇÕES NO onclick HTML — módulo ES não exporta automático
+  Todo onclick="funcao()" precisa de window.funcao = function(){...}
+  Funções dentro de <script type="module"> NÃO são globais.
+  function declaration normal também não funciona para onclick.
+  Sempre usar window.nomedafuncao = function() { ... }
+
+===============================================================
 
 ===============================================================
