@@ -1127,34 +1127,8 @@ window.addEventListener('resize', () => {
 });
 
 // ═══════════════════════════════════════════════════════
-//  ESTRELAS — 5 camadas para paralaxe em múltiplas escalas
-// ═══════════════════════════════════════════════════════
-function gerarEstrelas(qtd, raioMin, raioMax, tamanho, opacidade) {
-  const pos = new Float32Array(qtd * 3);
-  for (let i = 0; i < qtd; i++) {
-    const theta = Math.random() * Math.PI * 2;
-    const phi   = Math.acos(2 * Math.random() - 1);
-    const r     = raioMin + (raioMax - raioMin) * Math.random();
-    pos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
-    pos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
-    pos[i*3+2] = r * Math.cos(phi);
-  }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  return new THREE.Points(geo, new THREE.PointsMaterial({
-    color: 0xffffff, size: tamanho,
-    sizeAttenuation: false, transparent: true, opacity: opacidade
-  }));
-}
-
-const camadas = [
-  gerarEstrelas(7000,  2e6,   80e6,  1.0, 0.55),
-  gerarEstrelas(2000,  500e3, 2e6,   0.8, 0.35),
-  gerarEstrelas(1200,  20e3,  500e3, 1.1, 0.60),
-  gerarEstrelas(600,   2000,  20e3,  1.4, 0.70),
-  gerarEstrelas(150,   400,   2000,  1.8, 0.80),
-];
-camadas.forEach(c => scene.add(c));
+// Estrelas removidas — universo limpo e escuro
+const camadas = [];
 
 // ═══════════════════════════════════════════════════════
 //  WORMHOLE — fixo em COSM 0:0:0
