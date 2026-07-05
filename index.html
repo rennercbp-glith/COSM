@@ -1407,6 +1407,128 @@ function atualizarObjetos3D(dt) {
   });
 }
 
+function criarCampoDeFutebol(cx, cy, cz) {
+  const grp  = new THREE.Group();
+  const matV = new THREE.MeshStandardMaterial({ color: 0x2d7a3e, roughness: 0.95 });
+  const matB = new THREE.MeshStandardMaterial({ color: 0xffffff });
+  const matT = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.6, roughness: 0.3 });
+  const matL = new THREE.LineBasicMaterial({ color: 0xffffff });
+
+  const L = 105, W = 68, lh = 0.12;
+
+  // Gramado
+  const grama = new THREE.Mesh(new THREE.PlaneGeometry(L + 6, W + 6), matV);
+  grama.rotation.x = -Math.PI / 2;
+  grama.position.y = -0.02;
+  grp.add(grama);
+
+  function caixa(x, z, w, d) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, lh, d), matB);
+    m.position.set(x, lh / 2, z);
+    grp.add(m);
+  }
+
+  // Contorno e linha central
+  caixa(0, -W/2, L, lh); caixa(0,  W/2, L, lh);
+  caixa(-L/2, 0, lh, W); caixa( L/2, 0, lh, W);
+  caixa(0, 0, lh, W);
+
+  // Áreas de penalti (40.32 × 16.5)
+  const PA_W = 40.32, PA_D = 16.5;
+  [-1, 1].forEach(s => {
+    const ox = s * (L/2 - PA_D/2);
+    caixa(ox,  PA_W/2, PA_D, lh); caixa(ox, -PA_W/2, PA_D, lh);
+    caixa(s * (L/2 - PA_D), 0, lh, PA_W);
+  });
+
+  // Áreas de meta (18.32 × 5.5)
+  const GA_W = 18.32, GA_D = 5.5;
+  [-1, 1].forEach(s => {
+    const ox = s * (L/2 - GA_D/2);
+    caixa(ox,  GA_W/2, GA_D, lh); caixa(ox, -GA_W/2, GA_D, lh);
+    caixa(s * (L/2 - GA_D), 0, lh, GA_W);
+  });
+
+  // Círculo central (raio 9.15m)
+  const r = 9.15;
+  const circPts = Array.from({ length: 65 }, (_, i) => {
+    const a = (i / 64) * Math.PI * 2;
+    return new THREE.Vector3(Math.cos(a) * r, lh, Math.sin(a) * r);
+  });
+  grp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(circPts), matL));
+
+  // Pontos centrais e de penalti
+  function addPonto(px, pz) {
+    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, lh, 16), matB);
+    p.position.set(px, lh / 2, pz);
+    grp.add(p);
+  }
+  addPonto(0, 0);
+  [-1, 1].forEach(s => addPonto(s * (L/2 - 11), 0));
+
+  // Arcos de penalti (parte fora da área)
+  [-1, 1].forEach(s => {
+    const spotX = s * (L/2 - 11);
+    const paEdge = s * (L/2 - PA_D);
+    const pts = [];
+    for (let i = 0; i <= 128; i++) {
+      const a = (i / 128) * Math.PI * 2;
+      const ax = spotX + Math.cos(a) * r;
+      const az = Math.sin(a) * r;
+      const fora = s < 0 ? ax < paEdge : ax > paEdge;
+      if (fora) {
+        pts.push(new THREE.Vector3(ax, lh, az));
+      } else if (pts.length > 1) {
+        grp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts.splice(0)), matL));
+      } else {
+        pts.length = 0;
+      }
+    }
+    if (pts.length > 1)
+      grp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), matL));
+  });
+
+  // Arcos de canto (raio 1m)
+  [[L/2, W/2], [L/2, -W/2], [-L/2, W/2], [-L/2, -W/2]].forEach(([cx2, cz2]) => {
+    const sx = cx2 < 0 ? 1 : -1, sz = cz2 < 0 ? 1 : -1;
+    const cPts = Array.from({ length: 17 }, (_, i) => {
+      const a = (i / 16) * (Math.PI / 2);
+      return new THREE.Vector3(cx2 + sx * Math.sin(a), lh, cz2 + sz * Math.cos(a));
+    });
+    grp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(cPts), matL));
+  });
+
+  // Traves (7.32 × 2.44 × 2.44)
+  const GL_W = 7.32, GL_H = 2.44, GL_D = 2.44, pr = 0.07;
+  [-1, 1].forEach(s => {
+    const gx = s * L / 2, dir = -s;
+
+    const cilindro = (w, h, d, rx, ry, rz, px, py, pz, escala = 1) => {
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(pr * escala, pr * escala, (w || h || d), 8), matT);
+      m.rotation.set(rx, ry, rz);
+      m.position.set(px, py, pz);
+      grp.add(m);
+    };
+
+    // Postes verticais
+    cilindro(0, GL_H, 0, 0, 0, 0, gx, GL_H/2,  GL_W/2);
+    cilindro(0, GL_H, 0, 0, 0, 0, gx, GL_H/2, -GL_W/2);
+    // Travessão horizontal (ao longo de Z → rotation.x)
+    cilindro(GL_W, 0, 0, Math.PI/2, 0, 0, gx, GL_H, 0);
+    // Postes traseiros
+    cilindro(0, GL_H, 0, 0, 0, 0, gx + dir*GL_D, GL_H/2,  GL_W/2, 0.7);
+    cilindro(0, GL_H, 0, 0, 0, 0, gx + dir*GL_D, GL_H/2, -GL_W/2, 0.7);
+    // Barra traseira superior (ao longo de Z → rotation.x)
+    cilindro(GL_W, 0, 0, Math.PI/2, 0, 0, gx + dir*GL_D, GL_H, 0, 0.7);
+    // Barras laterais superiores (frente→trás)
+    cilindro(GL_D, 0, 0, 0, 0, Math.PI/2 * s, gx + dir*GL_D/2, GL_H,  GL_W/2, 0.7);
+    cilindro(GL_D, 0, 0, 0, 0, Math.PI/2 * s, gx + dir*GL_D/2, GL_H, -GL_W/2, 0.7);
+  });
+
+  objetos3d.push({ mesh: grp, cx, cy, cz, mixer: null });
+  scene.add(grp);
+}
+
 // ═══════════════════════════════════════════════════════
 //  LOOP PRINCIPAL
 // ═══════════════════════════════════════════════════════
@@ -2559,6 +2681,9 @@ carregarObjeto3D(
   'https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb',
   500
 );
+
+// Campo de futebol em 14100:999900:1800
+criarCampoDeFutebol(14100, 999900, 1800);
 
 const BEACON_DIST_MAX = 500;
 
