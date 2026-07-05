@@ -4,15 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>COSM</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
+  @font-face {
+    font-family: 'Conthrax';
+    src: url('Conthrax-SemiBold.otf') format('opentype');
+    font-weight: 600;
+    font-style: normal;
+  }
   *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:#080810;overflow:hidden;font-family:'Space Grotesk',sans-serif;color:#aaccff;}
+  body{background:#080810;overflow:hidden;font-family:'Conthrax',sans-serif;color:#aaccff;}
   code,#coord-input,#txt-pos,#txt-vel,.painel-valor,
   .dev-tipo-code,#iframe-coord,#iframe-titulo,#iframe-fechar,
   #btn-menu,#beacon-prompt,#notif,#iframe-teste-banner{
-    font-family:'Space Mono',monospace;
+    font-family:'Conthrax',monospace;
   }
   canvas{display:block;cursor:crosshair;}
 
@@ -1112,7 +1116,7 @@ document.fonts.ready.then(() => {
   const fc = document.createElement('canvas');
   fc.width = 2048; fc.height = 512;
   const fctx = fc.getContext('2d');
-  fctx.font = '700 320px "Space Mono", monospace';
+  fctx.font = '600 320px "Conthrax", sans-serif';
   fctx.fillStyle = '#ffffff';
   fctx.textAlign = 'center';
   fctx.textBaseline = 'middle';
