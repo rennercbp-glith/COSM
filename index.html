@@ -677,7 +677,23 @@
           onkeydown="if(event.key==='Enter')testarInserir()"/>
         <textarea id="ins-codigo" spellcheck="false" style="display:none;width:100%;min-height:220px;background:#060610;border:1px solid rgba(180,140,255,0.25);border-radius:8px;color:rgba(200,180,255,0.9);font-family:'Space Mono',monospace;font-size:11.5px;line-height:1.7;padding:14px;box-sizing:border-box;resize:vertical;outline:none;tab-size:2;" placeholder="// Escreva Three.js aqui..."></textarea>
         <div id="ins-codigo-erro" style="display:none;font-size:11px;color:rgba(255,120,80,0.9);background:rgba(255,80,40,0.06);border:1px solid rgba(255,80,40,0.2);border-radius:6px;padding:8px 12px;margin-top:8px;font-family:'Space Mono',monospace;white-space:pre-wrap;"></div>
-        <button id="ins-btn-testar" onclick="testarInserir()">
+
+        <!-- Separador + upload local -->
+        <div id="ins-arquivo-sep" style="display:none;text-align:center;padding:10px 0 6px;">
+          <span style="font-size:9px;letter-spacing:2px;color:rgba(255,255,255,0.18);">— OU —</span>
+        </div>
+        <label id="ins-label-arquivo" style="display:none;cursor:pointer;width:100%;padding:9px;border:1px dashed rgba(255,255,255,0.18);border-radius:6px;color:rgba(255,255,255,0.45);font-size:11px;letter-spacing:1px;text-align:center;box-sizing:border-box;transition:all 0.2s;"
+          onmouseover="this.style.borderColor='rgba(255,255,255,0.45)';this.style.color='#fff'"
+          onmouseout="this.style.borderColor='rgba(255,255,255,0.18)';this.style.color='rgba(255,255,255,0.45)'">
+          CARREGAR DO DISPOSITIVO →
+          <input id="ins-arquivo" type="file" style="display:none;" onchange="carregarArquivoLocal(this)"/>
+        </label>
+        <div id="ins-arquivo-info" style="display:none;margin-top:8px;padding:8px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:6px;">
+          <div id="ins-arquivo-nome" style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+          <div style="font-size:9px;letter-spacing:1px;color:rgba(255,255,255,0.2);">TEMPORÁRIO · VISÍVEL SÓ PARA VOCÊ · SOME AO FECHAR A ABA</div>
+        </div>
+
+        <button id="ins-btn-testar" onclick="testarInserir()" style="margin-top:10px;">
           TESTAR NA ZONA COSM://0:777777:0 →
         </button>
       </div>
@@ -1994,6 +2010,10 @@ window.abrirInserir = function() {
   document.querySelectorAll('.ins-card').forEach(c => c.classList.remove('selecionado'));
   document.getElementById('ins-detalhe').classList.remove('visivel');
   document.getElementById('ins-url').value = '';
+  document.getElementById('ins-arquivo').value = '';
+  document.getElementById('ins-arquivo-info').style.display = 'none';
+  document.getElementById('ins-arquivo-sep').style.display = 'none';
+  document.getElementById('ins-label-arquivo').style.display = 'none';
   document.getElementById('modal-inserir').classList.add('ativo');
   bloquearCanvas(true);
 };
@@ -2015,17 +2035,27 @@ window.selecionarTipoInserir = function(tipo) {
   const codeArea   = document.getElementById('ins-codigo');
   const btnTestar  = document.getElementById('ins-btn-testar');
 
+  const aceitaPorTipo = { imagem:'image/*', video:'video/*', pdf:'application/pdf,.pdf', glb:'.glb,.gltf', site:'*/*' };
+
   if (tipo === 'codigo') {
     urlInput.style.display = 'none';
     codeArea.style.display = 'block';
     if (!codeArea.value) codeArea.value = cfg.defaultCode;
     btnTestar.textContent = 'EXECUTAR NO UNIVERSO →';
+    document.getElementById('ins-arquivo-sep').style.display = 'none';
+    document.getElementById('ins-label-arquivo').style.display = 'none';
   } else {
     urlInput.style.display = 'block';
     codeArea.style.display = 'none';
     urlInput.placeholder = cfg.placeholder;
     urlInput.value = '';
     btnTestar.textContent = 'TESTAR NA ZONA COSM://0:777777:0 →';
+    document.getElementById('ins-arquivo-sep').style.display = 'block';
+    const labelArq = document.getElementById('ins-label-arquivo');
+    labelArq.style.display = 'block';
+    document.getElementById('ins-arquivo').accept = aceitaPorTipo[tipo] || '*/*';
+    document.getElementById('ins-arquivo-info').style.display = 'none';
+    document.getElementById('ins-arquivo').value = '';
   }
 
   const detalhe = document.getElementById('ins-detalhe');
@@ -2078,6 +2108,59 @@ function executarCodigo() {
     erroEl.textContent = '✕ ' + e.message;
   }
 }
+
+window.carregarArquivoLocal = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const nome = file.name;
+  const ext  = nome.split('.').pop().toLowerCase();
+  document.getElementById('ins-arquivo-nome').textContent = nome;
+  document.getElementById('ins-arquivo-info').style.display = 'block';
+
+  const isGlb   = ['glb','gltf'].includes(ext);
+  const isImage = ['jpg','jpeg','png','gif','webp','svg','bmp','avif'].includes(ext);
+  const isVideo = ['mp4','webm','mov','avi','mkv'].includes(ext);
+
+  const lancar = (src, eh3d) => {
+    fecharInserir();
+    document.getElementById('coord-input').value =
+      `${COORD_TESTE.x} : ${COORD_TESTE.y} : ${COORD_TESTE.z}`;
+    irParaCoordenada();
+    setTimeout(() => {
+      if (eh3d) carregarObjeto3D(COORD_TESTE.x, COORD_TESTE.y, COORD_TESTE.z, src, 300);
+      else abrirIframeTeste(src, nome);
+    }, 1600);
+  };
+
+  if (isGlb) {
+    lancar(URL.createObjectURL(file), true);
+    return;
+  }
+
+  if (isImage) {
+    // Lê como base64 para evitar restrição cross-origin no iframe data:
+    const reader = new FileReader();
+    reader.onload = e => {
+      const html = `<!DOCTYPE html><html><body style="margin:0;background:#050508;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${e.target.result}" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>`;
+      lancar('data:text/html,' + encodeURIComponent(html), false);
+    };
+    reader.readAsDataURL(file);
+    return;
+  }
+
+  if (isVideo) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const html = `<!DOCTYPE html><html><body style="margin:0;background:#050508;display:flex;align-items:center;justify-content:center;min-height:100vh"><video src="${e.target.result}" controls autoplay style="max-width:100%;max-height:100vh"></video></body></html>`;
+      lancar('data:text/html,' + encodeURIComponent(html), false);
+    };
+    reader.readAsDataURL(file);
+    return;
+  }
+
+  // PDF e qualquer outro — blob URL direto no iframe
+  lancar(URL.createObjectURL(file), false);
+};
 
 // ═══════════════════════════════════════════════════════
 //  MENU COSM://
