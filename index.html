@@ -554,7 +554,7 @@
     <div id="iframe-coord"></div>
     <button id="iframe-fechar" onclick="fecharIframe()">← VOLTAR AO UNIVERSO</button>
   </div>
-  <div id="iframe-teste-banner">⚠ MODO TESTE — este conteúdo some quando você fechar ou atualizar a página · Compre para fixar para sempre</div>
+  <div id="iframe-teste-banner"></div>
   <iframe id="iframe-content" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-popups-to-escape-sandbox" allow="autoplay; fullscreen; picture-in-picture"></iframe>
 </div>
 
@@ -1721,13 +1721,58 @@ function abrirIframeTeste(src, titulo) {
   document.getElementById('iframe-titulo').textContent = titulo || 'ZONA DE TESTE';
   document.getElementById('iframe-coord').textContent = 'COSM://0:777777:0 — DEMONSTRAÇÃO';
   document.getElementById('iframe-content').src = src;
-  document.getElementById('iframe-teste-banner').style.display = 'block';
+  const banner = document.getElementById('iframe-teste-banner');
+  banner.textContent = '⚠ DEMONSTRAÇÃO — este conteúdo some ao fechar · Registre sua coordenada para salvar permanente';
+  banner.style.display = 'block';
   document.getElementById('iframe-overlay').classList.add('ativo');
   bloquearCanvas(true);
   mostrarAvisoCoord(
     'Você está na zona de demonstração. Quando registrar seu próprio espaço, anote as coordenadas — elas são o único mapa num universo infinito.',
     'COSM://0:777777:0', 'teste'
   );
+}
+
+function abrirIframeNoEspaco(src, urlOriginal, coord) {
+  const coordStr = `COSM://${coord.x}:${coord.y}:${coord.z}`;
+  document.getElementById('iframe-titulo').textContent = urlOriginal.replace(/^https?:\/\//, '').split('/')[0];
+  document.getElementById('iframe-coord').textContent = coordStr + ' — MEU ESPAÇO';
+  document.getElementById('iframe-content').src = src;
+  const banner = document.getElementById('iframe-teste-banner');
+  banner.textContent = '✓ SALVO NO SEU ESPAÇO — qualquer pessoa que chegar nesta coordenada verá este conteúdo';
+  banner.style.display = 'block';
+  banner.style.background = 'rgba(0,60,20,0.9)';
+  banner.style.borderColor = 'rgba(100,255,150,0.3)';
+  banner.style.color = 'rgba(100,255,150,0.9)';
+  document.getElementById('iframe-overlay').classList.add('ativo');
+  bloquearCanvas(true);
+}
+
+function abrirIframeLocal(src, nome, temCoord) {
+  document.getElementById('iframe-titulo').textContent = nome;
+  document.getElementById('iframe-coord').textContent = temCoord
+    ? (() => { const c = minhaCoordSalva(); return c ? `COSM://${c.x}:${c.y}:${c.z} — MEU ESPAÇO` : ''; })()
+    : 'COSM://0:777777:0 — DEMONSTRAÇÃO';
+  document.getElementById('iframe-content').src = src;
+  const banner = document.getElementById('iframe-teste-banner');
+  banner.style.background = '';
+  banner.style.borderColor = '';
+  banner.style.color = '';
+  banner.textContent = '⚠ ARQUIVO LOCAL — só existe neste dispositivo · Para compartilhar, hospede em uma URL pública';
+  banner.style.display = 'block';
+  document.getElementById('iframe-overlay').classList.add('ativo');
+  bloquearCanvas(true);
+}
+
+function salvarUrlNoEspaco(url, eh3d) {
+  const carteira = localStorage.getItem('cosm_id');
+  if (!carteira) return;
+  const endpoint = eh3d ? '/api/url3d' : '/api/url';
+  const body = { carteira, url };
+  fetch(endpoint, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  }).catch(() => {});
 }
 
 window.renderizarTeste = function() {
@@ -2069,13 +2114,23 @@ window.testarInserir = function() {
   if (!url) return;
   if (!url.startsWith('http')) url = 'https://' + url;
   const { src, eh3d } = prepararUrl(url, insTipoAtual);
+  const minhaCoord = minhaCoordSalva();
+  const destino = minhaCoord || COORD_TESTE;
   fecharInserir();
   document.getElementById('coord-input').value =
-    `${COORD_TESTE.x} : ${COORD_TESTE.y} : ${COORD_TESTE.z}`;
+    `${destino.x} : ${destino.y} : ${destino.z}`;
   irParaCoordenada();
   setTimeout(() => {
-    if (eh3d) carregarObjeto3D(COORD_TESTE.x, COORD_TESTE.y, COORD_TESTE.z, url, 300);
-    else abrirIframeTeste(src, 'MODO TESTE');
+    if (eh3d) {
+      carregarObjeto3D(destino.x, destino.y, destino.z, url, 300);
+      if (minhaCoord) salvarUrlNoEspaco(url, true);
+    } else {
+      if (minhaCoord) {
+        abrirIframeNoEspaco(src, url, minhaCoord);
+      } else {
+        abrirIframeTeste(src, 'DEMONSTRAÇÃO');
+      }
+    }
   }, 1600);
 };
 
@@ -2120,15 +2175,28 @@ window.carregarArquivoLocal = function(input) {
   const isGlb   = ['glb','gltf'].includes(ext);
   const isImage = ['jpg','jpeg','png','gif','webp','svg','bmp','avif'].includes(ext);
   const isVideo = ['mp4','webm','mov','avi','mkv'].includes(ext);
+  const isPdf   = ext === 'pdf';
+
+  // PDF: iframe sandboxed bloqueia leitor nativo — abre em nova aba
+  if (isPdf) {
+    const blobUrl = URL.createObjectURL(file);
+    window.open(blobUrl, '_blank');
+    fecharInserir();
+    notif('PDF aberto em nova aba');
+    return;
+  }
+
+  const minhaCoord = minhaCoordSalva();
+  const destino = minhaCoord || COORD_TESTE;
 
   const lancar = (src, eh3d) => {
     fecharInserir();
     document.getElementById('coord-input').value =
-      `${COORD_TESTE.x} : ${COORD_TESTE.y} : ${COORD_TESTE.z}`;
+      `${destino.x} : ${destino.y} : ${destino.z}`;
     irParaCoordenada();
     setTimeout(() => {
-      if (eh3d) carregarObjeto3D(COORD_TESTE.x, COORD_TESTE.y, COORD_TESTE.z, src, 300);
-      else abrirIframeTeste(src, nome);
+      if (eh3d) carregarObjeto3D(destino.x, destino.y, destino.z, src, 300);
+      else abrirIframeLocal(src, nome, !!minhaCoord);
     }, 1600);
   };
 
@@ -2138,7 +2206,6 @@ window.carregarArquivoLocal = function(input) {
   }
 
   if (isImage) {
-    // Lê como base64 para evitar restrição cross-origin no iframe data:
     const reader = new FileReader();
     reader.onload = e => {
       const html = `<!DOCTYPE html><html><body style="margin:0;background:#050508;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${e.target.result}" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>`;
@@ -2158,8 +2225,9 @@ window.carregarArquivoLocal = function(input) {
     return;
   }
 
-  // PDF e qualquer outro — blob URL direto no iframe
-  lancar(URL.createObjectURL(file), false);
+  // Qualquer outro formato — nova aba
+  window.open(URL.createObjectURL(file), '_blank');
+  fecharInserir();
 };
 
 // ═══════════════════════════════════════════════════════
@@ -2543,7 +2611,11 @@ window.fecharIframe = function() {
   const overlay  = document.getElementById('iframe-overlay');
   overlay.classList.remove('ativo');
   document.getElementById('iframe-content').src = '';
-  document.getElementById('iframe-teste-banner').style.display = 'none';
+  const banner = document.getElementById('iframe-teste-banner');
+  banner.style.display = 'none';
+  banner.style.background = '';
+  banner.style.borderColor = '';
+  banner.style.color = '';
   if (!modalAberto()) bloquearCanvas(false);
 };
 </script>
