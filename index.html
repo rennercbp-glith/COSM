@@ -1386,7 +1386,8 @@ function atualizarObjetos3D(dt) {
       o.cy - coordBase.y,
       o.cz - coordBase.z
     );
-    if (o.mixer) o.mixer.update(dt);
+    o.mesh.visible = camera.position.distanceTo(o.mesh.position) <= BEACON_DIST_MAX;
+    if (o.mesh.visible && o.mixer) o.mixer.update(dt);
   });
 }
 
@@ -2408,26 +2409,28 @@ carregarObjeto3D(
   500
 );
 
+const BEACON_DIST_MAX = 500;
+
 function atualizarBeacons() {
   const prompt = document.getElementById('beacon-prompt');
   let maisperto = null;
   let distMin   = Infinity;
 
   beacons.forEach(b => {
-    // Posição no espaço Three.js = coord_cosm - coordBase
     b.mesh.position.set(
       b.cx - coordBase.x,
       b.cy - coordBase.y,
       b.cz - coordBase.z
     );
+    const dist = camera.position.distanceTo(b.mesh.position);
+    b.mesh.visible = dist <= BEACON_DIST_MAX;
+    if (!b.mesh.visible) return;
+
     // Pulsar suavemente
     const s = 1 + 0.12 * Math.sin(clock.getElapsedTime() * 1.8);
     b.mesh.scale.setScalar(s);
 
-    if (b.url) {
-      const dist = camera.position.distanceTo(b.mesh.position);
-      if (dist < distMin) { distMin = dist; maisperto = b; }
-    }
+    if (b.url && dist < distMin) { distMin = dist; maisperto = b; }
   });
 
   // Mostrar prompt se estiver a menos de 2000 unidades de beacon com URL
