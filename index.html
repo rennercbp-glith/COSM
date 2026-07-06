@@ -174,15 +174,6 @@
     position:fixed;inset:0;pointer-events:none;z-index:50;
     background:#ffffff;opacity:0;
   }
-  #campo-bussola{
-    position:fixed;z-index:30;pointer-events:none;
-    display:none;
-    background:rgba(0,0,0,0.55);border:1px solid rgba(100,255,120,0.3);
-    border-radius:50%;width:38px;height:38px;
-    align-items:center;justify-content:center;
-    font-size:18px;line-height:1;
-    box-shadow:0 0 12px rgba(0,200,80,0.2);
-  }
 
   /* ── Iframe overlay de conteúdo ── */
   #iframe-overlay{
@@ -542,7 +533,6 @@
   </div>
 </div>
 
-<div id="campo-bussola">⚽</div>
 <div id="notif"></div>
 <div id="prox-overlay"></div>
 <div id="flash"></div>
@@ -1440,27 +1430,6 @@ function atualizarHUD() {
   document.getElementById('txt-vel').textContent =
     v + (velCruz < -1 ? ' ◀' : velCruz > 1 ? ' ▶' : ' —');
 
-  // Bússola do campo — aparece quando o campo está fora do raio visível
-  const bussola = document.getElementById('campo-bussola');
-  const cl = new THREE.Vector3(CAMPO_CX - coordBase.x, CAMPO_CY - coordBase.y, CAMPO_CZ - coordBase.z);
-  const distC = camera.position.distanceTo(cl);
-  if (modoCampo || distC < 420) {
-    bussola.style.display = 'none';
-  } else {
-    const proj = cl.clone().project(camera);
-    const W = window.innerWidth / 2, H = window.innerHeight / 2;
-    const margin = 28;
-    let sx = proj.x * W + W, sy = -proj.y * H + H;
-    // Se atrás da câmera, inverte
-    if (proj.z > 1) { sx = W - (sx - W); sy = H - (sy - H); }
-    // Clamp à borda da tela
-    const cx2 = sx - W, cy2 = sy - H;
-    const scale = Math.min(1, (W - margin) / (Math.abs(cx2) || 1), (H - margin) / (Math.abs(cy2) || 1));
-    sx = W + cx2 * scale; sy = H + cy2 * scale;
-    bussola.style.display = 'flex';
-    bussola.style.left = (sx - 19) + 'px';
-    bussola.style.top  = (sy - 19) + 'px';
-  }
 }
 
 // ═══════════════════════════════════════════════════════
