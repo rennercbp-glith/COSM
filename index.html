@@ -1200,13 +1200,22 @@ function coordAtual() {
 // ═══════════════════════════════════════════════════════
 const VEL_MAX   = 1200;
 let velCruz     = 0;
-let velDir      = new THREE.Vector3(0, 0, -1); // direção travada do voo
+let velDir      = new THREE.Vector3(0, 0, -1);
 let voando          = false;
 let alvoVoo         = null;
 let alvoVooRotacao  = null;
 let gamepadAtivo    = false;
 let arrastando  = false;
 let mouseMoved  = false;
+
+// Modo órbita — câmera gira em torno de um objeto clicado
+let modoOrbita  = false;
+let orbitAlvo   = new THREE.Vector3();
+let orbitRaio   = 300;
+let orbitTheta  = 0;
+let orbitPhi    = Math.PI / 2;
+const raycaster = new THREE.Raycaster();
+const _mouse2D  = new THREE.Vector2();
 let lastX       = 0, lastY = 0;
 const teclas = {};
 
@@ -1237,19 +1246,59 @@ canvas.addEventListener('mousemove', e => {
   const dy = e.clientY - lastY;
   if (Math.abs(dx) + Math.abs(dy) > 2) mouseMoved = true;
   lastX = e.clientX; lastY = e.clientY;
-  // Yaw: eixo Y mundial — esq/dir
-  _qRot.setFromAxisAngle(_axY, -dx * 0.003);
-  camera.quaternion.premultiply(_qRot);
-  // Pitch: eixo X local da câmera — cima/baixo
-  _qRot.setFromAxisAngle(_axX, -dy * 0.003);
-  camera.quaternion.multiply(_qRot);
-  camera.quaternion.normalize();
+
+  if (modoOrbita) {
+    // Universo gira em torno do objeto — câmera se move em esfera
+    orbitTheta -= dx * 0.004;
+    orbitPhi    = Math.max(0.05, Math.min(Math.PI - 0.05, orbitPhi - dy * 0.004));
+    camera.position.set(
+      orbitAlvo.x + orbitRaio * Math.sin(orbitPhi) * Math.sin(orbitTheta),
+      orbitAlvo.y + orbitRaio * Math.cos(orbitPhi),
+      orbitAlvo.z + orbitRaio * Math.sin(orbitPhi) * Math.cos(orbitTheta)
+    );
+    camera.up.set(0, 1, 0);
+    camera.lookAt(orbitAlvo);
+  } else {
+    // Rotação livre da câmera
+    _qRot.setFromAxisAngle(_axY, -dx * 0.003);
+    camera.quaternion.premultiply(_qRot);
+    _qRot.setFromAxisAngle(_axX, -dy * 0.003);
+    camera.quaternion.multiply(_qRot);
+    camera.quaternion.normalize();
+  }
 });
 
-canvas.addEventListener('mouseup', () => {
+canvas.addEventListener('mouseup', e => {
   arrastando = false;
-  canvas.style.cursor = 'crosshair';
-  if (!mouseMoved) velCruz = 0;
+  canvas.style.cursor = modoOrbita ? 'move' : 'crosshair';
+  if (!mouseMoved) {
+    velCruz = 0;
+    // Clique sem arrastar — tenta entrar em órbita ao redor do objeto clicado
+    _mouse2D.x = (e.clientX / window.innerWidth)  *  2 - 1;
+    _mouse2D.y = (e.clientY / window.innerHeight) * -2 + 1;
+    raycaster.setFromCamera(_mouse2D, camera);
+    const alvos = objetos3d.filter(o => o.mesh.visible).map(o => o.mesh);
+    const hits  = raycaster.intersectObjects(alvos, true);
+    if (hits.length > 0) {
+      // Encontra o grupo raiz do objeto clicado
+      let root = hits[0].object;
+      while (root.parent && root.parent !== scene) root = root.parent;
+      orbitAlvo.copy(root.position);
+      orbitRaio = Math.max(50, camera.position.distanceTo(orbitAlvo));
+      // Calcula ângulos esféricos iniciais
+      const off  = camera.position.clone().sub(orbitAlvo);
+      orbitTheta = Math.atan2(off.x, off.z);
+      orbitPhi   = Math.acos(Math.max(-1, Math.min(1, off.y / orbitRaio)));
+      modoOrbita = true;
+      canvas.style.cursor = 'move';
+      notif('ÓRBITA ATIVA — arraste para girar o universo · ESC para sair');
+    } else if (modoOrbita) {
+      // Clique no vazio — sai da órbita
+      modoOrbita = false;
+      canvas.style.cursor = 'crosshair';
+      notif('ÓRBITA desativada');
+    }
+  }
 });
 
 canvas.addEventListener('contextmenu', e => e.preventDefault());
@@ -1257,7 +1306,7 @@ canvas.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('wheel', e => {
   if (modalAberto()) return;
   e.preventDefault();
-  const novaVel = Math.max(-VEL_MAX, Math.min(VEL_MAX, velCruz - e.deltaY * 0.6));
+  const novaVel = Math.max(-VEL_MAX, Math.min(VEL_MAX, velCruz - e.deltaY * 0.15));
   // Trava direção no momento do scroll (foguete)
   if (Math.sign(novaVel) !== Math.sign(velCruz) || Math.abs(velCruz) < 1) {
     velDir.set(0, 0, -1).applyQuaternion(camera.quaternion).normalize();
@@ -1267,7 +1316,7 @@ document.addEventListener('wheel', e => {
 
 document.addEventListener('keydown', e => {
   teclas[e.code] = true;
-  if (e.code === 'Escape') { velCruz = 0; voando = false; alvoVoo = null; }
+  if (e.code === 'Escape') { velCruz = 0; voando = false; alvoVoo = null; modoOrbita = false; canvas.style.cursor = 'crosshair'; }
 });
 document.addEventListener('keyup', e => delete teclas[e.code]);
 
@@ -1563,7 +1612,7 @@ function loop() {
 
   // WASD — movimento na direção atual da câmera
   if (!voando) {
-    const spd = teclas['ShiftLeft'] ? 200 : 60;
+    const spd = teclas['ShiftLeft'] ? 60 : 12;
     const dir = new THREE.Vector3();
     if (teclas['KeyW'] || teclas['ArrowUp'])    dir.z -= 1;
     if (teclas['KeyS'] || teclas['ArrowDown'])  dir.z += 1;
