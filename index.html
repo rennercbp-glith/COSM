@@ -1302,9 +1302,9 @@ window.irParaCoordenada = function() {
   notif(`SALTANDO → ${formatCoord(cx)} : ${formatCoord(cy)} : ${formatCoord(cz)}`);
 
   setTimeout(() => {
-    // Teleporte instantâneo: reposiciona coordBase, câmera chega a 1800u do destino
+    // Teleporte instantâneo: reposiciona coordBase, câmera chega a 300u do destino
     const fwd     = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-    const chegada = fwd.clone().multiplyScalar(-1800); // 1800u oposto ao olhar
+    const chegada = fwd.clone().multiplyScalar(-300); // 300u oposto ao olhar
 
     coordBase.x = cx; coordBase.y = cy; coordBase.z = cz;
     camera.position.copy(chegada);
