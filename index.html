@@ -1280,7 +1280,8 @@ let warping = false;
 
 window.irParaCoordenada = function() {
   const val    = document.getElementById('coord-input').value.trim();
-  const partes = val.split(':').map(v => parseFloat(v.trim()));
+  const parseCoord = s => { const n = parseFloat(s); return s.toLowerCase().includes('k') ? n * 1000 : n; };
+  const partes = val.split(':').map(v => parseCoord(v.trim()));
   if (partes.length !== 3 || partes.some(isNaN)) {
     const inp = document.getElementById('coord-input');
     inp.style.color = 'rgba(255,80,80,0.9)';
