@@ -1208,6 +1208,17 @@ let gamepadAtivo    = false;
 let arrastando  = false;
 let mouseMoved  = false;
 
+// Modo campo de futebol
+const CAMPO_CX = 14100, CAMPO_CY = 999900, CAMPO_CZ = 1800;
+const CAMPO_HL = 52.5, CAMPO_HW = 34;
+const CAMPO_RAIO_CAM = 22;
+let modoCampo  = false;
+let playerMesh = null;
+let playerPos  = new THREE.Vector3();
+let playerYaw  = 0;
+let campoYaw   = Math.PI;
+let campoPitch = 0.35;
+
 // Modo órbita — câmera gira em torno de um objeto clicado
 let modoOrbita  = false;
 let orbitAlvo   = new THREE.Vector3();
@@ -1247,7 +1258,11 @@ canvas.addEventListener('mousemove', e => {
   if (Math.abs(dx) + Math.abs(dy) > 2) mouseMoved = true;
   lastX = e.clientX; lastY = e.clientY;
 
-  if (modoOrbita) {
+  if (modoCampo) {
+    // Câmera orbita em torno do jogador
+    campoYaw   -= dx * 0.004;
+    campoPitch  = Math.max(0.08, Math.min(0.75, campoPitch - dy * 0.003));
+  } else if (modoOrbita) {
     // Universo gira em torno do objeto — câmera se move em esfera
     orbitTheta -= dx * 0.004;
     orbitPhi    = Math.max(0.05, Math.min(Math.PI - 0.05, orbitPhi - dy * 0.004));
@@ -1316,7 +1331,10 @@ document.addEventListener('wheel', e => {
 
 document.addEventListener('keydown', e => {
   teclas[e.code] = true;
-  if (e.code === 'Escape') { velCruz = 0; voando = false; alvoVoo = null; modoOrbita = false; canvas.style.cursor = 'crosshair'; }
+  if (e.code === 'Escape') {
+    if (modoCampo) { sairCampo(); }
+    else { velCruz = 0; voando = false; alvoVoo = null; modoOrbita = false; canvas.style.cursor = 'crosshair'; }
+  }
 });
 document.addEventListener('keyup', e => delete teclas[e.code]);
 
@@ -1579,12 +1597,118 @@ function criarCampoDeFutebol(cx, cy, cz) {
   scene.add(grp);
 }
 
+function criarJogador() {
+  const grp = new THREE.Group();
+  const mC = new THREE.MeshStandardMaterial({ color: 0x1a5ce6 });
+  const mK = new THREE.MeshStandardMaterial({ color: 0x111111 });
+  const mS = new THREE.MeshStandardMaterial({ color: 0xffffff });
+  const mP = new THREE.MeshStandardMaterial({ color: 0xf0c070 });
+
+  function parte(geo, mat, x, y, z, rx, rz) {
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(x, y, z);
+    if (rx) m.rotation.x = rx;
+    if (rz) m.rotation.z = rz;
+    grp.add(m);
+  }
+
+  parte(new THREE.CylinderGeometry(0.32, 0.28, 0.75, 8), mC,     0,  1.18, 0);
+  parte(new THREE.SphereGeometry(0.27, 8, 8), mP,                 0,  1.82, 0);
+  parte(new THREE.CylinderGeometry(0.09, 0.09, 0.55, 6), mC,  -0.45,  1.18, 0, 0,  0.35);
+  parte(new THREE.CylinderGeometry(0.09, 0.09, 0.55, 6), mC,   0.45,  1.18, 0, 0, -0.35);
+  parte(new THREE.CylinderGeometry(0.14, 0.12, 0.42, 6), mK,  -0.17,  0.62, 0);
+  parte(new THREE.CylinderGeometry(0.14, 0.12, 0.42, 6), mK,   0.17,  0.62, 0);
+  parte(new THREE.CylinderGeometry(0.10, 0.09, 0.42, 6), mS,  -0.17,  0.20, 0);
+  parte(new THREE.CylinderGeometry(0.10, 0.09, 0.42, 6), mS,   0.17,  0.20, 0);
+
+  grp.visible = false;
+  scene.add(grp);
+  return grp;
+}
+
+function entrarCampo() {
+  modoCampo  = true;
+  modoOrbita = false;
+  velCruz    = 0;
+  voando     = false;
+
+  // Projetar posição da câmera no plano do campo
+  const campoLocal = new THREE.Vector3(CAMPO_CX - coordBase.x, CAMPO_CY - coordBase.y, CAMPO_CZ - coordBase.z);
+  playerPos.set(
+    Math.max(-CAMPO_HL + 2, Math.min(CAMPO_HL - 2, camera.position.x - campoLocal.x)),
+    0,
+    Math.max(-CAMPO_HW + 2, Math.min(CAMPO_HW - 2, camera.position.z - campoLocal.z))
+  );
+  playerPos.add(campoLocal);
+
+  // Ângulo inicial da câmera baseado no olhar atual
+  const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+  campoYaw  = Math.atan2(fwd.x, fwd.z) + Math.PI;
+  campoPitch = 0.35;
+
+  if (playerMesh) playerMesh.visible = true;
+  canvas.style.cursor = 'default';
+  notif('⚽ CAMPO — WASD mover · mouse girar câmera · ESC sair');
+}
+
+function sairCampo() {
+  modoCampo = false;
+  if (playerMesh) playerMesh.visible = false;
+  velDir.set(0, 1, 0);
+  velCruz = 40;
+  canvas.style.cursor = 'crosshair';
+  notif('VOLTANDO AO ESPAÇO');
+}
+
+function atualizarCampo(dt) {
+  if (!playerMesh) return;
+  const campoBase = new THREE.Vector3(CAMPO_CX - coordBase.x, CAMPO_CY - coordBase.y, CAMPO_CZ - coordBase.z);
+
+  // Movimento do jogador relativo ao ângulo da câmera
+  const fwd = new THREE.Vector3(-Math.sin(campoYaw), 0, -Math.cos(campoYaw));
+  const rgt = new THREE.Vector3( Math.cos(campoYaw), 0, -Math.sin(campoYaw));
+  const mov = new THREE.Vector3();
+  const spd = 10;
+  if (teclas['KeyW'] || teclas['ArrowUp'])    mov.addScaledVector(fwd,  spd * dt);
+  if (teclas['KeyS'] || teclas['ArrowDown'])  mov.addScaledVector(fwd, -spd * dt);
+  if (teclas['KeyA'] || teclas['ArrowLeft'])  mov.addScaledVector(rgt, -spd * dt);
+  if (teclas['KeyD'] || teclas['ArrowRight']) mov.addScaledVector(rgt,  spd * dt);
+
+  if (mov.lengthSq() > 0) {
+    playerPos.add(mov);
+    // Limitar ao campo
+    playerPos.x = Math.max(campoBase.x - CAMPO_HL + 1, Math.min(campoBase.x + CAMPO_HL - 1, playerPos.x));
+    playerPos.z = Math.max(campoBase.z - CAMPO_HW + 1, Math.min(campoBase.z + CAMPO_HW - 1, playerPos.z));
+    playerYaw = Math.atan2(mov.x, mov.z);
+  }
+
+  playerMesh.position.set(playerPos.x, campoBase.y + 1.0, playerPos.z);
+  playerMesh.rotation.y = playerYaw;
+
+  // Câmera terceira pessoa — atrás e acima do jogador
+  const alvoPlayer = new THREE.Vector3(playerPos.x, campoBase.y + 1.8, playerPos.z);
+  const camAlvo = new THREE.Vector3(
+    playerPos.x + Math.sin(campoYaw) * CAMPO_RAIO_CAM,
+    campoBase.y + 1 + campoPitch * CAMPO_RAIO_CAM,
+    playerPos.z + Math.cos(campoYaw) * CAMPO_RAIO_CAM
+  );
+  camera.position.lerp(camAlvo, 0.12);
+  camera.up.set(0, 1, 0);
+  camera.lookAt(alvoPlayer);
+}
+
 // ═══════════════════════════════════════════════════════
 //  LOOP PRINCIPAL
 // ═══════════════════════════════════════════════════════
 function loop() {
   requestAnimationFrame(loop);
+  const dt = clock.getDelta();
   processarGamepad();
+
+  // Modo campo — jogador em terceira pessoa
+  if (modoCampo) {
+    atualizarCampo(dt);
+  } else {
 
   // Voo de teletransporte
   if (voando && alvoVoo) {
@@ -1625,6 +1749,14 @@ function loop() {
       camera.position.addScaledVector(dir, spd);
     }
   }
+
+  // Zona de gravidade do campo de futebol
+  if (!voando && !warping && !ejetando) {
+    const campoLocal = new THREE.Vector3(CAMPO_CX - coordBase.x, CAMPO_CY - coordBase.y, CAMPO_CZ - coordBase.z);
+    if (camera.position.distanceTo(campoLocal) < 90) entrarCampo();
+  }
+
+  } // fim else modoCampo
 
   // Estrelas seguem a câmera — sem aglomeração em nenhum ponto do espaço
   camadas.forEach(c => c.position.copy(camera.position));
@@ -1685,7 +1817,7 @@ function loop() {
 
   atualizarHUD();
   atualizarBeacons();
-  atualizarObjetos3D(clock.getDelta());
+  atualizarObjetos3D(dt);
   renderer.render(scene, camera);
 }
 
@@ -2734,6 +2866,7 @@ carregarObjeto3D(
 
 // Campo de futebol em 14100:999900:1800
 criarCampoDeFutebol(14100, 999900, 1800);
+playerMesh = criarJogador();
 
 const BEACON_DIST_MAX = 500;
 
