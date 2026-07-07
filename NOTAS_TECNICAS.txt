@@ -1,6 +1,6 @@
 ===============================================================
   COSM — NOTAS TÉCNICAS (para Claude ler no futuro)
-  Última atualização: 2026-07-04 (v10 — registro gratuito, coord por dispositivo, 30 dias)
+  Última atualização: 2026-07-06 (v11 — campo de futebol, pista de corrida, fix registro beta)
   Pasta: C:\Users\renne\Projetos\COSM\
   Deploy: cosm-production.up.railway.app
   GitHub: https://github.com/rennercbp-glith/COSM.git
@@ -172,6 +172,10 @@ GET  /api/minha-coord/:x/:y/:z   → verifica se coord está ativa (filtro 30 di
 -500000:2000000:0 → Beta slot 3
 ... (10 slots no cluster Y=2M/2.5M, ver BETA_COORDS no server.js)
 
+14100:999900:1800    → Campo de futebol 3D nativo (demo para devs — marcação branca, traves, modo jogador)
+14200:999900:1800    → COORDENADA DO RENNER (reservada por ele, livre por enquanto)
+-25541:1413789:23398 → COORDENADA REGISTRADA DO RENNER — pista de corrida aqui (cart)
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   SISTEMA DE PAGAMENTO — SOLANA PAY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -249,6 +253,12 @@ Space Mono (Google Fonts)    → coordenadas, código, botões, HUD
 ✓ "MEU ESPAÇO" no menu lateral (visível só quando coord salva no dispositivo)
 ✓ Tela ANOTE AGORA: coord grande + botão COPIAR + checkbox obrigatório → habilita IR PARA LÁ
 ✓ Prompt de reconhecimento: ao teleportar para coord registrada em novo dispositivo
+✓ Fix bug registro beta: contagem Fibonacci incluía só não-beta → colisão de coord → erro 500
+✓ Campo de futebol 3D nativo em 14100:999900:1800 (grama, marcação branca, traves, modo jogador W/A/S/D, câmera 3ª pessoa, ESC sai acima)
+✓ Pista de corrida em -25541:1413789:23398 (coordenada do Renner — oval asfalto, carro F1 vermelho W/A/S/D, ESC sai acima)
+✓ Modo órbita: clicar objeto → universo gira em torno dele, câmera fixa
+✓ Suporte k-notation nas coordenadas (14.1k = 14100)
+✓ Velocidade de navegação reduzida (scroll 0.15, cruise 12/60)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   PENDENTE — PRÓXIMAS SESSÕES
@@ -542,3 +552,251 @@ FUNÇÕES NO onclick HTML — módulo ES não exporta automático
 ===============================================================
 
 ===============================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  COSM DRIVE — CONCEITO DEFINIDO (2026-07-04)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+VISAO:
+  Drive pessoal dentro do universo. Arquivos guardados na coordenada.
+  Visibilidade por arquivo: PUBLICO (aparece pra quem visita) ou
+  PRIVADO (so o dono acessa via link direto sem rastro de quem e).
+
+STORAGE:
+  Opcao escolhida (ainda nao implementado): IPFS via Pinata
+  Mais nos na rede = mais rapido (igual BitTorrent)
+  Filosofia alinhada com COSM: decentralizado, sem dono central
+  Alternativa simples por enquanto: usuario cola URL de qualquer hospedagem
+
+LAYOUT DEFINIDO — 3 abas no painel MEU ESPACO:
+  1. ARQUIVOS: lista/grade com upload, toggle publico/privado, ver, baixar, copiar link, apagar
+  2. COMPARTILHAR: coord inteira (mostra publicos) ou link direto por arquivo
+  3. VISIVEL NA COORD: previa do que visitante ve
+
+BANCO — tabela nova necessaria:
+  arquivos (id, uuid_dono, nome, url_ipfs, tipo, tamanho_bytes, publico BOOLEAN, criado_em)
+  Multiplos arquivos por coordenada (diferente de url_conteudo que e 1 por coord)
+
+PARA IMPLEMENTAR:
+  1. Conta Pinata (gratis) + API Key
+  2. Endpoint /api/upload no server.js (multer + Pinata SDK)
+  3. Endpoint /api/arquivos/:uuid (lista arquivos do dono)
+  4. Endpoint /api/arquivo/:id/visibilidade (toggle publico/privado)
+  5. Painel COSM Drive no index.html (design definido em mockup)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  JOGOS NO COSM — CONCEITO DEFINIDO (2026-07-04)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+VISAO:
+  A coordenada E o endereco do jogo. Nao tem launcher, nao tem download.
+  Voce voa ate COSM://5000000:0:0 e entra no jogo. Igual o cassino-planeta
+  do filme — voce simplesmente chega la.
+
+3 NIVEIS DE JOGO:
+  Nivel 1 — Jogo simples (card CODIGO):
+    Escreve Three.js com interatividade. Roda direto na engine do COSM.
+    Fisica, colisao, eventos de teclado — tudo possivel hoje.
+    Single-player, sem servidor extra.
+
+  Nivel 2 — Jogo medio (url_conteudo):
+    Developer faz um jogo web completo (Unity WebGL, Phaser, Babylon.js, etc.)
+    Hospeda em qualquer lugar e aponta a URL para a coordenada.
+    Quem voa ate la entra no jogo via iframe. Sem launcher, sem instalacao.
+
+  Nivel 3 — Jogo pesado/multiplayer:
+    Developer roda servidor proprio (WebSocket, game server).
+    COSM aponta a coordenada para esse servidor.
+    Jogadores que chegam conectam ao servidor do jogo.
+    Developer paga pelo servidor conforme necessidade de performance.
+    O COSM nao hospeda — so enderea.
+
+MONETIZACAO (A IMPLEMENTAR):
+  → Acesso pago a coordenada: developer vende ingresso (token/chave)
+    para entrar no jogo. Quem nao tem o token nao acessa o conteudo.
+  → Venda de jogabilidade: itens, fases, power-ups dentro do jogo
+    (depende do sistema do proprio jogo — COSM nao controla)
+  → Royalty COSM: % nas transacoes feitas dentro do universo (marketplace)
+  → Performance tier: developer paga por CDN premium para servir
+    assets pesados mais rapido (nao via COSM — via servico externo)
+
+REGRAS DO ESPACO:
+  Developer pode definir o ambiente 3D ao redor do jogo:
+  shader customizado, fisica, objetos decorativos, musica.
+  Hoje ja possivel via CODIGO + _cosmAnimHooks.
+  Futuro: API de espaco que permite declarar fisica e visual da zona.
+
+O QUE AINDA PRECISA SER CONSTRUIDO:
+  → Controle de acesso por coordenada (publico/restrito/pago)
+  → Sistema de token/ingresso para entrada em coordenadas pagas
+  → Marketplace de jogos (coordenadas com jogo + preco de acesso)
+  → Talvez: tipo de conteudo JOGO no modal INSERIR
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  VISAO CENTRAL DO PRODUTO — DEFINIDA (2026-07-04)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FRASE DO FUNDADOR:
+  "Estou criando uma plataforma rentavel para qualquer um
+   ganhar dinheiro no meu COSM com seguranca e privacidade."
+
+O QUE ISSO SIGNIFICA NA PRATICA:
+  → Qualquer pessoa registra uma coordenada (gratis, sem identidade real)
+  → Coloca o que quiser nela: jogo, arte, loja, evento, drive, codigo
+  → Cobra acesso, cobra por arquivo, cobra por fila, cobra por experiencia
+  → Recebe pagamento via Solana (sem banco, sem CPF, sem rastreamento)
+  → O COSM processa e retem 10% automaticamente — o resto vai pro criador
+  → O visitante nao sabe quem e o dono — so sabe a coordenada
+  → O dono nao sabe quem e o visitante — so sabe o UUID anonimo
+
+TRES PILARES:
+  1. RENTAVEL — qualquer coordenada pode virar negocio
+     Jogo, museu, show, loja, escola, cassino, campo, leilao
+     Developer define preco, regras, acesso — COSM so cobra 10%
+
+  2. SEGURO — infraestrutura que nao expoe ninguem
+     Usuario = UUID (sem nome, sem email, sem IP registrado)
+     Pagamento = Solana (blockchain, sem intermediario bancario)
+     Arquivo = IPFS (sem servidor central, sem rastro de origem)
+     Coordenada = identidade anonima permanente
+
+  3. PRIVACIDADE — o anonimato e a regra, nao a excecao
+     Dono da coord: identificado so pelo UUID no banco interno
+     Visitante: identificado so pelo UUID — nao vinculado a pessoa real
+     Arquivo privado: link direto sem metadado de quem enviou
+     Transacao: blockchain publica mas sem nome vinculado
+
+COMO O COSM GANHA DINHEIRO (modelo definitivo):
+  → 10% de toda transacao que passar pela infraestrutura de pagamento
+  → Isso acontece automaticamente em toda coordenada comercial
+  → Nao precisa monitorar, nao precisa cobrar — a plataforma coleta
+  → Escala com o numero de criadores ativos no universo
+  → Quanto mais o ecossistema cresce, mais o COSM ganha
+
+ANALOGIAS PARA EXPLICAR EXTERNAMENTE:
+  → "E o App Store mas no universo 3D — qualquer coordenada e um app"
+  → "E o Shopify mas o endereco da loja fica no espaco"
+  → "E o YouTube mas o canal e uma coordenada que voce visita fisicamente"
+  → "E o DNS da internet, mas para um universo 3D navegavel"
+
+ORDEM DE CONSTRUCAO (prioridade definida pelo fundador):
+  1. Controle de acesso pago por coordenada (ingresso/token)
+  2. Marketplace com royalty automatico de 10%
+  3. COSM Drive (storage IPFS publico/privado por arquivo)
+  4. Visao: relay multiplayer, CDN premium, analytics por coordenada
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ESTRATEGIA DE LANCAMENTO — USUARIOS ALVO (2026-07-04)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PROBLEMA CENTRAL DO LANCAMENTO:
+  Universo vazio = sem motivo para explorar.
+  Sem criadores nao tem visitantes.
+  Sem visitantes nao tem criadores.
+  A iniciacao precisa resolver isso antes de abrir para todos.
+
+USUARIOS PRIMARIOS — em ordem de prioridade:
+
+  1. DESENVOLVEDORES E CRIADORES 3D (colonizadores)
+     Sao os que constroem o conteudo que outros vem ver.
+     Um developer que cria um jogo ja traz os amigos.
+     Um artista 3D que coloca uma escultura GLB ja compartilha a coord.
+     Sem eles o mapa fica em branco.
+
+  2. COMUNIDADE WEB3 / CRIPTO
+     Ja pensam em "possuir" espaco digital.
+     Privacidade por padrao e exatamente o que querem.
+     Solana Pay ja e familiar.
+     Coordenada permanente ressoa como NFT mas mais tangivel —
+     voce nao compra uma imagem, voce compra um lugar no universo.
+
+  3. DESENVOLVEDORES INDIE DE JOGOS
+     App Store cobra 30%, tem aprovacao, tem regras.
+     No COSM: registra coord, aponta para o jogo, vende acesso, paga 10%.
+     Sem gatekeeper. Muito atrativo para devs independentes.
+
+ESTRATEGIA DE INICIACAO:
+  Nao lanca para todo mundo.
+  Lanca para 20 criadores escolhidos com coordenadas gratuitas permanentes
+  em troca de construir algo impressionante.
+
+  20 coordenadas com conteudo real
+      → cada criador compartilha com sua comunidade
+      → pessoas voam, ficam impressionadas
+      → querem a propria coordenada
+      → loop comeca
+
+O MOMENTO QUE CONVERTE:
+  O primeiro visitante que chega numa coordenada com jogo funcionando,
+  galeria 3D ou experiencia interativa — e percebe que chegou voando
+  pelo espaco sem instalar nada — esse e o momento que converte.
+
+PRE-REQUISITO ANTES DE LANCAR:
+  Pelo menos 5 coordenadas com algo genuinamente impressionante.
+  A tecnologia ja impressiona sozinha, mas precisa de conteudo
+  para mostrar o que e possivel. O resto o boca a boca faz.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  COSM CHAT — CONCEITO DEFINIDO (2026-07-04)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+VISAO:
+  Chat entre coordenadas. Sem numero de telefone, sem email,
+  sem nome. Voce e sua coordenada. Ninguem sabe quem e esse numero.
+
+POR QUE E O MAIS SEGURO:
+  WhatsApp/Signal/Telegram: precisam de numero de telefone.
+  Isso vincula identidade real. O servidor sabe quem fala com quem.
+  COSM Chat: voce e COSM://X:Y:Z. Nada mais.
+
+MODELO DE SEGURANCA — 4 camadas:
+  1. Sem identidade real — coordenada anonima, sem vinculo com pessoa
+  2. Sem descoberta — para te achar precisa da sua coordenada
+  3. Autorizacao obrigatoria — mesmo com a coord, entra so se voce aprovar
+  4. Criptografia client-side — servidor guarda so texto cifrado, nao le nada
+
+FLUXO DE AUTORIZACAO:
+  Coord A quer falar com Coord B
+      → B recebe pedido de autorizacao
+      → B aprova: chat abre
+      → B ignora: Coord A nao existe para B
+
+DEAD DROP DIGITAL — conceito central:
+  No mundo real espiao deixa mensagem num local fisico combinado.
+  O outro passa la quando puder, pega, deixa resposta.
+  Ninguem viu ninguem. Sem rastro de comunicacao direta.
+  No COSM e igual — mensagem fica na coordenada esperando.
+
+DOIS MODOS NATURAIS:
+  Modo async (principal):
+    Mensagem enviada → fica guardada no servidor cifrada
+    Destinatario esta offline → nao sabe de nada
+    Destinatario entra na coordenada → mensagem aparece
+    Sem notificacao, sem push, sem recibo de leitura
+    Sem urgencia, sem pressao, sem rastro de horario de atividade
+
+  Modo ao vivo (automatico):
+    Duas coordenadas abertas ao mesmo tempo → vira tempo real
+    Um PC fecha → volta para async automaticamente
+    Sistema detecta sozinho, sem configuracao
+
+POR QUE NAO TEM PUSH NOTIFICATION (e isso e uma vantagem):
+  Push precisa de telefone ou email para chegar.
+  Isso vincula identidade.
+  No COSM nao tem identidade para notificar.
+  O silencio e o sigilo.
+  So sabe que tem mensagem quando entra na propria coordenada.
+
+PUBLICO IDEAL:
+  → Conversas sem pressa e sem urgencia
+  → Pessoas que valorizam privacidade real
+  → Jornalistas, ativistas, profissionais sigilosos
+  → Qualquer um que nao quer ser rastreado por horario de atividade
+
+TECNICO — O QUE PRECISARIA SER CONSTRUIDO:
+  Tabela: mensagens (id, coord_origem, coord_destino, conteudo_encrypted,
+          enviado_em, lido_em NULL)
+  Tabela: autorizacoes (coord_a, coord_b, status, criado_em)
+  Modo async: GET simples ao entrar na coordenada busca mensagens nao lidas
+  Modo ao vivo: WebSocket quando ambas coordenadas estao ativas
+  Sem WebSocket permanente — so ativa quando as duas estao online juntas
