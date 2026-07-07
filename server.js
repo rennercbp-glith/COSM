@@ -137,7 +137,7 @@ async function alocarProximaCoord(client, tipo) {
     const { rows } = await client.query("SELECT COUNT(*) AS total FROM registros WHERE tipo='empresa'");
     return alocarCoordenadaEmpresa(parseInt(rows[0].total));
   } else {
-    const { rows } = await client.query("SELECT COUNT(*) AS total FROM registros WHERE tipo='pessoa' AND plano <> 'beta'");
+    const { rows } = await client.query("SELECT COUNT(*) AS total FROM registros WHERE tipo='pessoa'");
     return alocarCoordenada(parseInt(rows[0].total));
   }
 }

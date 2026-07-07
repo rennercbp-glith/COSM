@@ -1219,6 +1219,17 @@ let playerYaw  = 0;
 let campoYaw   = Math.PI;
 let campoPitch = 0.35;
 
+// Modo pista de corrida
+const PISTA_CX = 14300, PISTA_CY = 999900, PISTA_CZ = 1800;
+const PISTA_RAIO_CAM = 20;
+let modoPista  = false;
+let carMesh    = null;
+let carPos     = new THREE.Vector3();
+let carAngle   = Math.PI / 2;
+let carSpeed   = 0;
+let pistaYaw   = Math.PI;
+let pistaPitch = 0.28;
+
 // Modo órbita — câmera gira em torno de um objeto clicado
 let modoOrbita  = false;
 let orbitAlvo   = new THREE.Vector3();
@@ -1262,6 +1273,9 @@ canvas.addEventListener('mousemove', e => {
     // Câmera orbita em torno do jogador
     campoYaw   -= dx * 0.004;
     campoPitch  = Math.max(0.08, Math.min(0.75, campoPitch - dy * 0.003));
+  } else if (modoPista) {
+    // Câmera segue o carro — mouse ajusta ângulo vertical
+    pistaPitch = Math.max(0.05, Math.min(0.6, pistaPitch - dy * 0.003));
   } else if (modoOrbita) {
     // Universo gira em torno do objeto — câmera se move em esfera
     orbitTheta -= dx * 0.004;
@@ -1333,6 +1347,7 @@ document.addEventListener('keydown', e => {
   teclas[e.code] = true;
   if (e.code === 'Escape') {
     if (modoCampo) { sairCampo(); }
+    else if (modoPista) { sairPista(); }
     else { velCruz = 0; voando = false; alvoVoo = null; modoOrbita = false; canvas.style.cursor = 'crosshair'; }
   }
 });
@@ -1702,6 +1717,194 @@ function atualizarCampo(dt) {
   camera.lookAt(alvoPlayer);
 }
 
+function criarPistaCorrida(cx, cy, cz) {
+  const grp = new THREE.Group();
+  const matAsf   = new THREE.MeshStandardMaterial({ color: 0x1c1c1c, roughness: 0.98 });
+  const matGrama = new THREE.MeshStandardMaterial({ color: 0x1a4a0a, roughness: 0.95 });
+  const matLinha = new THREE.MeshStandardMaterial({ color: 0xffffff });
+  const matGuarda= new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.5 });
+  const lh = 0.12;
+
+  const sl = 50, ri = 16, ro = 36; // half-straight, inner/outer radius
+
+  // Grama de fundo
+  const gramaBg = new THREE.Mesh(new THREE.PlaneGeometry(220, 140), matGrama);
+  gramaBg.rotation.x = -Math.PI / 2; gramaBg.position.y = -0.05;
+  grp.add(gramaBg);
+
+  // Asfalto da pista (forma oval com buraco)
+  const pista = new THREE.Shape();
+  pista.moveTo(-sl, ro);
+  pista.lineTo(sl, ro);
+  pista.absarc(sl, 0, ro, Math.PI/2, -Math.PI/2, true);
+  pista.lineTo(-sl, -ro);
+  pista.absarc(-sl, 0, ro, -Math.PI/2, Math.PI/2, true);
+  const buraco = new THREE.Path();
+  buraco.moveTo(-sl, ri);
+  buraco.lineTo(sl, ri);
+  buraco.absarc(sl, 0, ri, Math.PI/2, -Math.PI/2, true);
+  buraco.lineTo(-sl, -ri);
+  buraco.absarc(-sl, 0, ri, -Math.PI/2, Math.PI/2, true);
+  pista.holes.push(buraco);
+  const pistaGeo = new THREE.ShapeGeometry(pista, 48);
+  const pistaMesh = new THREE.Mesh(pistaGeo, matAsf);
+  pistaMesh.rotation.x = -Math.PI / 2; pistaMesh.position.y = 0;
+  grp.add(pistaMesh);
+
+  // Grama interior (dentro do oval)
+  const gramaInt = new THREE.Shape();
+  gramaInt.moveTo(-sl, ri); gramaInt.lineTo(sl, ri);
+  gramaInt.absarc(sl, 0, ri, Math.PI/2, -Math.PI/2, true);
+  gramaInt.lineTo(-sl, -ri);
+  gramaInt.absarc(-sl, 0, ri, -Math.PI/2, Math.PI/2, true);
+  const gramaIntMesh = new THREE.Mesh(new THREE.ShapeGeometry(gramaInt, 32), matGrama);
+  gramaIntMesh.rotation.x = -Math.PI / 2; gramaIntMesh.position.y = 0.01;
+  grp.add(gramaIntMesh);
+
+  // Linha de largada/chegada
+  const bandeira = new THREE.Mesh(new THREE.PlaneGeometry(0.8, (ro - ri)), matLinha);
+  bandeira.rotation.x = -Math.PI / 2;
+  bandeira.position.set(-sl, lh, 0);
+  grp.add(bandeira);
+
+  // Linhas brancas nas bordas (inner e outer)
+  const LINE_W = 0.3;
+  [[ri, 0], [ro, 0]].forEach(([r]) => {
+    const lineShape = new THREE.Shape();
+    lineShape.moveTo(-sl, r + LINE_W/2); lineShape.lineTo(sl, r + LINE_W/2);
+    lineShape.absarc(sl, 0, r + LINE_W/2, Math.PI/2, -Math.PI/2, true);
+    lineShape.lineTo(-sl, -(r + LINE_W/2));
+    lineShape.absarc(-sl, 0, r + LINE_W/2, -Math.PI/2, Math.PI/2, true);
+    const lineHole = new THREE.Path();
+    lineHole.moveTo(-sl, r - LINE_W/2); lineHole.lineTo(sl, r - LINE_W/2);
+    lineHole.absarc(sl, 0, r - LINE_W/2, Math.PI/2, -Math.PI/2, true);
+    lineHole.lineTo(-sl, -(r - LINE_W/2));
+    lineHole.absarc(-sl, 0, r - LINE_W/2, -Math.PI/2, Math.PI/2, true);
+    lineShape.holes.push(lineHole);
+    const lm = new THREE.Mesh(new THREE.ShapeGeometry(lineShape, 48), matLinha);
+    lm.rotation.x = -Math.PI / 2; lm.position.y = lh;
+    grp.add(lm);
+  });
+
+  // Guardrails (caixas vermelhas/brancas nas bordas)
+  const GH = 1.2, GW = 0.4;
+  for (let a = 0; a < Math.PI * 2; a += 0.18) {
+    const ax = Math.cos(a), az = Math.sin(a);
+    [[ri - GW/2], [ro + GW/2]].forEach(([r]) => {
+      let px, pz;
+      if (Math.abs(ax) * sl > ri) { px = Math.sign(ax) * (sl + r * Math.abs(ax) / r); pz = az * r; }
+      else { px = ax * sl; pz = az * r; }
+      const mat = new THREE.MeshStandardMaterial({
+        color: Math.floor(a / 0.36) % 2 === 0 ? 0xff2200 : 0xffffff
+      });
+      const g = new THREE.Mesh(new THREE.BoxGeometry(GW, GH, GW), mat);
+      g.position.set(Math.cos(a) * (r === ri - GW/2 ? ri : ro), GH/2, Math.sin(a) * r);
+      grp.add(g);
+    });
+  }
+
+  objetos3d.push({ mesh: grp, cx, cy, cz, mixer: null });
+  scene.add(grp);
+}
+
+function criarCarro() {
+  const grp = new THREE.Group();
+  const mBody  = new THREE.MeshStandardMaterial({ color: 0xcc1100, metalness: 0.6, roughness: 0.3 });
+  const mCabin = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.3, roughness: 0.4 });
+  const mWheel = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 });
+  const mRim   = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.8, roughness: 0.2 });
+
+  // Corpo
+  const body = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.7, 1.8), mBody);
+  body.position.y = 0.55; grp.add(body);
+  // Frente inclinada
+  const nose = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.35, 1.6), mBody);
+  nose.position.set(2.1, 0.28, 0); grp.add(nose);
+  // Cabine
+  const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.65, 1.4), mCabin);
+  cabin.position.set(-0.2, 1.12, 0); grp.add(cabin);
+  // Spoiler traseiro
+  const spoiler = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.5, 1.8), mBody);
+  spoiler.position.set(-1.9, 1.0, 0); grp.add(spoiler);
+
+  // Rodas (4x)
+  [[-1.4, -1.0], [-1.4, 1.0], [1.3, -1.0], [1.3, 1.0]].forEach(([z, x]) => {
+    const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.35, 16), mWheel);
+    wheel.rotation.z = Math.PI / 2;
+    wheel.position.set(x, 0.5, z); grp.add(wheel);
+    const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.36, 8), mRim);
+    rim.rotation.z = Math.PI / 2;
+    rim.position.set(x, 0.5, z); grp.add(rim);
+  });
+
+  grp.visible = false;
+  scene.add(grp);
+  return grp;
+}
+
+function entrarPista() {
+  modoPista  = true;
+  modoCampo  = false;
+  modoOrbita = false;
+  velCruz    = 0; voando = false;
+  const pb = new THREE.Vector3(PISTA_CX - coordBase.x, PISTA_CY - coordBase.y, PISTA_CZ - coordBase.z);
+  carPos.set(pb.x - 50, 0, pb.z);
+  carAngle = Math.PI / 2; carSpeed = 0;
+  pistaYaw = carAngle + Math.PI; pistaPitch = 0.28;
+  if (carMesh) carMesh.visible = true;
+  canvas.style.cursor = 'default';
+  notif('🏎  PISTA — W acelera · S freia · A/D dirige · ESC sair');
+}
+
+function sairPista() {
+  modoPista = false;
+  if (carMesh) carMesh.visible = false;
+  const pb = new THREE.Vector3(PISTA_CX - coordBase.x, PISTA_CY - coordBase.y, PISTA_CZ - coordBase.z);
+  camera.position.set(pb.x, pb.y + 260, pb.z + 60);
+  camera.up.set(0, 1, 0); camera.lookAt(pb);
+  velCruz = 0; canvas.style.cursor = 'crosshair';
+  notif('ESPAÇO — pista visível abaixo');
+}
+
+function atualizarPista(dt) {
+  if (!carMesh) return;
+  const pb = new THREE.Vector3(PISTA_CX - coordBase.x, PISTA_CY - coordBase.y, PISTA_CZ - coordBase.z);
+
+  // Física do carro
+  const MAX_SPD = 30, ACCEL = 20, BRAKE = 35;
+  if (teclas['KeyW'] || teclas['ArrowUp'])
+    carSpeed = Math.min(MAX_SPD, carSpeed + ACCEL * dt);
+  else if (teclas['KeyS'] || teclas['ArrowDown'])
+    carSpeed = Math.max(-MAX_SPD * 0.4, carSpeed - BRAKE * dt);
+  else
+    carSpeed *= (1 - 3 * dt);
+
+  if (Math.abs(carSpeed) > 0.3) {
+    const steer = 1.8 * (1 - Math.abs(carSpeed) / MAX_SPD * 0.5) * Math.sign(carSpeed);
+    if (teclas['KeyA'] || teclas['ArrowLeft'])  carAngle += steer * dt;
+    if (teclas['KeyD'] || teclas['ArrowRight']) carAngle -= steer * dt;
+  }
+
+  carPos.x += Math.sin(carAngle) * carSpeed * dt;
+  carPos.z += Math.cos(carAngle) * carSpeed * dt;
+
+  carMesh.position.set(carPos.x, pb.y + 0.5, carPos.z);
+  carMesh.rotation.y = carAngle;
+
+  // Câmera auto-segue atrás do carro com lag suave
+  const targetYaw = carAngle + Math.PI;
+  const dy = ((targetYaw - pistaYaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+  pistaYaw += dy * Math.min(1, 3 * dt);
+  const camAlvo = new THREE.Vector3(
+    carPos.x + Math.sin(pistaYaw) * PISTA_RAIO_CAM,
+    pb.y + 0.5 + pistaPitch * PISTA_RAIO_CAM,
+    carPos.z + Math.cos(pistaYaw) * PISTA_RAIO_CAM
+  );
+  camera.position.lerp(camAlvo, 0.1);
+  camera.up.set(0, 1, 0);
+  camera.lookAt(new THREE.Vector3(carPos.x, pb.y + 1.2, carPos.z));
+}
+
 // ═══════════════════════════════════════════════════════
 //  LOOP PRINCIPAL
 // ═══════════════════════════════════════════════════════
@@ -1713,6 +1916,8 @@ function loop() {
   // Modo campo — jogador em terceira pessoa
   if (modoCampo) {
     atualizarCampo(dt);
+  } else if (modoPista) {
+    atualizarPista(dt);
   } else {
 
   // Voo de teletransporte
@@ -1759,9 +1964,11 @@ function loop() {
   if (!voando && !warping && !ejetando) {
     const campoLocal = new THREE.Vector3(CAMPO_CX - coordBase.x, CAMPO_CY - coordBase.y, CAMPO_CZ - coordBase.z);
     if (camera.position.distanceTo(campoLocal) < 90) entrarCampo();
+    const pistaLocal = new THREE.Vector3(PISTA_CX - coordBase.x, PISTA_CY - coordBase.y, PISTA_CZ - coordBase.z);
+    if (camera.position.distanceTo(pistaLocal) < 90) entrarPista();
   }
 
-  } // fim else modoCampo
+  } // fim else modoCampo/modoPista
 
   // Estrelas seguem a câmera — sem aglomeração em nenhum ponto do espaço
   camadas.forEach(c => c.position.copy(camera.position));
@@ -2873,6 +3080,8 @@ carregarObjeto3D(
 // Campo de futebol em 14100:999900:1800
 criarCampoDeFutebol(14100, 999900, 1800);
 playerMesh = criarJogador();
+criarPistaCorrida(14300, 999900, 1800);
+carMesh = criarCarro();
 
 const BEACON_DIST_MAX = 500;
 
