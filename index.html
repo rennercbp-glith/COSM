@@ -3050,17 +3050,23 @@ async function carregarCoordenadas() {
     const resp = await fetch('/api/coordenadas');
     const lista = await resp.json();
     lista.forEach(reg => {
-      // Beacon sempre aparece (marcador de presença)
-      const mat  = beaconMats[reg.tipo] || beaconMats.pessoa;
-      const mesh = new THREE.Mesh(beaconGeo, mat.clone());
-      scene.add(mesh);
-      beacons.push({
-        mesh,
-        cx: reg.coord_x, cy: reg.coord_y, cz: reg.coord_z,
-        nome: reg.nome || reg.carteira.slice(0,8) + '...',
-        url:  reg.url_conteudo || null,
-        tipo: reg.tipo || 'pessoa'
-      });
+      // Não renderiza beacon em coordenadas com objeto 3D nativo (campo, pista)
+      const temNativo = (
+        (reg.coord_x === CAMPO_CX && reg.coord_y === CAMPO_CY && reg.coord_z === CAMPO_CZ) ||
+        (reg.coord_x === PISTA_CX && reg.coord_y === PISTA_CY && reg.coord_z === PISTA_CZ)
+      );
+      if (!temNativo) {
+        const mat  = beaconMats[reg.tipo] || beaconMats.pessoa;
+        const mesh = new THREE.Mesh(beaconGeo, mat.clone());
+        scene.add(mesh);
+        beacons.push({
+          mesh,
+          cx: reg.coord_x, cy: reg.coord_y, cz: reg.coord_z,
+          nome: reg.nome || reg.carteira.slice(0,8) + '...',
+          url:  reg.url_conteudo || null,
+          tipo: reg.tipo || 'pessoa'
+        });
+      }
       // Objeto 3D nativo — se tiver url_3d, carrega no universo
       if (reg.url_3d) {
         carregarObjeto3D(reg.coord_x, reg.coord_y, reg.coord_z, reg.url_3d);
