@@ -460,10 +460,12 @@
   }
   #aviso-coord-fechar:hover{border-color:rgba(255,200,60,0.7);color:rgba(255,200,60,1);}
 
-  /* ── Landing Page Developer — Seções ── */
+  /* ── Landing Page Developer — Scroll-snap ── */
   #landing-overlay{
     position:fixed;inset:0;z-index:9000;
-    background:#080810;overflow:hidden;
+    background:#080810;
+    overflow-y:scroll;scroll-snap-type:y mandatory;
+    display:flex;flex-direction:column;
     transition:opacity 0.7s cubic-bezier(.4,0,.2,1);
   }
   #landing-overlay.saindo{opacity:0;pointer-events:none;}
@@ -486,123 +488,123 @@
 
   /* Progresso — bolinhas */
   #ld-progress{
-    position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
-    z-index:9100;display:flex;gap:8px;align-items:center;
+    position:fixed;right:28px;top:50%;transform:translateY(-50%);
+    z-index:9100;display:flex;flex-direction:column;gap:8px;align-items:center;
   }
   .ld-dot{
-    width:5px;height:5px;border-radius:50%;
+    width:4px;height:4px;border-radius:50%;
     background:rgba(255,255,255,0.15);
     transition:background 0.3s,transform 0.3s;cursor:pointer;
   }
-  .ld-dot.ativa{background:rgba(80,255,180,0.7);transform:scale(1.4);}
+  .ld-dot.ativa{background:rgba(80,255,180,0.7);transform:scale(1.6);}
 
   /* Seção */
   .ld-sec{
-    position:absolute;inset:0;
+    height:100vh;flex-shrink:0;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
-    padding:80px 32px 80px;
-    opacity:0;pointer-events:none;
-    transform:translateY(28px);
-    transition:opacity 0.45s cubic-bezier(.4,0,.2,1),transform 0.45s cubic-bezier(.4,0,.2,1);
-    overflow-y:auto;
+    padding:72px 32px 64px;
+    scroll-snap-align:start;
+    overflow:hidden;
   }
-  .ld-sec.ativa{opacity:1;pointer-events:all;transform:translateY(0);}
-  .ld-sec.saindo{opacity:0;transform:translateY(-28px);}
-  .ld-sec-inner{width:100%;max-width:720px;}
+  .ld-sec-inner{width:100%;max-width:700px;}
+
+  /* Seta "arraste" */
+  .ld-arrow{
+    position:absolute;bottom:28px;left:50%;transform:translateX(-50%);
+    font-size:18px;color:rgba(255,255,255,0.12);
+    animation:ld-bob 2s ease-in-out infinite;pointer-events:none;
+    font-family:sans-serif;
+  }
+  @keyframes ld-bob{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(6px);}}
 
   /* Tipografia */
   .ld-num{
     font-size:10px;letter-spacing:4px;color:rgba(255,255,255,0.2);
-    margin-bottom:16px;font-family:'Space Mono',monospace;
+    margin-bottom:12px;font-family:'Space Mono',monospace;
   }
   .ld-h1{
-    font-size:clamp(28px,4.5vw,52px);color:#fff;line-height:1.15;
-    font-weight:600;margin-bottom:24px;font-family:'Space Grotesk',sans-serif;
+    font-size:clamp(26px,4vw,48px);color:#fff;line-height:1.15;
+    font-weight:600;margin-bottom:20px;font-family:'Space Grotesk',sans-serif;
   }
   .ld-h1 em{color:rgba(80,255,180,0.9);font-style:normal;}
   .ld-p{
-    font-size:15px;color:rgba(255,255,255,0.5);line-height:2;
-    margin-bottom:14px;max-width:580px;font-family:'Space Grotesk',sans-serif;
+    font-size:14px;color:rgba(255,255,255,0.5);line-height:1.9;
+    margin-bottom:12px;max-width:560px;font-family:'Space Grotesk',sans-serif;
   }
   .ld-p strong{color:rgba(255,255,255,0.85);font-weight:500;}
-  .ld-p em{color:rgba(80,255,180,0.8);font-style:normal;}
 
-  /* Botões */
-  .ld-btn{
-    display:inline-flex;align-items:center;gap:10px;
-    background:rgba(80,255,180,0.07);
-    border:1px solid rgba(80,255,180,0.3);
-    border-radius:8px;padding:13px 26px;
-    color:rgba(80,255,180,0.85);cursor:pointer;
-    font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;
-    transition:all 0.2s;margin-top:8px;
-  }
-  .ld-btn:hover{background:rgba(80,255,180,0.13);border-color:rgba(80,255,180,0.65);color:#fff;}
-  .ld-btn .arr{transition:transform 0.2s;}
-  .ld-btn:hover .arr{transform:translateX(5px);}
+  /* Botão INICIAR */
   .ld-btn-iniciar{
-    background:rgba(80,255,180,0.1);border-color:rgba(80,255,180,0.5);
-    font-size:13px;padding:16px 36px;
+    display:inline-flex;align-items:center;gap:10px;
+    background:rgba(80,255,180,0.08);
+    border:1px solid rgba(80,255,180,0.4);
+    border-radius:8px;padding:14px 32px;
+    color:rgba(80,255,180,0.9);cursor:pointer;
+    font-family:'Space Mono',monospace;font-size:12px;letter-spacing:2px;
+    transition:all 0.2s;margin-top:20px;
   }
+  .ld-btn-iniciar:hover{background:rgba(80,255,180,0.15);border-color:rgba(80,255,180,0.7);color:#fff;}
+  .ld-btn-iniciar .arr{transition:transform 0.2s;}
+  .ld-btn-iniciar:hover .arr{transform:translateX(5px);}
 
   /* Code block */
   .ld-code{
     background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.07);
-    border-radius:8px;padding:16px 18px;margin:20px 0;
-    font-family:'Space Mono',monospace;font-size:11.5px;
-    line-height:1.8;color:rgba(80,255,180,0.75);
-    overflow-x:auto;white-space:pre;max-width:620px;
+    border-radius:8px;padding:14px 16px;margin:14px 0;
+    font-family:'Space Mono',monospace;font-size:11px;
+    line-height:1.75;color:rgba(80,255,180,0.75);
+    white-space:pre;overflow-x:auto;
   }
   .ld-code .cm{color:rgba(255,255,255,0.18);}
   .ld-code .kw{color:rgba(100,180,255,0.85);}
   .ld-code .st{color:rgba(255,180,80,0.85);}
   .ld-code .nm{color:rgba(180,140,255,0.85);}
 
-  /* Grid tipos */
-  .ld-tipos{
-    display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-    gap:10px;margin:20px 0;max-width:680px;
-  }
+  /* Tipos — faixas horizontais */
+  .ld-tipos{display:flex;flex-direction:column;gap:8px;margin:14px 0;width:100%;max-width:700px;}
   .ld-tipo{
+    display:grid;grid-template-columns:1fr 200px;gap:16px;align-items:center;
     border:1px solid rgba(255,255,255,0.07);border-radius:10px;
-    padding:18px 16px;background:rgba(255,255,255,0.02);
+    padding:14px 18px;background:rgba(255,255,255,0.02);
   }
   .ld-tipo-tag{
-    font-size:9px;letter-spacing:3px;margin-bottom:8px;
+    font-size:9px;letter-spacing:3px;margin-bottom:4px;
     font-family:'Space Mono',monospace;font-weight:600;display:block;
   }
-  .ld-tipo-nome{font-size:13px;color:#fff;font-weight:600;margin-bottom:6px;}
-  .ld-tipo-desc{font-size:11px;color:rgba(255,255,255,0.4);line-height:1.8;}
+  .ld-tipo-nome{font-size:13px;color:#fff;font-weight:600;margin-bottom:4px;}
+  .ld-tipo-desc{font-size:11px;color:rgba(255,255,255,0.4);line-height:1.6;}
+  .ld-tipo .ld-code{margin:0;font-size:10px;padding:10px 12px;}
 
-  /* Grid API */
-  .ld-api{border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:4px 18px;max-width:620px;margin-top:16px;}
+  /* API */
+  .ld-api{border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:2px 16px;max-width:680px;margin-top:14px;width:100%;}
   .ld-api-row{
-    display:grid;grid-template-columns:200px 1fr;gap:12px;
-    padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);
-    font-family:'Space Mono',monospace;font-size:11px;align-items:start;
+    display:grid;grid-template-columns:210px 1fr;gap:12px;
+    padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);
+    font-family:'Space Mono',monospace;font-size:10.5px;align-items:start;
   }
   .ld-api-row:last-child{border-bottom:none;}
   .ld-api-ep{color:rgba(80,255,180,0.7);}
-  .ld-api-info{color:rgba(255,255,255,0.35);font-size:10px;line-height:1.7;}
+  .ld-api-info{color:rgba(255,255,255,0.3);font-size:10px;line-height:1.6;}
 
-  /* Grid engine */
-  .ld-specs{
-    display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
-    gap:8px;margin-top:16px;max-width:680px;
-  }
-  .ld-spec{
-    border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px 14px;
-  }
-  .ld-spec-k{font-size:9px;letter-spacing:2px;color:rgba(255,255,255,0.2);margin-bottom:4px;font-family:'Space Mono',monospace;}
-  .ld-spec-v{font-size:12px;color:rgba(255,255,255,0.65);}
-
-  /* Beta box */
+  /* Beta */
   .ld-beta{
+    display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;
     border:1px solid rgba(255,200,80,0.2);border-radius:12px;
-    padding:28px;background:rgba(255,200,80,0.03);max-width:520px;margin:20px 0 28px;
+    padding:22px 24px;background:rgba(255,200,80,0.03);max-width:680px;width:100%;margin:14px 0 16px;
   }
-  .ld-beta-n{font-size:36px;color:rgba(255,200,80,0.8);font-family:'Space Mono',monospace;margin-bottom:8px;}
-  .ld-beta-d{font-size:13px;color:rgba(255,255,255,0.45);line-height:2;}
+  .ld-beta-n{font-size:32px;color:rgba(255,200,80,0.85);font-family:'Space Mono',monospace;white-space:nowrap;}
+  .ld-beta-d{font-size:12px;color:rgba(255,255,255,0.45);line-height:1.85;}
+
+  /* Specs inline */
+  .ld-specs-row{
+    display:flex;flex-wrap:wrap;gap:6px;max-width:680px;width:100%;
+  }
+  .ld-spec-chip{
+    border:1px solid rgba(255,255,255,0.06);border-radius:20px;
+    padding:5px 12px;font-size:10px;color:rgba(255,255,255,0.4);
+    font-family:'Space Mono',monospace;
+  }
+  .ld-spec-chip span{color:rgba(255,255,255,0.65);margin-left:4px;}
 </style>
 </head>
 <body>
@@ -617,7 +619,7 @@
   <div id="ld-progress"></div>
 
   <!-- SEC 0 — HERO -->
-  <div class="ld-sec ativa" data-sec="0">
+  <div class="ld-sec" data-sec="0" style="position:relative">
     <div class="ld-sec-inner">
       <div class="ld-num">PLATAFORMA PARA DESENVOLVEDORES · OPEN BETA</div>
       <h1 class="ld-h1">O universo 3D que você<br>faz <em>deploy</em>, não constrói.</h1>
@@ -626,92 +628,95 @@
         Coloque o que quiser lá — objeto 3D, app web, Three.js ao vivo.<br>
         Qualquer pessoa no mundo navega até você pelo universo.
       </p>
-      <button class="ld-btn" onclick="ldAvancar()">CONTINUAR <span class="arr">→</span></button>
     </div>
+    <div class="ld-arrow">↓</div>
   </div>
 
   <!-- SEC 1 — O QUE É -->
-  <div class="ld-sec" data-sec="1">
+  <div class="ld-sec" data-sec="1" style="position:relative">
     <div class="ld-sec-inner">
       <div class="ld-num">01 — O QUE É O COSM</div>
       <h1 class="ld-h1">Infraestrutura,<br>não plataforma.</h1>
       <p class="ld-p">
-        A App Store não cria os apps. A AWS não cria os produtos.<br>
-        O Roblox não cria os mundos.<br><br>
+        A App Store não cria os apps. A AWS não cria os produtos. O Roblox não cria os mundos.<br>
         <strong>O COSM fornece o universo. Você fornece o conteúdo.</strong>
       </p>
       <p class="ld-p">
         Como o <strong>HTTP é o protocolo da web</strong>, o <strong>COSM:// é o protocolo do espaço 3D</strong>.
-        Cada coordenada é um endereço permanente — sem servidor próprio obrigatório,
-        sem domínio, sem intermediário entre você e quem visita.
+        Cada coordenada é um endereço permanente — sem servidor, sem domínio, sem intermediário.
       </p>
       <p class="ld-p">Você não hospeda um site. <strong>Você ocupa um ponto no universo.</strong></p>
-      <button class="ld-btn" onclick="ldAvancar()">COMO FUNCIONA <span class="arr">→</span></button>
     </div>
+    <div class="ld-arrow">↓</div>
   </div>
 
-  <!-- SEC 2 — COMO FUNCIONA -->
-  <div class="ld-sec" data-sec="2">
+  <!-- SEC 2 — COMO FUNCIONA (faixas horizontais) -->
+  <div class="ld-sec" data-sec="2" style="position:relative">
     <div class="ld-sec-inner">
       <div class="ld-num">02 — COMO FUNCIONA</div>
       <h1 class="ld-h1">Três formas de colocar<br>conteúdo na sua coordenada.</h1>
       <div class="ld-tipos">
         <div class="ld-tipo">
-          <span class="ld-tipo-tag" style="color:rgba(80,255,180,0.7)">TYPE 01 — OBJETO 3D NATIVO</span>
-          <div class="ld-tipo-nome">.glb / .gltf</div>
-          <div class="ld-tipo-desc">Aparece solto no universo — sem moldura, sem iframe. Animações automáticas. Exporte do Blender, Unity ou Spline.</div>
+          <div>
+            <span class="ld-tipo-tag" style="color:rgba(80,255,180,0.7)">TYPE 01 — OBJETO 3D NATIVO</span>
+            <div class="ld-tipo-nome">.glb / .gltf</div>
+            <div class="ld-tipo-desc">Aparece solto no universo — sem moldura, sem iframe. Animações automáticas via AnimationMixer. Exporte do Blender, Unity ou Spline.</div>
+          </div>
           <div class="ld-code"><span class="kw">PATCH</span> /api/url3d
 <span class="st">"url"</span>: <span class="st">"https://cdn.ex.com/obj.glb"</span></div>
         </div>
         <div class="ld-tipo">
-          <span class="ld-tipo-tag" style="color:rgba(180,140,255,0.7)">TYPE 02 — THREE.JS AO VIVO</span>
-          <div class="ld-tipo-nome">Código na engine</div>
-          <div class="ld-tipo-desc">Acesso a <code style="color:rgba(180,140,255,0.8)">THREE</code>, <code style="color:rgba(180,140,255,0.8)">scene</code>, <code style="color:rgba(180,140,255,0.8)">camera</code> e <code style="color:rgba(180,140,255,0.8)">coordBase</code>. Retorne um Object3D.</div>
+          <div>
+            <span class="ld-tipo-tag" style="color:rgba(180,140,255,0.7)">TYPE 02 — THREE.JS AO VIVO</span>
+            <div class="ld-tipo-nome">Código na engine</div>
+            <div class="ld-tipo-desc">Acesso direto a <code style="color:rgba(180,140,255,0.8)">THREE</code>, <code style="color:rgba(180,140,255,0.8)">scene</code>, <code style="color:rgba(180,140,255,0.8)">camera</code> e <code style="color:rgba(180,140,255,0.8)">coordBase</code>. Retorne um Object3D.</div>
+          </div>
           <div class="ld-code"><span class="kw">return new</span> THREE.<span class="nm">Mesh</span>(geo, mat)</div>
         </div>
         <div class="ld-tipo">
-          <span class="ld-tipo-tag" style="color:rgba(100,180,255,0.7)">TYPE 03 — WEB / IFRAME</span>
-          <div class="ld-tipo-nome">Qualquer URL HTTPS</div>
-          <div class="ld-tipo-desc">React, Vue, Unity WebGL, Shopify — renderizado em tela cheia na coordenada.</div>
+          <div>
+            <span class="ld-tipo-tag" style="color:rgba(100,180,255,0.7)">TYPE 03 — WEB / IFRAME</span>
+            <div class="ld-tipo-nome">Qualquer URL HTTPS</div>
+            <div class="ld-tipo-desc">React, Vue, Unity WebGL, Shopify — renderizado em tela cheia na coordenada. Scroll, clique e teclado funcionam.</div>
+          </div>
           <div class="ld-code"><span class="kw">PATCH</span> /api/url
 <span class="st">"url"</span>: <span class="st">"https://meuapp.vercel.app"</span></div>
         </div>
       </div>
-      <button class="ld-btn" onclick="ldAvancar()">CONTROLE TOTAL <span class="arr">→</span></button>
     </div>
+    <div class="ld-arrow">↓</div>
   </div>
 
-  <!-- SEC 3 — CONTROLE TOTAL (developer hooks) -->
-  <div class="ld-sec" data-sec="3">
+  <!-- SEC 3 — CONTROLE TOTAL -->
+  <div class="ld-sec" data-sec="3" style="position:relative">
     <div class="ld-sec-inner">
       <div class="ld-num">03 — PARA DESENVOLVEDORES</div>
       <h1 class="ld-h1">A coordenada é<br>sua barra de endereço.</h1>
       <p class="ld-p">
-        Quem registra uma coordenada tem <strong>controle absoluto</strong> sobre ela —
+        Quem registra uma coordenada tem <strong>controle absoluto</strong> —
         câmera, navegação, física, renderização. Tudo pode ser sobrescrito.
-        É como se você digitasse uma URL e chegasse num universo 3D que você mesmo criou.
+        É como digitar uma URL e chegar num universo 3D que você mesmo criou.
       </p>
-      <div class="ld-code"><span class="cm">// Hook de loop — roda a cada frame quando o usuário está na sua coordenada</span>
+      <div class="ld-code"><span class="cm">// Roda a cada frame enquanto o visitante estiver na sua coordenada</span>
 <span class="kw">window</span>._cosmLoop = (<span class="nm">dt</span>) => {
   meuObjeto.rotation.y += <span class="nm">dt</span> * <span class="nm">0.5</span>
   meuObjeto.position.y = Math.<span class="nm">sin</span>(Date.<span class="nm">now</span>() / <span class="nm">600</span>) * <span class="nm">20</span>
 }
 
-<span class="cm">// Controle de câmera — desativa navegação padrão do COSM</span>
+<span class="cm">// Assume controle da câmera — desativa mouse/teclado padrão do COSM</span>
 <span class="kw">window</span>._cosmControls = <span class="nm">false</span>
 camera.position.<span class="nm">set</span>(<span class="nm">0</span>, <span class="nm">80</span>, <span class="nm">200</span>)
 camera.<span class="nm">lookAt</span>(<span class="nm">0</span>, <span class="nm">0</span>, <span class="nm">0</span>)</div>
-      <p class="ld-p" style="font-size:12px;margin-top:14px">
-        <strong>_cosmLoop(dt)</strong> — função chamada todo frame enquanto o visitante estiver na sua área.<br>
-        <strong>_cosmControls = false</strong> — assume controle total da câmera (mouse/teclado do COSM são desativados).<br>
+      <p class="ld-p" style="font-size:11px;margin-top:10px;line-height:1.8">
+        <strong>_cosmLoop(dt)</strong> — chamado todo frame na sua área. <strong>_cosmControls = false</strong> — câmera livre.<br>
         Ambos são removidos automaticamente ao sair da coordenada.
       </p>
-      <button class="ld-btn" onclick="ldAvancar()">API REFERENCE <span class="arr">→</span></button>
     </div>
+    <div class="ld-arrow">↓</div>
   </div>
 
   <!-- SEC 4 — API -->
-  <div class="ld-sec" data-sec="4">
+  <div class="ld-sec" data-sec="4" style="position:relative">
     <div class="ld-sec-inner">
       <div class="ld-num">04 — API REFERENCE</div>
       <h1 class="ld-h1">REST. Sem SDK.<br>Sem chave na beta.</h1>
@@ -722,23 +727,23 @@ camera.<span class="nm">lookAt</span>(<span class="nm">0</span>, <span class="nm
         </div>
         <div class="ld-api-row">
           <div class="ld-api-ep">PATCH /api/url3d</div>
-          <div class="ld-api-info">Define objeto 3D (.glb / .gltf público)<br>body: { carteira, url }</div>
+          <div class="ld-api-info">Define objeto 3D (.glb / .gltf público) — body: { carteira, url }</div>
         </div>
         <div class="ld-api-row">
           <div class="ld-api-ep">PATCH /api/url</div>
-          <div class="ld-api-info">Define conteúdo web da coordenada<br>body: { carteira, url } — qualquer HTTPS</div>
+          <div class="ld-api-info">Define conteúdo web — body: { carteira, url } — qualquer HTTPS</div>
         </div>
         <div class="ld-api-row">
           <div class="ld-api-ep">GET /api/coordenadas</div>
-          <div class="ld-api-info">Lista coordenadas com objetos 3D ativos<br>→ [ { coord_x, coord_y, coord_z, url_3d, nome } ]</div>
+          <div class="ld-api-info">Lista coordenadas com objetos 3D ativos → [ { coord_x, coord_y, coord_z, url_3d, nome } ]</div>
         </div>
         <div class="ld-api-row">
           <div class="ld-api-ep">GET /api/minha-coord/:x/:y/:z</div>
           <div class="ld-api-info">Verifica existência e dono → { existe: bool }</div>
         </div>
       </div>
-      <button class="ld-btn" style="margin-top:20px" onclick="ldAvancar()">BETA DEVELOPERS <span class="arr">→</span></button>
     </div>
+    <div class="ld-arrow">↓</div>
   </div>
 
   <!-- SEC 5 — BETA + INICIAR -->
@@ -747,27 +752,32 @@ camera.<span class="nm">lookAt</span>(<span class="nm">0</span>, <span class="nm
       <div class="ld-num">05 — BETA DEVELOPERS</div>
       <h1 class="ld-h1">10 vagas.<br>Gratuitas. Permanentes.</h1>
       <div class="ld-beta">
-        <div class="ld-beta-n">10 VAGAS</div>
+        <div class="ld-beta-n">10<br>VAGAS</div>
         <div class="ld-beta-d">
-          Registre sua coordenada agora, sem pagar nada.<br>
-          O que você colocar lá fica para sempre — sua coordenada, seu projeto, seu endereço no universo.<br><br>
+          Registre sua coordenada agora, sem pagar nada.
+          O que você colocar lá fica para sempre.<br>
           <strong style="color:rgba(255,200,80,0.85)">Use para divulgar seu projeto e o COSM juntos.</strong><br>
           Quando o universo crescer, quem chegou primeiro já está lá.
         </div>
       </div>
-      <div class="ld-specs">
-        <div class="ld-spec"><div class="ld-spec-k">RENDERER</div><div class="ld-spec-v">Three.js r160</div></div>
-        <div class="ld-spec"><div class="ld-spec-k">PRECISÃO</div><div class="ld-spec-v">Floating origin</div></div>
-        <div class="ld-spec"><div class="ld-spec-k">MOBILE</div><div class="ld-spec-v">Touch + Pinch</div></div>
-        <div class="ld-spec"><div class="ld-spec-k">GAMEPAD</div><div class="ld-spec-v">PS4 · Xbox</div></div>
-        <div class="ld-spec"><div class="ld-spec-k">BACKEND</div><div class="ld-spec-v">Node + PostgreSQL</div></div>
-        <div class="ld-spec"><div class="ld-spec-k">DEPLOY</div><div class="ld-spec-v">Railway (auto)</div></div>
+      <div class="ld-specs-row">
+        <div class="ld-spec-chip">Three.js r160</div>
+        <div class="ld-spec-chip">Floating origin</div>
+        <div class="ld-spec-chip">Touch + Pinch</div>
+        <div class="ld-spec-chip">PS4 · Xbox</div>
+        <div class="ld-spec-chip">Node + PostgreSQL</div>
+        <div class="ld-spec-chip">Railway (auto)</div>
+        <div class="ld-spec-chip">WebXR ready</div>
+        <div class="ld-spec-chip">Solana Pay</div>
       </div>
-      <button class="ld-btn ld-btn-iniciar" onclick="iniciarCOSM()" style="margin-top:24px">
+      <button class="ld-btn-iniciar" onclick="iniciarCOSM()">
         INICIAR O UNIVERSO <span class="arr">→</span>
       </button>
     </div>
   </div>
+
+  <!-- Trigger oculto — arrastar além do fim = iniciar -->
+  <div id="ld-end-trigger" style="height:1px;scroll-snap-align:start;flex-shrink:0;"></div>
 
 </div>
 
@@ -3361,53 +3371,60 @@ carMesh = criarCarro();
 
 // ── Landing Page ──────────────────────────────────────
 (function() {
-  const TOTAL = 6;
-  let secAtual = 0;
-  let bloqueado = false;
+  const overlay = document.getElementById('landing-overlay');
+  const secs = Array.from(document.querySelectorAll('.ld-sec'));
+  const prog = document.getElementById('ld-progress');
+  const TOTAL = secs.length;
 
-  function buildDots() {
-    const prog = document.getElementById('ld-progress');
-    if (!prog) return;
-    prog.innerHTML = '';
-    for (let i = 0; i < TOTAL; i++) {
-      const d = document.createElement('div');
-      d.className = 'ld-dot' + (i === 0 ? ' ativa' : '');
-      d.onclick = () => irParaSec(i);
-      prog.appendChild(d);
-    }
-  }
-
-  function irParaSec(idx) {
-    if (bloqueado || idx === secAtual || idx < 0 || idx >= TOTAL) return;
-    bloqueado = true;
-    const secs = document.querySelectorAll('.ld-sec');
-    const dots = document.querySelectorAll('.ld-dot');
-    secs[secAtual].classList.remove('ativa');
-    secs[secAtual].classList.add('saindo');
-    setTimeout(() => { secs[secAtual].classList.remove('saindo'); }, 460);
-    secAtual = idx;
-    secs[secAtual].classList.add('ativa');
-    dots.forEach((d, i) => d.classList.toggle('ativa', i === secAtual));
-    setTimeout(() => { bloqueado = false; }, 480);
-  }
-
-  window.ldAvancar = function() { irParaSec(secAtual + 1); };
-
-  window.iniciarCOSM = function() {
-    const el = document.getElementById('landing-overlay');
-    el.classList.add('saindo');
-    setTimeout(() => { el.style.display = 'none'; }, 700);
-  };
-
-  document.addEventListener('keydown', (e) => {
-    const overlay = document.getElementById('landing-overlay');
-    if (!overlay || overlay.style.display === 'none') return;
-    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); ldAvancar(); }
-    if (e.key === 'ArrowLeft') irParaSec(secAtual - 1);
-    if (e.key === 'Escape') iniciarCOSM();
+  // Dots
+  secs.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'ld-dot' + (i === 0 ? ' ativa' : '');
+    d.onclick = () => secs[i].scrollIntoView({ behavior: 'smooth' });
+    prog.appendChild(d);
   });
 
-  buildDots();
+  // IntersectionObserver — atualiza dot ativo
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const idx = secs.indexOf(e.target);
+      if (idx < 0) return;
+      document.querySelectorAll('.ld-dot').forEach((d, i) => d.classList.toggle('ativa', i === idx));
+    });
+  }, { root: overlay, threshold: 0.5 });
+  secs.forEach(s => io.observe(s));
+
+  // Trigger oculto no fim = iniciar
+  const trigger = document.getElementById('ld-end-trigger');
+  const ioEnd = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) iniciarCOSM();
+  }, { root: overlay, threshold: 1.0 });
+  ioEnd.observe(trigger);
+
+  window.iniciarCOSM = function() {
+    io.disconnect(); ioEnd.disconnect();
+    overlay.classList.add('saindo');
+    setTimeout(() => { overlay.style.display = 'none'; }, 700);
+  };
+
+  // Teclado
+  document.addEventListener('keydown', (e) => {
+    if (!overlay || overlay.style.display === 'none') return;
+    if (e.key === 'Escape') { iniciarCOSM(); return; }
+    const cur = Math.round(overlay.scrollTop / window.innerHeight);
+    if (e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      const next = secs[cur + 1];
+      if (next) next.scrollIntoView({ behavior: 'smooth' });
+      else iniciarCOSM();
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prev = secs[cur - 1];
+      if (prev) prev.scrollIntoView({ behavior: 'smooth' });
+    }
+  });
 })();
 
 window.fecharIframe = function() {
