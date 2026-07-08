@@ -523,9 +523,10 @@
     margin-bottom:14px;font-family:'Space Mono',monospace;
   }
   .ld-h1{
-    font-size:clamp(34px,5vw,64px);color:#fff;line-height:1.12;
-    font-weight:600;margin-bottom:22px;font-family:'Space Grotesk',sans-serif;
+    font-size:clamp(22px,3vw,38px);color:#fff;line-height:1.15;
+    font-weight:600;margin-bottom:20px;font-family:'Space Grotesk',sans-serif;
   }
+  .ld-sec-hero .ld-h1{font-size:clamp(34px,5vw,64px);line-height:1.12;margin-bottom:22px;}
   .ld-h1 em{color:rgba(80,255,180,0.9);font-style:normal;}
   .ld-p{
     font-size:16px;color:rgba(255,255,255,0.52);line-height:1.9;
@@ -621,7 +622,7 @@
   <div id="ld-progress"></div>
 
   <!-- SEC 0 — HERO -->
-  <div class="ld-sec" data-sec="0" style="position:relative">
+  <div class="ld-sec ld-sec-hero" data-sec="0" style="position:relative">
     <div class="ld-sec-inner">
       <div class="ld-num">PLATAFORMA PARA DESENVOLVEDORES · OPEN BETA</div>
       <h1 class="ld-h1">O universo 3D que você<br>faz <em>deploy</em>, não constrói.</h1>
@@ -3406,22 +3407,33 @@ carMesh = criarCarro();
     setTimeout(() => { overlay.style.display = 'none'; }, 700);
   };
 
-  // Teclado
-  document.addEventListener('keydown', (e) => {
-    if (!overlay || overlay.style.display === 'none') return;
-    if (e.key === 'Escape') { iniciarCOSM(); return; }
+  // Mouse wheel + teclado — navegação entre seções
+  let navCooldown = false;
+  function navPara(dir) {
+    if (navCooldown) return;
+    navCooldown = true;
+    setTimeout(() => { navCooldown = false; }, 750);
     const cur = Math.round(overlay.scrollTop / window.innerHeight);
-    if (e.key === 'ArrowDown' || e.key === ' ') {
-      e.preventDefault();
+    if (dir > 0) {
       const next = secs[cur + 1];
       if (next) next.scrollIntoView({ behavior: 'smooth' });
       else iniciarCOSM();
-    }
-    if (e.key === 'ArrowUp') {
-      e.preventDefault();
+    } else {
       const prev = secs[cur - 1];
       if (prev) prev.scrollIntoView({ behavior: 'smooth' });
     }
+  }
+
+  overlay.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    navPara(e.deltaY);
+  }, { passive: false });
+
+  document.addEventListener('keydown', (e) => {
+    if (!overlay || overlay.style.display === 'none') return;
+    if (e.key === 'Escape') { iniciarCOSM(); return; }
+    if (e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); navPara(1); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); navPara(-1); }
   });
 })();
 
