@@ -519,17 +519,17 @@
 
   /* Tipografia */
   .ld-num{
-    font-size:10px;letter-spacing:4px;color:rgba(255,255,255,0.2);
-    margin-bottom:12px;font-family:'Space Mono',monospace;
+    font-size:11px;letter-spacing:4px;color:rgba(255,255,255,0.22);
+    margin-bottom:14px;font-family:'Space Mono',monospace;
   }
   .ld-h1{
-    font-size:clamp(26px,4vw,48px);color:#fff;line-height:1.15;
-    font-weight:600;margin-bottom:20px;font-family:'Space Grotesk',sans-serif;
+    font-size:clamp(34px,5vw,64px);color:#fff;line-height:1.12;
+    font-weight:600;margin-bottom:22px;font-family:'Space Grotesk',sans-serif;
   }
   .ld-h1 em{color:rgba(80,255,180,0.9);font-style:normal;}
   .ld-p{
-    font-size:14px;color:rgba(255,255,255,0.5);line-height:1.9;
-    margin-bottom:12px;max-width:560px;font-family:'Space Grotesk',sans-serif;
+    font-size:16px;color:rgba(255,255,255,0.52);line-height:1.9;
+    margin-bottom:14px;max-width:580px;font-family:'Space Grotesk',sans-serif;
   }
   .ld-p strong{color:rgba(255,255,255,0.85);font-weight:500;}
 
@@ -560,20 +560,22 @@
   .ld-code .st{color:rgba(255,180,80,0.85);}
   .ld-code .nm{color:rgba(180,140,255,0.85);}
 
-  /* Tipos — faixas horizontais */
-  .ld-tipos{display:flex;flex-direction:column;gap:8px;margin:14px 0;width:100%;max-width:700px;}
+  /* Tipos — grid 3 cards */
+  .ld-tipos{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0;width:100%;max-width:760px;}
   .ld-tipo{
-    display:grid;grid-template-columns:1fr 200px;gap:16px;align-items:center;
-    border:1px solid rgba(255,255,255,0.07);border-radius:10px;
-    padding:14px 18px;background:rgba(255,255,255,0.02);
+    border:1px solid rgba(255,255,255,0.08);border-radius:12px;
+    padding:20px 18px;background:rgba(255,255,255,0.025);
   }
   .ld-tipo-tag{
-    font-size:9px;letter-spacing:3px;margin-bottom:4px;
+    font-size:9px;letter-spacing:3px;margin-bottom:8px;
     font-family:'Space Mono',monospace;font-weight:600;display:block;
   }
-  .ld-tipo-nome{font-size:13px;color:#fff;font-weight:600;margin-bottom:4px;}
-  .ld-tipo-desc{font-size:11px;color:rgba(255,255,255,0.4);line-height:1.6;}
-  .ld-tipo .ld-code{margin:0;font-size:10px;padding:10px 12px;}
+  .ld-tipo-nome{font-size:14px;color:#fff;font-weight:600;margin-bottom:6px;}
+  .ld-tipo-desc{font-size:12px;color:rgba(255,255,255,0.42);line-height:1.75;margin-bottom:0;}
+  .ld-tipo .ld-code{
+    margin:12px 0 0;font-size:10px;padding:10px 12px;
+    white-space:pre-wrap;word-break:break-all;overflow:hidden;
+  }
 
   /* API */
   .ld-api{border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:2px 16px;max-width:680px;margin-top:14px;width:100%;}
@@ -657,30 +659,26 @@
       <h1 class="ld-h1">Três formas de colocar<br>conteúdo na sua coordenada.</h1>
       <div class="ld-tipos">
         <div class="ld-tipo">
-          <div>
-            <span class="ld-tipo-tag" style="color:rgba(80,255,180,0.7)">TYPE 01 — OBJETO 3D NATIVO</span>
-            <div class="ld-tipo-nome">.glb / .gltf</div>
-            <div class="ld-tipo-desc">Aparece solto no universo — sem moldura, sem iframe. Animações automáticas via AnimationMixer. Exporte do Blender, Unity ou Spline.</div>
-          </div>
+          <span class="ld-tipo-tag" style="color:rgba(80,255,180,0.7)">TYPE 01 — OBJETO 3D</span>
+          <div class="ld-tipo-nome">.glb / .gltf</div>
+          <div class="ld-tipo-desc">Aparece solto no universo — sem moldura, sem iframe. Animações automáticas. Exporte do Blender, Unity ou Spline.</div>
           <div class="ld-code"><span class="kw">PATCH</span> /api/url3d
-<span class="st">"url"</span>: <span class="st">"https://cdn.ex.com/obj.glb"</span></div>
+<span class="st">"url"</span>: <span class="st">"cdn.ex.com/obj.glb"</span></div>
         </div>
         <div class="ld-tipo">
-          <div>
-            <span class="ld-tipo-tag" style="color:rgba(180,140,255,0.7)">TYPE 02 — THREE.JS AO VIVO</span>
-            <div class="ld-tipo-nome">Código na engine</div>
-            <div class="ld-tipo-desc">Acesso direto a <code style="color:rgba(180,140,255,0.8)">THREE</code>, <code style="color:rgba(180,140,255,0.8)">scene</code>, <code style="color:rgba(180,140,255,0.8)">camera</code> e <code style="color:rgba(180,140,255,0.8)">coordBase</code>. Retorne um Object3D.</div>
-          </div>
-          <div class="ld-code"><span class="kw">return new</span> THREE.<span class="nm">Mesh</span>(geo, mat)</div>
+          <span class="ld-tipo-tag" style="color:rgba(180,140,255,0.7)">TYPE 02 — THREE.JS</span>
+          <div class="ld-tipo-nome">Código ao vivo</div>
+          <div class="ld-tipo-desc">Acesso a <code style="color:rgba(180,140,255,0.8)">THREE</code>, <code style="color:rgba(180,140,255,0.8)">scene</code>, <code style="color:rgba(180,140,255,0.8)">camera</code> e <code style="color:rgba(180,140,255,0.8)">coordBase</code>. Retorne um Object3D e ele aparece no universo.</div>
+          <div class="ld-code"><span class="kw">return new</span> THREE.<span class="nm">Mesh</span>(
+  geo, mat
+)</div>
         </div>
         <div class="ld-tipo">
-          <div>
-            <span class="ld-tipo-tag" style="color:rgba(100,180,255,0.7)">TYPE 03 — WEB / IFRAME</span>
-            <div class="ld-tipo-nome">Qualquer URL HTTPS</div>
-            <div class="ld-tipo-desc">React, Vue, Unity WebGL, Shopify — renderizado em tela cheia na coordenada. Scroll, clique e teclado funcionam.</div>
-          </div>
+          <span class="ld-tipo-tag" style="color:rgba(100,180,255,0.7)">TYPE 03 — WEB / IFRAME</span>
+          <div class="ld-tipo-nome">Qualquer URL HTTPS</div>
+          <div class="ld-tipo-desc">React, Vue, Unity WebGL, Shopify — tela cheia na coordenada. Scroll, clique e teclado funcionam dentro do espaço.</div>
           <div class="ld-code"><span class="kw">PATCH</span> /api/url
-<span class="st">"url"</span>: <span class="st">"https://meuapp.vercel.app"</span></div>
+<span class="st">"url"</span>: <span class="st">"meuapp.vercel.app"</span></div>
         </div>
       </div>
     </div>
