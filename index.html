@@ -459,10 +459,385 @@
     padding:7px 16px;transition:all 0.2s;width:100%;
   }
   #aviso-coord-fechar:hover{border-color:rgba(255,200,60,0.7);color:rgba(255,200,60,1);}
+
+  /* ── Landing Page Developer ── */
+  #landing-overlay{
+    position:fixed;inset:0;z-index:9000;
+    background:#080810;overflow-y:auto;overflow-x:hidden;
+    scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.08) transparent;
+    transition:opacity 0.7s cubic-bezier(.4,0,.2,1);
+  }
+  #landing-overlay.saindo{opacity:0;pointer-events:none;}
+  .ld-wrap{
+    max-width:860px;margin:0 auto;padding:64px 32px 120px;
+    font-family:'Space Grotesk',sans-serif;
+  }
+  .ld-topbar{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:96px;
+  }
+  .ld-logo{
+    font-family:'Conthrax',monospace;font-size:13px;letter-spacing:4px;
+    color:rgba(255,255,255,0.9);
+  }
+  .ld-skip{
+    font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.2);
+    cursor:pointer;background:none;border:none;padding:6px 0;
+    transition:color 0.2s;font-family:'Space Mono',monospace;
+  }
+  .ld-skip:hover{color:rgba(255,255,255,0.5);}
+  .ld-hero{margin-bottom:96px;}
+  .ld-hero-tag{
+    font-size:10px;letter-spacing:4px;color:rgba(80,255,180,0.7);
+    margin-bottom:24px;font-family:'Space Mono',monospace;
+  }
+  .ld-hero-h1{
+    font-size:clamp(32px,5vw,56px);color:#fff;line-height:1.15;
+    letter-spacing:-0.5px;margin-bottom:28px;font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+  }
+  .ld-hero-h1 em{color:rgba(80,255,180,0.9);font-style:normal;}
+  .ld-hero-sub{
+    font-size:16px;color:rgba(255,255,255,0.5);line-height:1.9;
+    max-width:560px;margin-bottom:40px;
+  }
+  .ld-btn-iniciar{
+    display:inline-flex;align-items:center;gap:12px;
+    background:rgba(80,255,180,0.08);
+    border:1px solid rgba(80,255,180,0.35);
+    border-radius:8px;padding:14px 28px;
+    color:rgba(80,255,180,0.9);cursor:pointer;
+    font-family:'Space Mono',monospace;font-size:12px;letter-spacing:2px;
+    transition:all 0.2s;
+  }
+  .ld-btn-iniciar:hover{
+    background:rgba(80,255,180,0.14);border-color:rgba(80,255,180,0.7);
+    color:#fff;
+  }
+  .ld-btn-iniciar .arr{transition:transform 0.2s;}
+  .ld-btn-iniciar:hover .arr{transform:translateX(4px);}
+  .ld-div{height:1px;background:rgba(255,255,255,0.06);margin:64px 0;}
+  .ld-sec{margin-bottom:72px;}
+  .ld-sec-num{
+    font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.2);
+    margin-bottom:10px;font-family:'Space Mono',monospace;
+  }
+  .ld-sec-titulo{
+    font-size:22px;color:#fff;letter-spacing:0px;margin-bottom:16px;
+    font-weight:600;
+  }
+  .ld-sec-txt{
+    font-size:14px;color:rgba(255,255,255,0.55);line-height:2;margin-bottom:16px;
+  }
+  .ld-sec-txt strong{color:rgba(255,255,255,0.85);font-weight:500;}
+  .ld-tipos{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:28px;}
+  .ld-tipo{
+    border:1px solid rgba(255,255,255,0.07);border-radius:10px;
+    padding:22px 20px;background:rgba(255,255,255,0.02);
+  }
+  .ld-tipo-tag{
+    font-size:9px;letter-spacing:3px;margin-bottom:10px;
+    font-family:'Space Mono',monospace;font-weight:600;display:block;
+  }
+  .ld-tipo-nome{font-size:14px;color:#fff;font-weight:600;margin-bottom:8px;}
+  .ld-tipo-desc{font-size:12px;color:rgba(255,255,255,0.45);line-height:1.8;margin-bottom:14px;}
+  .ld-code{
+    background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.07);
+    border-radius:6px;padding:12px 14px;
+    font-family:'Space Mono',monospace;font-size:11px;
+    line-height:1.7;color:rgba(80,255,180,0.7);
+    overflow-x:auto;white-space:pre;
+  }
+  .ld-code .cm{color:rgba(255,255,255,0.2);}
+  .ld-code .kw{color:rgba(100,180,255,0.8);}
+  .ld-code .st{color:rgba(255,180,80,0.8);}
+  .ld-code .nm{color:rgba(180,140,255,0.8);}
+  .ld-grid-specs{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:10px;margin-top:20px;
+  }
+  .ld-spec{
+    border:1px solid rgba(255,255,255,0.06);border-radius:8px;
+    padding:14px 16px;
+  }
+  .ld-spec-k{
+    font-size:9px;letter-spacing:2px;color:rgba(255,255,255,0.25);
+    margin-bottom:6px;font-family:'Space Mono',monospace;
+  }
+  .ld-spec-v{font-size:13px;color:rgba(255,255,255,0.7);font-weight:500;}
+  .ld-api-linha{
+    display:grid;grid-template-columns:140px 1fr;gap:16px;align-items:start;
+    padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.05);
+    font-family:'Space Mono',monospace;font-size:12px;
+  }
+  .ld-api-linha:last-child{border-bottom:none;}
+  .ld-api-method{color:rgba(80,255,180,0.7);}
+  .ld-api-desc{color:rgba(255,255,255,0.4);font-size:11px;margin-top:4px;}
+  .ld-coord-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:8px;margin-top:20px;
+  }
+  .ld-coord-item{
+    padding:12px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);
+    background:rgba(255,255,255,0.02);
+  }
+  .ld-coord-zona{
+    font-size:9px;letter-spacing:2px;font-family:'Space Mono',monospace;
+    margin-bottom:4px;
+  }
+  .ld-coord-escala{font-size:11px;color:rgba(255,255,255,0.4);}
+  .ld-beta-box{
+    border:1px solid rgba(255,200,80,0.2);border-radius:10px;
+    padding:28px 28px;background:rgba(255,200,80,0.03);margin-top:20px;
+  }
+  .ld-beta-num{
+    font-size:32px;color:rgba(255,200,80,0.8);font-family:'Space Mono',monospace;
+    letter-spacing:2px;margin-bottom:6px;
+  }
+  .ld-beta-desc{font-size:13px;color:rgba(255,255,255,0.45);line-height:1.9;}
+  .ld-bottom-cta{
+    text-align:center;padding:40px 0;
+  }
+  .ld-bottom-sub{
+    font-size:11px;letter-spacing:1px;color:rgba(255,255,255,0.2);
+    margin-top:16px;font-family:'Space Mono',monospace;
+  }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
+
+<!-- ── Landing Page Developer Platform ── -->
+<div id="landing-overlay">
+<div class="ld-wrap">
+
+  <!-- Topbar -->
+  <div class="ld-topbar">
+    <div class="ld-logo">COSM://</div>
+    <button class="ld-skip" onclick="iniciarCOSM()">PULAR E ENTRAR →</button>
+  </div>
+
+  <!-- Hero -->
+  <div class="ld-hero">
+    <div class="ld-hero-tag">PLATAFORMA PARA DESENVOLVEDORES · OPEN BETA</div>
+    <h1 class="ld-hero-h1">O universo 3D que você<br>faz <em>deploy</em>, não constrói.</h1>
+    <p class="ld-hero-sub">
+      Registre uma coordenada permanente no espaço 3D.
+      Coloque o que quiser lá — objeto 3D, app web, código Three.js ao vivo.
+      Qualquer pessoa no mundo navega até você pelo universo.
+    </p>
+    <button class="ld-btn-iniciar" onclick="iniciarCOSM()">
+      INICIAR O UNIVERSO <span class="arr">→</span>
+    </button>
+  </div>
+
+  <div class="ld-div"></div>
+
+  <!-- 01 — O que é -->
+  <div class="ld-sec">
+    <div class="ld-sec-num">01 — CONCEITO</div>
+    <div class="ld-sec-titulo">Infraestrutura, não plataforma.</div>
+    <p class="ld-sec-txt">
+      A App Store não cria os apps. A AWS não cria os produtos. O Roblox não cria os mundos.<br>
+      O <strong>COSM fornece o universo.</strong> Você fornece o conteúdo.
+    </p>
+    <p class="ld-sec-txt">
+      Como o <strong>HTTP é o protocolo da web</strong>, o <strong>COSM:// é o protocolo do espaço 3D</strong>.
+      Cada coordenada é um endereço permanente — sem servidor próprio obrigatório,
+      sem domínio, sem intermediário entre você e quem visita.
+    </p>
+    <p class="ld-sec-txt">
+      Você não hospeda um site. <strong>Você ocupa um ponto no universo.</strong>
+    </p>
+  </div>
+
+  <div class="ld-div"></div>
+
+  <!-- 02 — O que criar -->
+  <div class="ld-sec">
+    <div class="ld-sec-num">02 — O QUE VOCÊ PODE CRIAR</div>
+    <div class="ld-sec-titulo">Três formas de colocar conteúdo na sua coordenada.</div>
+    <div class="ld-tipos">
+
+      <!-- TYPE 01 -->
+      <div class="ld-tipo">
+        <span class="ld-tipo-tag" style="color:rgba(80,255,180,0.7)">TYPE 01 — OBJETO 3D NATIVO</span>
+        <div class="ld-tipo-nome">.glb / .gltf</div>
+        <div class="ld-tipo-desc">
+          Aparece solto no universo — sem moldura, sem iframe.
+          Animações tocam automaticamente. Exporte do Blender, Unity, Spline ou Unreal.
+        </div>
+        <div class="ld-code"><span class="cm">// registro via API</span>
+<span class="kw">PATCH</span> /api/url3d
+<span class="st">"url"</span>: <span class="st">"https://cdn.exemplo.com/cidade.glb"</span></div>
+      </div>
+
+      <!-- TYPE 02 -->
+      <div class="ld-tipo">
+        <span class="ld-tipo-tag" style="color:rgba(180,140,255,0.7)">TYPE 02 — CÓDIGO THREE.JS</span>
+        <div class="ld-tipo-nome">Ao vivo na engine</div>
+        <div class="ld-tipo-desc">
+          Escreva Three.js diretamente. Acesso completo a
+          <code style="color:rgba(180,140,255,0.8);font-size:10px">THREE</code>,
+          <code style="color:rgba(180,140,255,0.8);font-size:10px">scene</code>,
+          <code style="color:rgba(180,140,255,0.8);font-size:10px">camera</code> e
+          <code style="color:rgba(180,140,255,0.8);font-size:10px">coordBase</code>.
+          Retorne um Object3D — ele aparece no universo.
+        </div>
+        <div class="ld-code"><span class="kw">const</span> geo = <span class="kw">new</span> THREE.<span class="nm">TorusKnotGeometry</span>(<span class="nm">80</span>, <span class="nm">20</span>)
+<span class="kw">const</span> mat = <span class="kw">new</span> THREE.<span class="nm">MeshStandardMaterial</span>({
+  color: <span class="nm">0xff6600</span>, metalness: <span class="nm">0.6</span>
+})
+<span class="kw">return new</span> THREE.<span class="nm">Mesh</span>(geo, mat)</div>
+      </div>
+
+      <!-- TYPE 03 -->
+      <div class="ld-tipo">
+        <span class="ld-tipo-tag" style="color:rgba(100,180,255,0.7)">TYPE 03 — WEB / IFRAME</span>
+        <div class="ld-tipo-nome">Qualquer URL HTTPS</div>
+        <div class="ld-tipo-desc">
+          Renderizado em tela cheia na coordenada.
+          React, Vue, Svelte, Unity WebGL, Shopify, Notion — funciona.
+          Scroll, clique e teclado funcionam normalmente dentro do espaço.
+        </div>
+        <div class="ld-code"><span class="cm">// registro via API</span>
+<span class="kw">PATCH</span> /api/url
+<span class="st">"url"</span>: <span class="st">"https://meuapp.vercel.app"</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="ld-div"></div>
+
+  <!-- 03 — Sistema de coordenadas -->
+  <div class="ld-sec">
+    <div class="ld-sec-num">03 — SISTEMA DE COORDENADAS</div>
+    <div class="ld-sec-titulo">Floating origin. Escala infinita. Privacidade por padrão.</div>
+    <p class="ld-sec-txt">
+      <strong>COSM(X, Y, Z) = coordBase + camera.position</strong><br>
+      Floating origin elimina imprecisão float32 em qualquer escala —
+      funciona de <code style="color:rgba(255,255,255,0.6);font-size:12px">0:0:0</code> até
+      <code style="color:rgba(255,255,255,0.6);font-size:12px">999999999:999999999:999999999</code> sem artefatos visuais.
+    </p>
+    <p class="ld-sec-txt">
+      Alocação por espiral de Fibonacci — <strong>GAP de 1.000.000 unidades</strong> entre coordenadas registradas.
+      Vizinhos ficam a anos de distância. Ninguém chega ao seu espaço por acidente.
+    </p>
+    <div class="ld-coord-grid">
+      <div class="ld-coord-item">
+        <div class="ld-coord-zona" style="color:rgba(255,255,255,0.35)">LOCAL</div>
+        <div class="ld-coord-escala">0 — 999 unidades</div>
+      </div>
+      <div class="ld-coord-item">
+        <div class="ld-coord-zona" style="color:rgba(100,255,180,0.6)">PESSOAL</div>
+        <div class="ld-coord-escala">1k — 999k unidades</div>
+      </div>
+      <div class="ld-coord-item">
+        <div class="ld-coord-zona" style="color:rgba(100,200,255,0.6)">SETOR</div>
+        <div class="ld-coord-escala">1S — 999S unidades</div>
+      </div>
+      <div class="ld-coord-item">
+        <div class="ld-coord-zona" style="color:rgba(180,140,255,0.6)">ANOS-LUZ</div>
+        <div class="ld-coord-escala">1A+ · escala galáctica</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ld-div"></div>
+
+  <!-- 04 — API -->
+  <div class="ld-sec">
+    <div class="ld-sec-num">04 — API REFERENCE</div>
+    <div class="ld-sec-titulo">REST. Sem SDK obrigatório. Sem chave de API na beta.</div>
+    <div style="margin-top:20px;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:4px 20px;">
+      <div class="ld-api-linha">
+        <span class="ld-api-method">POST /api/registrar</span>
+        <div>
+          <div style="color:rgba(255,255,255,0.6);font-size:11px">Registra coordenada no universo</div>
+          <div class="ld-api-desc">body: { carteira, tipo, plano, nome } → { coord_x, coord_y, coord_z }</div>
+        </div>
+      </div>
+      <div class="ld-api-linha">
+        <span class="ld-api-method">PATCH /api/url3d</span>
+        <div>
+          <div style="color:rgba(255,255,255,0.6);font-size:11px">Define objeto 3D da coordenada</div>
+          <div class="ld-api-desc">body: { carteira, url } — aceita .glb ou .gltf público</div>
+        </div>
+      </div>
+      <div class="ld-api-linha">
+        <span class="ld-api-method">PATCH /api/url</span>
+        <div>
+          <div style="color:rgba(255,255,255,0.6);font-size:11px">Define conteúdo web da coordenada</div>
+          <div class="ld-api-desc">body: { carteira, url } — qualquer HTTPS</div>
+        </div>
+      </div>
+      <div class="ld-api-linha">
+        <span class="ld-api-method">GET /api/coordenadas</span>
+        <div>
+          <div style="color:rgba(255,255,255,0.6);font-size:11px">Lista coordenadas com objetos 3D ativos</div>
+          <div class="ld-api-desc">Retorna array com coord_x, coord_y, coord_z, url_3d, nome</div>
+        </div>
+      </div>
+      <div class="ld-api-linha">
+        <span class="ld-api-method">GET /api/minha-coord/:x/:y/:z</span>
+        <div>
+          <div style="color:rgba(255,255,255,0.6);font-size:11px">Verifica existência e dono</div>
+          <div class="ld-api-desc">Retorna { existe: bool } — usado no reconhecimento de dispositivo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ld-div"></div>
+
+  <!-- 05 — Engine -->
+  <div class="ld-sec">
+    <div class="ld-sec-num">05 — ENGINE & PLATAFORMA</div>
+    <div class="ld-sec-titulo">Sem build step. Sem bundler. HTML único.</div>
+    <div class="ld-grid-specs">
+      <div class="ld-spec"><div class="ld-spec-k">RENDERER</div><div class="ld-spec-v">Three.js r160</div></div>
+      <div class="ld-spec"><div class="ld-spec-k">MODELOS 3D</div><div class="ld-spec-v">GLTFLoader nativo</div></div>
+      <div class="ld-spec"><div class="ld-spec-k">ANIMAÇÃO</div><div class="ld-spec-v">AnimationMixer</div></div>
+      <div class="ld-spec"><div class="ld-spec-k">PRECISÃO</div><div class="ld-spec-v">Floating origin</div></div>
+      <div class="ld-spec"><div class="ld-spec-k">ALOCAÇÃO</div><div class="ld-spec-v">Fibonacci spiral</div></div>
+      <div class="ld-spec"><div class="ld-spec-k">DESKTOP</div><div class="ld-spec-v">Mouse + Teclado</div></div>
+      <div class="ld-spec"><div class="ld-spec-k">MOBILE</div><div class="ld-spec-v">Touch + Pinch</div></div>
+      <div class="ld-spec"><div class="ld-spec-k">GAMEPAD</div><div class="ld-spec-v">PS3 · PS4 · Xbox</div></div>
+      <div class="ld-spec"><div class="ld-spec-k">FUTURO</div><div class="ld-spec-v">WebXR / VR ready</div></div>
+      <div class="ld-spec"><div class="ld-spec-k">BACKEND</div><div class="ld-spec-v">Node + PostgreSQL</div></div>
+      <div class="ld-spec"><div class="ld-spec-k">DEPLOY</div><div class="ld-spec-v">Railway (auto)</div></div>
+      <div class="ld-spec"><div class="ld-spec-k">PAGAMENTO</div><div class="ld-spec-v">Solana Pay</div></div>
+    </div>
+  </div>
+
+  <div class="ld-div"></div>
+
+  <!-- Beta -->
+  <div class="ld-sec">
+    <div class="ld-sec-num">06 — BETA DEVELOPERS</div>
+    <div class="ld-sec-titulo">10 vagas. Gratuitas. Permanentes.</div>
+    <div class="ld-beta-box">
+      <div class="ld-beta-num">10 VAGAS</div>
+      <div class="ld-beta-desc">
+        Registre sua coordenada agora, sem pagar nada.<br>
+        O que você colocar lá fica para sempre — sua coordenada, seu projeto, seu endereço no universo.<br><br>
+        <strong style="color:rgba(255,200,80,0.7)">Use para divulgar seu projeto e o COSM juntos.</strong><br>
+        Quando o universo crescer, quem chegou primeiro já está lá.
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA final -->
+  <div class="ld-bottom-cta">
+    <button class="ld-btn-iniciar" onclick="iniciarCOSM()" style="font-size:13px;padding:16px 36px;">
+      INICIAR O UNIVERSO <span class="arr">→</span>
+    </button>
+    <div class="ld-bottom-sub">cosm-production.up.railway.app · Three.js r160 · Open Beta</div>
+  </div>
+
+</div>
+</div>
 
 <!-- ── Menu principal COSM:// ── -->
 <button id="btn-menu" onclick="toggleMenu()">///</button>
@@ -3051,6 +3426,13 @@ playerMesh = criarJogador();
 criarPistaCorrida(PISTA_CX, PISTA_CY, PISTA_CZ);
 carMesh = criarCarro();
 
+
+// ── Landing Page ──────────────────────────────────────
+window.iniciarCOSM = function() {
+  const el = document.getElementById('landing-overlay');
+  el.classList.add('saindo');
+  setTimeout(() => { el.style.display = 'none'; }, 700);
+};
 
 window.fecharIframe = function() {
   const overlay  = document.getElementById('iframe-overlay');
