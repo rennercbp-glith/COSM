@@ -15,7 +15,7 @@
   body{background:#080810;overflow:hidden;font-family:'Conthrax',sans-serif;color:#aaccff;}
   code,#coord-input,#txt-pos,#txt-vel,.painel-valor,
   .dev-tipo-code,#iframe-coord,#iframe-titulo,#iframe-fechar,
-  #btn-menu,#beacon-prompt,#notif,#iframe-teste-banner{
+  #btn-menu,#notif,#iframe-teste-banner{
     font-family:'Conthrax',monospace;
   }
   canvas{display:block;cursor:crosshair;}
@@ -196,15 +196,6 @@
   #iframe-fechar:hover{border-color:rgba(255,100,100,0.5);color:rgba(255,100,100,0.8);}
   #iframe-content{flex:1;border:none;width:100%;background:#000;}
 
-  /* ── Beacon (marcador de coordenada com conteúdo) ── */
-  #beacon-prompt{
-    position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
-    background:rgba(0,0,0,0.75);border:1px solid rgba(100,200,255,0.3);
-    border-radius:8px;padding:10px 20px;font-size:13px;letter-spacing:1px;
-    color:rgba(100,200,255,0.9);cursor:pointer;pointer-events:all;z-index:20;
-    display:none;backdrop-filter:blur(6px);transition:all 0.2s;
-  }
-  #beacon-prompt:hover{border-color:rgba(100,200,255,0.7);color:#fff;}
 
   /* ── Modal teste ── */
   #modal-teste{
@@ -558,8 +549,6 @@
   <iframe id="iframe-content" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-popups-to-escape-sandbox" allow="autoplay; fullscreen; picture-in-picture"></iframe>
 </div>
 
-<!-- Beacon prompt: aparece quando perto de coordenada com conteúdo -->
-<div id="beacon-prompt" onclick="abrirConteudoBeacon()"></div>
 
 <!-- Prompt de reconhecimento de coord em novo dispositivo -->
 <div id="prompt-reconhecer" style="display:none;position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#08080f;border:1px solid rgba(100,255,180,0.3);border-radius:10px;padding:14px 20px;z-index:50;font-family:'Space Mono',monospace;text-align:center;max-width:340px;width:90vw;">
@@ -1448,17 +1437,6 @@ function atualizarHUD() {
 }
 
 // ═══════════════════════════════════════════════════════
-//  BEACONS — declarações antecipadas (usadas no loop)
-// ═══════════════════════════════════════════════════════
-const beacons    = [];
-let   beaconAtivo = null;
-const beaconGeo  = new THREE.SphereGeometry(80, 12, 12);
-const beaconMats = {
-  pessoa:  new THREE.MeshBasicMaterial({ color: 0x44ccff, transparent: true, opacity: 0.55 }),
-  empresa: new THREE.MeshBasicMaterial({ color: 0xcc88ff, transparent: true, opacity: 0.55 })
-};
-
-// ═══════════════════════════════════════════════════════
 //  OBJETOS 3D NATIVOS — declarações antecipadas
 // ═══════════════════════════════════════════════════════
 const COORD_TESTE  = { x: 0, y: 777777, z: 0 };
@@ -2029,7 +2007,6 @@ function loop() {
   if (window._cosmAnimHooks) window._cosmAnimHooks.forEach(fn => { try { fn(); } catch(_){} });
 
   atualizarHUD();
-  atualizarBeacons();
   atualizarObjetos3D(dt);
   renderer.render(scene, camera);
 }
@@ -3050,23 +3027,6 @@ async function carregarCoordenadas() {
     const resp = await fetch('/api/coordenadas');
     const lista = await resp.json();
     lista.forEach(reg => {
-      // Não renderiza beacon em coordenadas com objeto 3D nativo (campo, pista)
-      const temNativo = (
-        (reg.coord_x === CAMPO_CX && reg.coord_y === CAMPO_CY && reg.coord_z === CAMPO_CZ) ||
-        (reg.coord_x === PISTA_CX && reg.coord_y === PISTA_CY && reg.coord_z === PISTA_CZ)
-      );
-      if (!temNativo) {
-        const mat  = beaconMats[reg.tipo] || beaconMats.pessoa;
-        const mesh = new THREE.Mesh(beaconGeo, mat.clone());
-        scene.add(mesh);
-        beacons.push({
-          mesh,
-          cx: reg.coord_x, cy: reg.coord_y, cz: reg.coord_z,
-          nome: reg.nome || reg.carteira.slice(0,8) + '...',
-          url:  reg.url_conteudo || null,
-          tipo: reg.tipo || 'pessoa'
-        });
-      }
       // Objeto 3D nativo — se tiver url_3d, carrega no universo
       if (reg.url_3d) {
         carregarObjeto3D(reg.coord_x, reg.coord_y, reg.coord_z, reg.url_3d);
@@ -3089,52 +3049,6 @@ playerMesh = criarJogador();
 criarPistaCorrida(PISTA_CX, PISTA_CY, PISTA_CZ);
 carMesh = criarCarro();
 
-const BEACON_DIST_MAX = 500;
-
-function atualizarBeacons() {
-  const prompt = document.getElementById('beacon-prompt');
-  let maisperto = null;
-  let distMin   = Infinity;
-
-  beacons.forEach(b => {
-    b.mesh.position.set(
-      b.cx - coordBase.x,
-      b.cy - coordBase.y,
-      b.cz - coordBase.z
-    );
-    const dist = camera.position.distanceTo(b.mesh.position);
-    b.mesh.visible = dist <= BEACON_DIST_MAX;
-    if (!b.mesh.visible) return;
-
-    // Pulsar suavemente
-    const s = 1 + 0.12 * Math.sin(clock.getElapsedTime() * 1.8);
-    b.mesh.scale.setScalar(s);
-
-    if (b.url && dist < distMin) { distMin = dist; maisperto = b; }
-  });
-
-  // Mostrar prompt se estiver a menos de 2000 unidades de beacon com URL
-  if (maisperto && distMin < 2000 && !document.getElementById('iframe-overlay').classList.contains('ativo')) {
-    beaconAtivo = maisperto;
-    prompt.textContent = `▶  ENTRAR EM ${maisperto.nome.toUpperCase()}`;
-    prompt.style.display = 'block';
-  } else {
-    beaconAtivo = null;
-    prompt.style.display = 'none';
-  }
-}
-
-window.abrirConteudoBeacon = function() {
-  if (!beaconAtivo?.url) return;
-  const overlay = document.getElementById('iframe-overlay');
-  document.getElementById('iframe-titulo').textContent =
-    beaconAtivo.nome.toUpperCase();
-  document.getElementById('iframe-coord').textContent =
-    `COSM://${beaconAtivo.cx}:${beaconAtivo.cy}:${beaconAtivo.cz}`;
-  document.getElementById('iframe-content').src = beaconAtivo.url;
-  overlay.classList.add('ativo');
-  bloquearCanvas(true);
-};
 
 window.fecharIframe = function() {
   const overlay  = document.getElementById('iframe-overlay');
