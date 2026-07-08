@@ -1457,6 +1457,8 @@ function carregarObjeto3D(cx, cy, cz, url, escala = 500) {
   }, undefined, err => console.warn('COSM 3D load error:', url, err));
 }
 
+const OBJ_DIST_MAX = 500; // distância máxima para renderizar objetos 3D nativos
+
 function atualizarObjetos3D(dt) {
   objetos3d.forEach(o => {
     o.mesh.position.set(
@@ -1464,7 +1466,7 @@ function atualizarObjetos3D(dt) {
       o.cy - coordBase.y,
       o.cz - coordBase.z
     );
-    o.mesh.visible = camera.position.distanceTo(o.mesh.position) <= BEACON_DIST_MAX;
+    o.mesh.visible = camera.position.distanceTo(o.mesh.position) <= OBJ_DIST_MAX;
     if (o.mesh.visible && o.mixer) o.mixer.update(dt);
   });
 }

@@ -1,6 +1,6 @@
 ===============================================================
   COSM — NOTAS TÉCNICAS (para Claude ler no futuro)
-  Última atualização: 2026-07-06 (v11 — campo de futebol, pista de corrida, fix registro beta)
+  Última atualização: 2026-07-07 (v12 — beacon removido, pista na coord do Renner, bug registro corrigido)
   Pasta: C:\Users\renne\Projetos\COSM\
   Deploy: cosm-production.up.railway.app
   GitHub: https://github.com/rennercbp-glith/COSM.git
@@ -13,6 +13,39 @@ INSTRUÇÃO PARA CLAUDE AO ABRIR ESTA SESSÃO:
   3. Para cada coisa nova que for adicionar: pergunte se pode ter versão 3D nativa
   4. Confirme ao Renner: "Li as notas e o código. Estado atual: [resumo]."
   5. Nunca implemente nada sem o Renner pedir
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ESTADO ATUAL — 2026-07-07 (leia isso primeiro ao retomar)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+COORDENADAS IMPORTANTES:
+  14100:999900:1800    → Campo de futebol (demo 3D — exemplo para devs)
+  14200:999900:1800    → Coordenada do Renner (reservada, vazia por enquanto)
+  -25541:1413789:23398 → Coordenada REGISTRADA do Renner no banco (pista de corrida aqui)
+
+O QUE FOI FEITO NA ÚLTIMA SESSÃO (2026-07-07):
+  1. Campo de futebol procedural em Three.js (grama, linhas brancas, traves, jogador 3ª pessoa)
+  2. Pista de corrida procedural em Three.js (oval asfalto, carro F1 W/A/S/D)
+     → Pista foi movida de 14300:999900:1800 para -25541:1413789:23398 (coord do Renner)
+     → Bug corrigido: chamada usava número fixo em vez de constante PISTA_CX/CY/CZ
+  3. Modo órbita: clicar objeto → câmera fixa, universo gira ao redor
+  4. k-notation nas coordenadas (14.1k = 14100)
+  5. Fix registro beta: bug que fazia todos beta receberem mesma coord (erro 500 silencioso)
+     → server.js linha ~140: query agora conta TODOS tipo='pessoa' (não só plano<>'beta')
+  6. Beacon (esfera azul) REMOVIDO completamente do código
+     → Não aparece mais para nenhuma coordenada registrada
+     → url_conteudo e url_3d continuam funcionando normalmente
+
+PUSH PENDENTE:
+  → Commit "Remove beacon completamente" foi feito localmente (e7c0559)
+     mas git push estava travando nessa sessão (timeout recorrente)
+  → RODAR MANUALMENTE: cd C:\Users\renne\Projetos\COSM && git push origin main
+
+PRÓXIMO A FAZER (sugestão, não confirmado pelo Renner):
+  → Painel "MEU ESPAÇO": setar url_conteudo, url_3d, nome, privacidade
+  → Testar pagamento real com SOL (primeira compra)
+  → Pista de corrida — a bola azul sumiu mas o asfalto da pista está azul-claro
+    (cor errada — deveria ser cinza escuro tipo asfalto real)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   LOOP VIRAL — IDEIA DE CRESCIMENTO (2026-07-04)
@@ -255,10 +288,13 @@ Space Mono (Google Fonts)    → coordenadas, código, botões, HUD
 ✓ Prompt de reconhecimento: ao teleportar para coord registrada em novo dispositivo
 ✓ Fix bug registro beta: contagem Fibonacci incluía só não-beta → colisão de coord → erro 500
 ✓ Campo de futebol 3D nativo em 14100:999900:1800 (grama, marcação branca, traves, modo jogador W/A/S/D, câmera 3ª pessoa, ESC sai acima)
-✓ Pista de corrida em -25541:1413789:23398 (coordenada do Renner — oval asfalto, carro F1 vermelho W/A/S/D, ESC sai acima)
+✓ Pista de corrida em -25541:1413789:23398 (coordenada registrada do Renner — oval asfalto, carro F1 vermelho W/A/S/D, ESC sai acima)
 ✓ Modo órbita: clicar objeto → universo gira em torno dele, câmera fixa
 ✓ Suporte k-notation nas coordenadas (14.1k = 14100)
 ✓ Velocidade de navegação reduzida (scroll 0.15, cruise 12/60)
+✓ BEACON REMOVIDO COMPLETAMENTE — nenhuma esfera aparece em coordenada alguma
+  (CSS, HTML, JS, declarações, atualizarBeacons(), abrirConteudoBeacon() — tudo apagado)
+  Coordenadas continuam funcionando: url_conteudo (iframe) e url_3d (.glb) intactos
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   PENDENTE — PRÓXIMAS SESSÕES
