@@ -220,7 +220,7 @@ app.get('/api/coordenada/:carteira', async (req, res) => {
 app.get('/api/coordenadas', async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT carteira, coord_x, coord_y, coord_z, nome, tipo, url_conteudo, url_3d
+      `SELECT coord_x, coord_y, coord_z, nome, tipo, url_conteudo, url_3d
        FROM registros
        WHERE publico = true
          AND (plano IN ('permanente','anual') OR ultimo_acesso > NOW() - INTERVAL '30 days')
