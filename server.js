@@ -428,8 +428,12 @@ app.get('/api/beta', async (req, res) => {
     const { rows } = await pool.query(
       `SELECT coord_x, coord_y, coord_z, nome FROM registros WHERE plano = 'beta'`
     );
+    // coord_x/y/z voltam do Postgres como string (coluna BIGINT) — comparar
+    // com Number() dos dois lados, senão "0" === 0 nunca bate.
     const slots = BETA_COORDS.map((c, i) => {
-      const ocp = rows.find(r => r.coord_x === c.x && r.coord_y === c.y && r.coord_z === c.z);
+      const ocp = rows.find(r =>
+        Number(r.coord_x) === c.x && Number(r.coord_y) === c.y && Number(r.coord_z) === c.z
+      );
       return { slot: i + 1, x: c.x, y: c.y, z: c.z, ocupado: !!ocp, nome: ocp?.nome || null };
     });
     res.json(slots);
