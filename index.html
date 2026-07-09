@@ -205,6 +205,20 @@
     text-align:center;flex-shrink:0;
   }
 
+  /* ── Modal TOTP ── */
+  #modal-totp{
+    position:fixed;inset:0;z-index:210;display:flex;
+    align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.9);backdrop-filter:blur(12px);
+    opacity:0;pointer-events:none;transition:opacity 0.3s;
+  }
+  #modal-totp.ativo{opacity:1;pointer-events:all;}
+  #painel-totp{
+    background:#08080f;border:1px solid rgba(100,255,180,0.15);
+    border-radius:14px;padding:32px 36px;width:400px;max-width:92vw;
+    font-family:'Space Grotesk',sans-serif;
+  }
+
   /* ── Modal CONTROLES ── */
   #modal-controles{
     position:fixed;inset:0;z-index:200;display:flex;
@@ -685,12 +699,24 @@ camera.<span class="nm">lookAt</span>(<span class="nm">0</span>, <span class="nm
           <div class="ld-api-info">Registra coordenada → { coord_x, coord_y, coord_z }<br>body: { carteira, tipo, plano, nome }</div>
         </div>
         <div class="ld-api-row">
+          <div class="ld-api-ep">POST /api/totp/iniciar</div>
+          <div class="ld-api-info">Gera a chave de segurança e o QR code — body: { carteira }. Obrigatório logo após registrar.</div>
+        </div>
+        <div class="ld-api-row">
+          <div class="ld-api-ep">POST /api/totp/confirmar</div>
+          <div class="ld-api-info">Confirma o primeiro código e ativa a coordenada — body: { carteira, codigo } → devolve sessão</div>
+        </div>
+        <div class="ld-api-row">
+          <div class="ld-api-ep">POST /api/totp/login</div>
+          <div class="ld-api-info">Login com TOTP já configurado — body: { carteira, codigo } → devolve sessão</div>
+        </div>
+        <div class="ld-api-row">
           <div class="ld-api-ep">PATCH /api/url3d</div>
-          <div class="ld-api-info">Define objeto 3D (.glb / .gltf público) — body: { carteira, url }</div>
+          <div class="ld-api-info">Define objeto 3D (.glb / .gltf público) — body: { carteira, url }<br>exige header Authorization: Bearer &lt;sessão TOTP&gt;</div>
         </div>
         <div class="ld-api-row">
           <div class="ld-api-ep">PATCH /api/url</div>
-          <div class="ld-api-info">Define conteúdo web — body: { carteira, url } — qualquer HTTPS</div>
+          <div class="ld-api-info">Define conteúdo web — body: { carteira, url } — qualquer HTTPS<br>exige header Authorization: Bearer &lt;sessão TOTP&gt;</div>
         </div>
         <div class="ld-api-row">
           <div class="ld-api-ep">GET /api/coordenadas</div>
@@ -888,6 +914,38 @@ camera.<span class="nm">lookAt</span>(<span class="nm">0</span>, <span class="nm
     </div>
 
     <button class="reg-btn" onclick="fecharControles()" style="width:100%;margin-top:8px;">FECHAR</button>
+  </div>
+</div>
+
+<!-- ── Modal TOTP — configuração/login por código de 6 dígitos ── -->
+<div id="modal-totp">
+  <div id="painel-totp" onclick="event.stopPropagation()">
+    <div class="reg-label" style="text-align:center;">CHAVE DE SEGURANÇA</div>
+
+    <div id="totp-setup-intro" style="display:none;font-size:12px;color:rgba(255,255,255,0.5);line-height:1.8;text-align:center;margin-bottom:16px;">
+      Toda coordenada precisa de uma chave de segurança antes de editar algo.
+      Escaneie o QR code com um app autenticador (Google Authenticator, Authy,
+      qualquer um) e digite o código gerado. <strong style="color:rgba(255,180,80,0.85)">Guarde esse QR code —
+      sem ele, não tem como recuperar o acesso se perder o celular.</strong>
+    </div>
+    <div id="totp-qr-wrap" style="display:none;text-align:center;margin-bottom:16px;">
+      <img id="totp-qr-img" style="width:180px;height:180px;border-radius:8px;background:#fff;padding:8px;"/>
+      <div id="totp-secret-manual" style="font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.35);margin-top:10px;letter-spacing:1px;word-break:break-all;"></div>
+    </div>
+
+    <div id="totp-login-intro" style="display:none;font-size:12px;color:rgba(255,255,255,0.5);line-height:1.8;text-align:center;margin-bottom:16px;">
+      Digite o código do seu app autenticador pra confirmar que é você.
+    </div>
+
+    <input id="totp-codigo" class="reg-input" type="text" inputmode="numeric" maxlength="6"
+      placeholder="000000" style="text-align:center;letter-spacing:8px;font-size:18px;font-family:'Space Mono',monospace;"
+      onkeydown="if(event.key==='Enter')confirmarTotp()"/>
+    <div id="totp-erro" style="display:none;font-size:11px;color:rgba(255,100,80,0.85);text-align:center;margin-top:10px;"></div>
+
+    <div style="display:flex;gap:10px;margin-top:18px;justify-content:center;">
+      <button class="reg-btn" onclick="fecharTotp()">CANCELAR</button>
+      <button id="totp-btn-confirmar" class="reg-btn reg-btn-destaque" onclick="confirmarTotp()">CONFIRMAR →</button>
+    </div>
   </div>
 </div>
 
@@ -2150,6 +2208,7 @@ function modalAberto() {
          document.getElementById('modal-reg').classList.contains('ativo') ||
          document.getElementById('modal-inserir').classList.contains('ativo') ||
          document.getElementById('modal-controles').classList.contains('ativo') ||
+         document.getElementById('modal-totp').classList.contains('ativo') ||
          document.getElementById('landing-overlay').style.display !== 'none';
 }
 
@@ -2226,16 +2285,151 @@ function abrirIframeLocal(src, nome) {
   bloquearCanvas(true);
 }
 
+// ═══════════════════════════════════════════════════════
+//  SESSÃO TOTP — configuração e login por código de 6 dígitos
+//  Toda coordenada precisa de uma chave TOTP confirmada antes de
+//  editar qualquer coisa. garantirSessao() cuida de checar se já
+//  existe sessão válida, e se não, abre o modal certo (setup na
+//  primeira vez, login nas seguintes) antes de rodar a ação.
+// ═══════════════════════════════════════════════════════
+const SESSAO_KEY = 'cosm_sessao'; // "token|expiraEmMs"
+let totpAoConfirmar = null;       // callback rodado após código validado
+let totpModoSetup   = false;      // true = primeira configuração (mostra QR)
+
+function sessaoAtual() {
+  const s = localStorage.getItem(SESSAO_KEY);
+  if (!s) return null;
+  const [token, exp] = s.split('|');
+  if (!token || Date.now() > parseInt(exp)) { localStorage.removeItem(SESSAO_KEY); return null; }
+  return token;
+}
+
+function salvarSessao(token) {
+  const exp = Date.now() + 29 * 60 * 1000; // sessão do servidor dura 30min — 1min de folga
+  localStorage.setItem(SESSAO_KEY, `${token}|${exp}`);
+}
+
+async function garantirSessao(aoConcluir) {
+  const carteira = localStorage.getItem('cosm_id');
+  if (!carteira) return;
+
+  if (sessaoAtual()) { aoConcluir(); return; }
+
+  totpAoConfirmar = aoConcluir;
+  document.getElementById('totp-codigo').value = '';
+  document.getElementById('totp-erro').style.display = 'none';
+
+  try {
+    const resp = await fetch(`/api/totp/status/${carteira}`);
+    const data = await resp.json();
+    totpModoSetup = !data.configurado;
+  } catch (_) {
+    totpModoSetup = false;
+  }
+
+  if (totpModoSetup) await abrirTotpSetup(carteira);
+  else abrirTotpLogin();
+}
+
+async function abrirTotpSetup(carteira) {
+  document.getElementById('totp-setup-intro').style.display = 'block';
+  document.getElementById('totp-login-intro').style.display = 'none';
+  document.getElementById('totp-qr-wrap').style.display = 'block';
+  document.getElementById('totp-qr-img').src = '';
+  document.getElementById('totp-secret-manual').textContent = 'Gerando chave...';
+  document.getElementById('modal-totp').classList.add('ativo');
+  bloquearCanvas(true);
+
+  try {
+    const resp = await fetch('/api/totp/iniciar', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ carteira })
+    });
+    const data = await resp.json();
+    if (data.ja_configurado) {
+      // Configurado por outra aba/dispositivo entre a checagem e agora
+      totpModoSetup = false;
+      abrirTotpLogin();
+      return;
+    }
+    document.getElementById('totp-qr-img').src = data.qr;
+    document.getElementById('totp-secret-manual').textContent = 'Chave manual: ' + data.secret;
+  } catch (_) {
+    document.getElementById('totp-erro').textContent = 'Erro ao gerar a chave. Tente novamente.';
+    document.getElementById('totp-erro').style.display = 'block';
+  }
+}
+
+function abrirTotpLogin() {
+  document.getElementById('totp-setup-intro').style.display = 'none';
+  document.getElementById('totp-qr-wrap').style.display = 'none';
+  document.getElementById('totp-login-intro').style.display = 'block';
+  document.getElementById('modal-totp').classList.add('ativo');
+  bloquearCanvas(true);
+}
+
+window.fecharTotp = function() {
+  document.getElementById('modal-totp').classList.remove('ativo');
+  totpAoConfirmar = null;
+  if (!modalAberto()) bloquearCanvas(false);
+};
+
+window.confirmarTotp = async function() {
+  const carteira = localStorage.getItem('cosm_id');
+  const codigo   = document.getElementById('totp-codigo').value.trim();
+  const erroEl   = document.getElementById('totp-erro');
+  erroEl.style.display = 'none';
+  if (!/^\d{6}$/.test(codigo)) {
+    erroEl.textContent = 'Digite os 6 números do código.';
+    erroEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('totp-btn-confirmar');
+  btn.disabled = true; btn.textContent = 'VERIFICANDO...';
+
+  try {
+    const endpoint = totpModoSetup ? '/api/totp/confirmar' : '/api/totp/login';
+    const resp = await fetch(endpoint, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ carteira, codigo })
+    });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      erroEl.textContent = data.erro === 'codigo invalido' ? 'Código errado ou expirado. Tente de novo.' : data.erro;
+      erroEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'CONFIRMAR →';
+      return;
+    }
+
+    salvarSessao(data.sessao);
+    document.getElementById('modal-totp').classList.remove('ativo');
+    if (!modalAberto()) bloquearCanvas(false);
+    btn.disabled = false; btn.textContent = 'CONFIRMAR →';
+
+    const cb = totpAoConfirmar;
+    totpAoConfirmar = null;
+    if (cb) cb();
+  } catch (_) {
+    erroEl.textContent = 'Erro de conexão. Tente novamente.';
+    erroEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'CONFIRMAR →';
+  }
+};
+
+// Persiste conteúdo na coordenada — exige sessão TOTP válida.
 function salvarUrlNoEspaco(url, eh3d) {
   const carteira = localStorage.getItem('cosm_id');
   if (!carteira) return;
-  const endpoint = eh3d ? '/api/url3d' : '/api/url';
-  const body = { carteira, url };
-  fetch(endpoint, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  }).catch(() => {});
+  garantirSessao(() => {
+    const endpoint = eh3d ? '/api/url3d' : '/api/url';
+    fetch(endpoint, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sessaoAtual() },
+      body: JSON.stringify({ carteira, url })
+    }).catch(() => {});
+  });
 }
 
 function bloquearCanvas(sim) {
@@ -2579,6 +2773,7 @@ window.testarInserir = function() {
       salvarUrlNoEspaco(url, true);
     } else {
       abrirIframeNoEspaco(src, url, destino);
+      salvarUrlNoEspaco(url, false);
     }
   }, 1600);
 };
@@ -2897,7 +3092,11 @@ window.confirmarBetaRegistro = async function() {
     }
 
     minhaCoordReg = data.coordenada;
-    mostrarConfirmado(data.coordenada);
+    btn.disabled = false; btn.textContent = 'REGISTRAR →';
+    // Toda coordenada nova exige configurar a chave de segurança (TOTP)
+    // antes de ver a tela final — garantirSessao() detecta que ainda não
+    // tem TOTP configurado e abre o QR code automaticamente.
+    garantirSessao(() => mostrarConfirmado(data.coordenada));
   } catch (_) {
     erroEl.textContent = 'Erro de conexão. Tente novamente.';
     erroEl.style.display = 'block';

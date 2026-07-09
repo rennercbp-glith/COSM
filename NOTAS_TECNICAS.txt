@@ -1,6 +1,6 @@
 ===============================================================
   COSM — NOTAS TÉCNICAS (para Claude ler no futuro)
-  Última atualização: 2026-07-09 (v15 — plano de cobrança/CNPJ, rascunho de contrato, email trocado)
+  Última atualização: 2026-07-09 (v16 — autenticação TOTP obrigatória em toda coordenada)
   Pasta: C:\Users\renne\Projetos\COSM\
   Deploy: cosm-production.up.railway.app
   GitHub: https://github.com/rennercbp-glith/COSM.git
@@ -147,6 +147,93 @@ O QUE FOI FEITO NA SESSÃO 2026-07-09:
      autenticação real via assinatura de carteira Solana resolveria
      os três pontos de uma vez — fecha vazamento por definição e
      dá recuperação de conta em novo aparelho.
+
+  10. AUTENTICAÇÃO TOTP — implementada (resolve o ponto 9 acima)
+      Decisão do Renner: TOTP padrão (RFC 6238, o mesmo do Google
+      Authenticator/Authy/qualquer app compatível) obrigatório em
+      TODA coordenada — sem códigos de backup, sem sync com conta
+      Google. Filosofia explícita: "perdeu a chave, perdeu a
+      coordenada" — mesma lógica de self-custody de carteira cripto
+      (Bitcoin/Solana), coerente com o resto do produto.
+
+      O carteira deixou de ser a trava (Opção A discutida) — agora
+      ele só identifica a linha no banco. Quem decide se pode editar
+      é uma sessão temporária (JWT, 30min) emitida só depois de um
+      código TOTP válido.
+
+      NOVO NO BANCO (registros):
+        totp_secret     TEXT    — chave TOTP (null até configurar)
+        totp_confirmado BOOLEAN — true só depois do primeiro código
+                                   confirmado com sucesso
+
+      NOVOS ENDPOINTS (server.js):
+        POST /api/totp/iniciar        { carteira } → gera/reaproveita
+             a chave e devolve QR code (preto sobre branco — precisa
+             ser lido por app de terceiros, diferente do QR do Solana
+             Pay que é branco sobre transparente)
+        POST /api/totp/confirmar      { carteira, codigo } → confirma
+             o primeiro código, ativa totp_confirmado, devolve sessão
+        POST /api/totp/login          { carteira, codigo } → login de
+             quem já tem TOTP configurado, devolve sessão
+        GET  /api/totp/status/:carteira → { configurado: bool }, usado
+             pelo cliente pra decidir entre tela de SETUP ou LOGIN
+
+      ENDPOINTS PROTEGIDOS (agora exigem totp_confirmado=true no banco
+      E header Authorization: Bearer <sessão válida>):
+        PATCH /api/url, /api/url3d, /api/privacidade, /api/nome
+
+      MIGRAÇÃO: coordenadas registradas antes desta feature existir
+      não têm totp_secret ainda. Na primeira vez que tentarem editar
+      algo, garantirSessao() no cliente detecta totp_confirmado=false
+      via /api/totp/status e abre o setup automaticamente — não existe
+      caminho pra editar sem passar por isso, nenhuma coordenada fica
+      de fora.
+
+      NOVO NO CLIENTE (index.html):
+        #modal-totp — um modal só, dois estados visuais (setup mostra
+        QR + chave manual; login só pede o código)
+        garantirSessao(aoConcluir) — função central: se já tem sessão
+        válida no localStorage (cosm_sessao), roda aoConcluir() na
+        hora; senão abre o modal certo e só roda aoConcluir() depois
+        do código confirmado
+        Fluxo de registro (confirmarBetaRegistro): depois do
+        POST /api/beta/claim, chama garantirSessao() ANTES de mostrar
+        a tela final "ANOTE AGORA" — TOTP é obrigatório desde o
+        primeiro registro, não dá pra pular
+        salvarUrlNoEspaco() virou o único caminho pra persistir
+        conteúdo (PATCH /api/url e /api/url3d) — agora sempre passa
+        por garantirSessao() e manda o header Authorization
+
+      BUG PRÉ-EXISTENTE CORRIGIDO DE PASSAGEM: testarInserir() nunca
+      chamava salvarUrlNoEspaco() no caminho de conteúdo web/iframe —
+      só no caminho de objeto 3D (.glb). O banner dizia "✓ SALVO NO
+      SEU ESPAÇO" mas url_conteudo nunca era persistido de verdade.
+      Corrigido porque tocava direto na mesma função que ganhou o
+      gate de TOTP — sem isso, o gate nem faria diferença nesse
+      caminho (mais comum que o de .glb).
+
+      DEPENDÊNCIAS NOVAS (package.json): otplib, jsonwebtoken —
+      NUNCA TESTADAS EM PRODUÇÃO (sem Node local nesta sessão pra
+      testar antes do push — revisão foi só leitura de código +
+      checagem de chaves/parênteses balanceados). Testar o fluxo
+      completo assim que o deploy subir: registrar coordenada nova,
+      escanear QR, confirmar código, inserir conteúdo.
+
+      VARIÁVEL DE AMBIENTE NOVA NO RAILWAY (falta configurar):
+        TOTP_SESSION_SECRET — assina as sessões JWT. Tem um valor
+        padrão só pra não quebrar localmente, mas ISSO PRECISA SER
+        DEFINIDO NO RAILWAY antes de confiar na segurança da sessão
+        em produção — sem isso, o segredo de assinatura é público
+        (está no código-fonte).
+
+      PENDENTE (fora do escopo desta sessão):
+        → Painel "MEU ESPAÇO" ainda não chama /api/nome nem
+          /api/privacidade — quando for construído, já vai nascer
+          protegido pelo mesmo garantirSessao()
+        → Sem tela pra reconfigurar TOTP num aparelho novo caso o
+          usuário ainda tenha o carteira mas perdeu o app — por
+          design (ver filosofia acima), mas vale confirmar que é
+          isso mesmo quando o painel administrativo for discutido
 
 PENDÊNCIAS ANTERIORES (sessão 2026-07-08):
 

@@ -3,6 +3,8 @@ const { Pool }       = require('pg');
 const path           = require('path');
 const { Connection, PublicKey, Keypair } = require('@solana/web3.js');
 const QRCode         = require('qrcode');
+const { authenticator } = require('otplib');
+const jwt            = require('jsonwebtoken');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -24,6 +26,30 @@ const PRECOS = {
   empresa: { mensal: parseFloat(process.env.PRECO_EMPRESA_MES   || '0.02' ), anual: parseFloat(process.env.PRECO_EMPRESA_ANUAL|| '0.1' ), permanente: parseFloat(process.env.PRECO_EMPRESA_PERM || '10' ) }
 };
 const ROYALTY_PERC = parseFloat(process.env.ROYALTY_PERC || '0.10'); // 10% sobre revendas
+
+// ─── Autenticação por TOTP (código de 6 dígitos) ──────────────
+// TOTP_SESSION_SECRET DEVE ser definido no Railway em produção —
+// o valor padrão abaixo só existe para não quebrar em ambiente local.
+const TOTP_SESSION_SECRET = process.env.TOTP_SESSION_SECRET || 'cosm-dev-secret-trocar-em-producao';
+const SESSAO_DURACAO_SEG  = 30 * 60; // 30 minutos
+
+function gerarSessao(carteira) {
+  return jwt.sign({ carteira }, TOTP_SESSION_SECRET, { expiresIn: SESSAO_DURACAO_SEG });
+}
+
+// Confere o token da sessão no header Authorization: Bearer <token>
+// e garante que ele pertence ao mesmo carteira que veio no corpo da requisição.
+function sessaoValida(req, carteira) {
+  const auth = req.headers.authorization || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+  if (!token) return false;
+  try {
+    const payload = jwt.verify(token, TOTP_SESSION_SECRET);
+    return payload.carteira === carteira;
+  } catch (_) {
+    return false;
+  }
+}
 
 // ─── Validação de nome público (@handle) ──────────────────────
 // Bloqueio básico contra impersonação de marcas conhecidas — não é proteção legal completa.
@@ -69,6 +95,8 @@ async function initDB() {
   await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS url_conteudo  TEXT`);
   await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS url_3d       TEXT`);
   await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS ultimo_acesso TIMESTAMPTZ DEFAULT NOW()`);
+  await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS totp_secret     TEXT`);
+  await pool.query(`ALTER TABLE registros ADD COLUMN IF NOT EXISTS totp_confirmado BOOLEAN DEFAULT false`);
 
   // Garantir que nenhuma coordenada seja alocada duas vezes
   await pool.query(`
@@ -267,12 +295,109 @@ app.get('/api/minha-coord/:x/:y/:z', async (req, res) => {
   }
 });
 
+// ─── Autenticação TOTP — configuração e login ──────────────────
+
+// Inicia a configuração do TOTP: gera (ou reaproveita, se ainda não
+// confirmado) a chave secreta e devolve o QR code pra escanear.
+// Body: { carteira }
+app.post('/api/totp/iniciar', async (req, res) => {
+  try {
+    const { carteira } = req.body;
+    if (!carteira) return res.status(400).json({ erro: 'carteira obrigatoria' });
+
+    const { rows } = await pool.query('SELECT totp_secret, totp_confirmado FROM registros WHERE carteira = $1', [carteira]);
+    if (!rows.length) return res.status(404).json({ erro: 'coordenada nao encontrada' });
+
+    if (rows[0].totp_confirmado) return res.json({ ja_configurado: true });
+
+    let secret = rows[0].totp_secret;
+    if (!secret) {
+      secret = authenticator.generateSecret();
+      await pool.query('UPDATE registros SET totp_secret = $1 WHERE carteira = $2', [secret, carteira]);
+    }
+
+    const otpauth = authenticator.keyuri(carteira.slice(0, 8), 'COSM', secret);
+    // Preto sobre branco (padrão) — precisa ser escaneável por apps de
+    // terceiros (Google Authenticator etc.), diferente do QR do Solana
+    // Pay que só é lido dentro de uma carteira cripto específica.
+    const qr = await QRCode.toDataURL(otpauth, {
+      width: 220, margin: 2,
+      color: { dark: '#000000', light: '#ffffff' }
+    });
+
+    res.json({ secret, qr });
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+// Confirma o primeiro código digitado e ativa o TOTP na coordenada.
+// Body: { carteira, codigo }
+app.post('/api/totp/confirmar', async (req, res) => {
+  try {
+    const { carteira, codigo } = req.body;
+    if (!carteira || !codigo) return res.status(400).json({ erro: 'carteira e codigo obrigatorios' });
+
+    const { rows } = await pool.query('SELECT totp_secret, totp_confirmado FROM registros WHERE carteira = $1', [carteira]);
+    if (!rows.length) return res.status(404).json({ erro: 'coordenada nao encontrada' });
+    if (!rows[0].totp_secret) return res.status(400).json({ erro: 'configuracao nao iniciada' });
+
+    if (!authenticator.check(String(codigo), rows[0].totp_secret)) {
+      return res.status(401).json({ erro: 'codigo invalido' });
+    }
+
+    await pool.query('UPDATE registros SET totp_confirmado = true WHERE carteira = $1', [carteira]);
+    res.json({ ok: true, sessao: gerarSessao(carteira) });
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+// Login com TOTP já configurado — verifica o código e devolve uma sessão.
+// Body: { carteira, codigo }
+app.post('/api/totp/login', async (req, res) => {
+  try {
+    const { carteira, codigo } = req.body;
+    if (!carteira || !codigo) return res.status(400).json({ erro: 'carteira e codigo obrigatorios' });
+
+    const { rows } = await pool.query('SELECT totp_secret, totp_confirmado FROM registros WHERE carteira = $1', [carteira]);
+    if (!rows.length) return res.status(404).json({ erro: 'coordenada nao encontrada' });
+    if (!rows[0].totp_confirmado) return res.status(400).json({ erro: 'totp nao configurado' });
+
+    if (!authenticator.check(String(codigo), rows[0].totp_secret)) {
+      return res.status(401).json({ erro: 'codigo invalido' });
+    }
+
+    res.json({ ok: true, sessao: gerarSessao(carteira) });
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+// Verifica se uma coordenada já tem TOTP configurado (pra decidir,
+// no cliente, entre abrir a tela de SETUP ou a de LOGIN).
+app.get('/api/totp/status/:carteira', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT totp_confirmado FROM registros WHERE carteira = $1', [req.params.carteira]);
+    if (!rows.length) return res.status(404).json({ erro: 'coordenada nao encontrada' });
+    res.json({ configurado: !!rows[0].totp_confirmado });
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 // Definir URL de conteúdo para uma coordenada
-// Body: { carteira, url }
+// Body: { carteira, url } — exige sessão TOTP válida (header Authorization: Bearer)
 app.patch('/api/url', async (req, res) => {
   try {
     const { carteira, url } = req.body;
     if (!carteira) return res.status(400).json({ erro: 'carteira obrigatoria' });
+
+    const { rows } = await pool.query('SELECT totp_confirmado FROM registros WHERE carteira = $1', [carteira]);
+    if (!rows.length) return res.status(404).json({ erro: 'coordenada nao encontrada' });
+    if (!rows[0].totp_confirmado) return res.status(403).json({ erro: 'totp nao configurado' });
+    if (!sessaoValida(req, carteira)) return res.status(401).json({ erro: 'sessao invalida ou expirada' });
+
     await pool.query(
       'UPDATE registros SET url_conteudo = $1 WHERE carteira = $2',
       [url || null, carteira]
@@ -341,11 +466,17 @@ app.post('/api/beta/claim', async (req, res) => {
 });
 
 // Definir objeto 3D nativo (.glb) para uma coordenada
-// Body: { carteira, url }
+// Body: { carteira, url } — exige sessão TOTP válida (header Authorization: Bearer)
 app.patch('/api/url3d', async (req, res) => {
   try {
     const { carteira, url } = req.body;
     if (!carteira) return res.status(400).json({ erro: 'carteira obrigatoria' });
+
+    const { rows } = await pool.query('SELECT totp_confirmado FROM registros WHERE carteira = $1', [carteira]);
+    if (!rows.length) return res.status(404).json({ erro: 'coordenada nao encontrada' });
+    if (!rows[0].totp_confirmado) return res.status(403).json({ erro: 'totp nao configurado' });
+    if (!sessaoValida(req, carteira)) return res.status(401).json({ erro: 'sessao invalida ou expirada' });
+
     await pool.query(
       'UPDATE registros SET url_3d = $1 WHERE carteira = $2',
       [url || null, carteira]
@@ -357,9 +488,17 @@ app.patch('/api/url3d', async (req, res) => {
 });
 
 // Alternar visibilidade (público/privado)
+// Body: { carteira, publico } — exige sessão TOTP válida (header Authorization: Bearer)
 app.patch('/api/privacidade', async (req, res) => {
   try {
     const { carteira, publico } = req.body;
+    if (!carteira) return res.status(400).json({ erro: 'carteira obrigatoria' });
+
+    const { rows } = await pool.query('SELECT totp_confirmado FROM registros WHERE carteira = $1', [carteira]);
+    if (!rows.length) return res.status(404).json({ erro: 'coordenada nao encontrada' });
+    if (!rows[0].totp_confirmado) return res.status(403).json({ erro: 'totp nao configurado' });
+    if (!sessaoValida(req, carteira)) return res.status(401).json({ erro: 'sessao invalida ou expirada' });
+
     await pool.query(
       'UPDATE registros SET publico = $1 WHERE carteira = $2',
       [publico, carteira]
@@ -371,12 +510,22 @@ app.patch('/api/privacidade', async (req, res) => {
 });
 
 // Atualizar nome do espaço
+// Body: { carteira, nome } — exige sessão TOTP válida (header Authorization: Bearer)
 app.patch('/api/nome', async (req, res) => {
   try {
     const { carteira, nome } = req.body;
+    if (!carteira) return res.status(400).json({ erro: 'carteira obrigatoria' });
+    const nomeVal = validarNome(nome);
+    if (!nomeVal.ok) return res.status(400).json({ erro: nomeVal.erro });
+
+    const { rows } = await pool.query('SELECT totp_confirmado FROM registros WHERE carteira = $1', [carteira]);
+    if (!rows.length) return res.status(404).json({ erro: 'coordenada nao encontrada' });
+    if (!rows[0].totp_confirmado) return res.status(403).json({ erro: 'totp nao configurado' });
+    if (!sessaoValida(req, carteira)) return res.status(401).json({ erro: 'sessao invalida ou expirada' });
+
     await pool.query(
       'UPDATE registros SET nome = $1 WHERE carteira = $2',
-      [nome, carteira]
+      [nomeVal.valor, carteira]
     );
     res.json({ ok: true });
   } catch (e) {
