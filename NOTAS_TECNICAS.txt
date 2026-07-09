@@ -1,6 +1,6 @@
 ===============================================================
   COSM — NOTAS TÉCNICAS (para Claude ler no futuro)
-  Última atualização: 2026-07-07 (v12 — beacon removido, pista na coord do Renner, bug registro corrigido)
+  Última atualização: 2026-07-09 (v14 — fix scroll da landing, registro via 10 vagas beta, TESTAR removido)
   Pasta: C:\Users\renne\Projetos\COSM\
   Deploy: cosm-production.up.railway.app
   GitHub: https://github.com/rennercbp-glith/COSM.git
@@ -15,7 +15,7 @@ INSTRUÇÃO PARA CLAUDE AO ABRIR ESTA SESSÃO:
   5. Nunca implemente nada sem o Renner pedir
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  ESTADO ATUAL — 2026-07-07 (leia isso primeiro ao retomar)
+  ESTADO ATUAL — 2026-07-09 (leia isso primeiro ao retomar)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 COORDENADAS IMPORTANTES:
@@ -23,29 +23,123 @@ COORDENADAS IMPORTANTES:
   14200:999900:1800    → Coordenada do Renner (reservada, vazia por enquanto)
   -25541:1413789:23398 → Coordenada REGISTRADA do Renner no banco (pista de corrida aqui)
 
-O QUE FOI FEITO NA ÚLTIMA SESSÃO (2026-07-07):
-  1. Campo de futebol procedural em Three.js (grama, linhas brancas, traves, jogador 3ª pessoa)
-  2. Pista de corrida procedural em Three.js (oval asfalto, carro F1 W/A/S/D)
-     → Pista foi movida de 14300:999900:1800 para -25541:1413789:23398 (coord do Renner)
-     → Bug corrigido: chamada usava número fixo em vez de constante PISTA_CX/CY/CZ
-  3. Modo órbita: clicar objeto → câmera fixa, universo gira ao redor
-  4. k-notation nas coordenadas (14.1k = 14100)
-  5. Fix registro beta: bug que fazia todos beta receberem mesma coord (erro 500 silencioso)
-     → server.js linha ~140: query agora conta TODOS tipo='pessoa' (não só plano<>'beta')
-  6. Beacon (esfera azul) REMOVIDO completamente do código
-     → Não aparece mais para nenhuma coordenada registrada
-     → url_conteudo e url_3d continuam funcionando normalmente
+O QUE FOI FEITO NA SESSÃO 2026-07-09:
 
-PUSH PENDENTE:
-  → Commit "Remove beacon completamente" foi feito localmente (e7c0559)
-     mas git push estava travando nessa sessão (timeout recorrente)
-  → RODAR MANUALMENTE: cd C:\Users\renne\Projetos\COSM && git push origin main
+  1. BUG CORRIGIDO — scroll da landing vazava pro universo
+     overlay.addEventListener('wheel') da landing não bloqueava o
+     document.addEventListener('wheel') do universo (modalAberto() não
+     sabia da landing). velCruz acumulava durante a navegação das seções,
+     e ao clicar em INICIAR a câmera saía voando sozinha.
+     Fix: modalAberto() agora inclui landing-overlay.style.display !== 'none'
+     + velCruz = 0 dentro de iniciarCOSM() como garantia extra.
 
-PRÓXIMO A FAZER (sugestão, não confirmado pelo Renner):
+  2. BOTÃO TESTAR REMOVIDO — junto com tudo que dependia dele
+     Removido: menu TESTAR, modal-teste inteiro (docs de dev, zona de
+     demonstração COSM://0:777777:0 com robô, grid beta antigo), CSS
+     .dev-tipo/.dev-ex, função COORD_TESTE e todas as referências.
+     INSERIR agora exige coordenada registrada — sem coord salva no
+     dispositivo, abrirInserir() fecha o menu e abre REGISTRAR direto.
+
+  3. REGISTRO REESTRUTURADO — as 10 vagas beta viraram o único caminho
+     de registro de PESSOA nesta fase (não é mais Fibonacci aberto).
+     Fluxo: REGISTRAR → tipo PESSOA/EMPRESA →
+       EMPRESA: mostra aviso "em desenvolvimento", sem input, bloqueado
+       PESSOA: mostra grid das 10 coordenadas fixas (BETA_COORDS),
+               ocupadas aparecem travadas, livre é clicável →
+               nome público opcional (@handle) → REGISTRAR chama
+               POST /api/beta/claim (não mais /api/registrar para pessoa)
+     Quando as 10 esgotam: grid mostra "TODAS AS VAGAS FORAM PREENCHIDAS"
+     — não existe fallback pago ainda, fica para quando o Renner pedir.
+
+  4. NOME PÚBLICO — validação de @handle (cliente + servidor)
+     Formato obrigatório: @nome (letras, números, underscore, 2-20 chars).
+     Lista curta de marcas conhecidas bloqueadas (NOMES_BLOQUEADOS em
+     server.js e index.html) — filtro básico, não é proteção legal.
+     Validado em POST /api/registrar E POST /api/beta/claim no server.js
+     (validarNome()), e no cliente antes de enviar (validarNomeHandle()).
+     IMPORTANTE — gap encontrado e ainda não resolvido: o nome público
+     é salvo no banco mas NÃO aparece pra quem chega na coordenada no
+     universo 3D (sem billboard/sprite). Também não existe busca por
+     nome ainda (só por coordenada exata). Ambos ficaram de fora desta
+     sessão — Renner avisado, decidir se entra em seguida.
+
+  5. mostrarAvisoCoord() ficou órfã — a função e o widget #aviso-coord
+     ("ANOTE ESTE ENDEREÇO" flutuante) não têm mais nenhum call site
+     depois que TESTAR/irParaBetaCoord sumiram. A tela de confirmação
+     do registro (reg-s3) já tem seu próprio aviso "ANOTE AGORA" embutido,
+     então não há perda funcional — mas o widget ficou como código morto.
+     NÃO REMOVIDO AINDA — perguntar ao Renner se apaga ou mantém pra
+     reusar depois (ex: lembrete ao entrar em coordenada de terceiro).
+
+PENDÊNCIAS ANTERIORES (sessão 2026-07-08):
+
+  1. BUG CRÍTICO CORRIGIDO — campo e pista invisíveis
+     Causa: BEACON_DIST_MAX foi removido com o beacon mas ainda era referenciado
+     em atualizarObjetos3D() → mesh.visible = false sempre → objetos sumiam.
+     Fix: adicionado const OBJ_DIST_MAX = 500 e renomeada a referência.
+
+  2. LANDING PAGE DEVELOPER PLATFORM — concluída e deployada
+     6 seções fullscreen com scroll-snap:
+       SEC 0 — Hero: "O universo 3D que você faz deploy, não constrói"
+       SEC 1 — O que é: infraestrutura, não plataforma
+       SEC 2 — Como funciona: 3 tipos (GLB, Three.js, iframe) em cards
+       SEC 3 — Controle total: documenta _cosmLoop e _cosmControls
+       SEC 4 — API Reference: todos os endpoints REST
+       SEC 5 — Beta: 10 vagas + INICIAR
+     Navegação: mouse wheel (rolar) + teclado (↑↓ Space Esc) + seta ↓ animada
+     Dots de progresso na lateral direita.
+     INICIAR entra no COSM (não entra automaticamente ao rolar).
+
+  3. CONCEITO CENTRAL DEFINIDO — coordenada = barra de endereço
+     A coordenada COSM://X:Y:Z é para o universo 3D
+     o que a URL é para a web. Quem registra tem controle absoluto.
+
+  4. HOOKS DO DESENVOLVEDOR — documentados na landing (implementação pendente)
+     window._cosmLoop = (dt) => { ... }  → roda todo frame na área do dev
+     window._cosmControls = false        → assume controle da câmera
+     Ver seção HOOKS DO DESENVOLVEDOR abaixo para detalhes.
+
+  5. PUSH FEITO — tudo no Railway
+     Commits desta sessão: OBJ_DIST_MAX fix, landing v1→v2→v3→v4
+
+PRÓXIMO A FAZER:
+  → Corrigir landing: INICIAR ainda dispara sozinho ao rolar além da última seção
+     (ioEnd IntersectionObserver em ld-end-trigger) — só o vazamento de velCruz
+     foi corrigido em 2026-07-09, o auto-disparo em si continua
+  → Corrigir: usuário com coordenada salva no browser entra direto sem ver a landing
+     → deveria mostrar landing mas com botão "MEU ESPAÇO" ao clicar
+  → Implementar _cosmLoop e _cosmControls na engine (index.html JS)
   → Painel "MEU ESPAÇO": setar url_conteudo, url_3d, nome, privacidade
   → Testar pagamento real com SOL (primeira compra)
-  → Pista de corrida — a bola azul sumiu mas o asfalto da pista está azul-claro
-    (cor errada — deveria ser cinza escuro tipo asfalto real)
+  → Nome público visível no universo 3D (billboard/sprite na coordenada)
+  → Busca por nome ou coordenada (endpoint + UI) — nome hoje só existe no banco
+  → Decidir destino de mostrarAvisoCoord()/#aviso-coord — apagar ou reusar
+  → Decidir o que acontece quando as 10 vagas beta esgotarem (hoje só trava)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  HOOKS DO DESENVOLVEDOR — conceito 2026-07-08
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Quando visitante chega na coordenada de um dev registrado,
+a engine verifica se existe window._cosmLoop e/ou window._cosmControls.
+
+  window._cosmLoop = (dt) => {
+    // dt = delta time em segundos
+    // chamado todo frame dentro de loop() do COSM
+    // enquanto visitante estiver na área da coordenada
+    meuObjeto.rotation.y += dt * 0.5
+    meuObjeto.position.y = Math.sin(Date.now() / 600) * 20
+  }
+
+  window._cosmControls = false
+  // false = desativa mouse/teclado padrão do COSM
+  // dev controla câmera livremente
+  camera.position.set(0, 80, 200)
+  camera.lookAt(0, 0, 0)
+
+Ao sair da área: _cosmLoop e _cosmControls são removidos (= undefined).
+Área definida por distância da coordenada registrada (OBJ_DIST_MAX).
+AINDA NÃO IMPLEMENTADO — só documentado na landing.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   LOOP VIRAL — IDEIA DE CRESCIMENTO (2026-07-04)

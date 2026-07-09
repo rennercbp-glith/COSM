@@ -25,6 +25,28 @@ const PRECOS = {
 };
 const ROYALTY_PERC = parseFloat(process.env.ROYALTY_PERC || '0.10'); // 10% sobre revendas
 
+// ─── Validação de nome público (@handle) ──────────────────────
+// Bloqueio básico contra impersonação de marcas conhecidas — não é proteção legal completa.
+const NOMES_BLOQUEADOS = [
+  'nike', 'adidas', 'apple', 'google', 'microsoft', 'amazon', 'meta', 'facebook',
+  'instagram', 'tesla', 'sony', 'playstation', 'xbox', 'nintendo', 'netflix',
+  'disney', 'samsung', 'cocacola', 'pepsi', 'mcdonalds', 'starbucks', 'walmart',
+  'uber', 'airbnb', 'spotify', 'twitter', 'openai', 'anthropic', 'claude'
+];
+
+function validarNome(nome) {
+  if (nome == null || nome === '') return { ok: true, valor: null };
+  const h = nome.trim();
+  if (!/^@[a-zA-Z0-9_]{2,20}$/.test(h)) {
+    return { ok: false, erro: 'nome invalido — use @nome (letras, numeros e _, 2 a 20 caracteres)' };
+  }
+  const slug = h.slice(1).toLowerCase();
+  if (NOMES_BLOQUEADOS.some(b => slug.includes(b))) {
+    return { ok: false, erro: 'nome nao permitido' };
+  }
+  return { ok: true, valor: h };
+}
+
 async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS registros (
@@ -149,6 +171,8 @@ app.post('/api/registrar', async (req, res) => {
   try {
     const { carteira, tipo = 'pessoa', plano = 'permanente', nome = null } = req.body;
     if (!carteira) return res.status(400).json({ erro: 'carteira obrigatoria' });
+    const nomeVal = validarNome(nome);
+    if (!nomeVal.ok) return res.status(400).json({ erro: nomeVal.erro });
 
     await client.query('BEGIN');
 
@@ -166,7 +190,7 @@ app.post('/api/registrar', async (req, res) => {
     const { rows } = await client.query(
       `INSERT INTO registros (carteira, coord_x, coord_y, coord_z, nome, tipo, plano, valido_ate)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-      [carteira, coord.x, coord.y, coord.z, nome, tipo, plano, validoAte]
+      [carteira, coord.x, coord.y, coord.z, nomeVal.valor, tipo, plano, validoAte]
     );
     await client.query('COMMIT');
     res.json({ coordenada: rows[0], nova: true });
@@ -293,6 +317,8 @@ app.post('/api/beta/claim', async (req, res) => {
   try {
     const { carteira, slot, nome, url, url_3d } = req.body;
     if (!carteira || !slot) return res.status(400).json({ erro: 'carteira e slot obrigatorios' });
+    const nomeVal = validarNome(nome);
+    if (!nomeVal.ok) return res.status(400).json({ erro: nomeVal.erro });
     const idx = parseInt(slot) - 1;
     if (idx < 0 || idx >= BETA_COORDS.length) return res.status(400).json({ erro: 'slot invalido' });
     const coord = BETA_COORDS[idx];
@@ -308,7 +334,7 @@ app.post('/api/beta/claim', async (req, res) => {
     const { rows } = await pool.query(
       `INSERT INTO registros (carteira, coord_x, coord_y, coord_z, nome, tipo, plano, url_conteudo, url_3d)
        VALUES ($1,$2,$3,$4,$5,'pessoa','beta',$6,$7) RETURNING *`,
-      [carteira, coord.x, coord.y, coord.z, nome || null, url || null, url_3d || null]
+      [carteira, coord.x, coord.y, coord.z, nomeVal.valor, url || null, url_3d || null]
     );
     res.json({ ok: true, coordenada: rows[0] });
   } catch (e) { res.status(500).json({ erro: e.message }); }

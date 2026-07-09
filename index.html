@@ -14,7 +14,7 @@
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:#080810;overflow:hidden;font-family:'Conthrax',sans-serif;color:#aaccff;}
   code,#coord-input,#txt-pos,#txt-vel,.painel-valor,
-  .dev-tipo-code,#iframe-coord,#iframe-titulo,#iframe-fechar,
+  #iframe-coord,#iframe-titulo,#iframe-fechar,
   #btn-menu,#notif,#iframe-teste-banner{
     font-family:'Conthrax',monospace;
   }
@@ -196,46 +196,6 @@
   #iframe-fechar:hover{border-color:rgba(255,100,100,0.5);color:rgba(255,100,100,0.8);}
   #iframe-content{flex:1;border:none;width:100%;background:#000;}
 
-
-  /* ── Modal teste ── */
-  #modal-teste{
-    position:fixed;inset:0;z-index:200;display:flex;
-    align-items:center;justify-content:center;
-    background:rgba(0,0,0,0.88);backdrop-filter:blur(12px);
-    opacity:0;pointer-events:none;transition:opacity 0.3s;
-  }
-  #modal-teste.ativo{opacity:1;pointer-events:all;}
-  #painel-teste{
-    background:#08080f;border:1px solid rgba(80,255,180,0.1);
-    border-radius:14px;padding:40px 48px;width:720px;max-width:96vw;
-    max-height:92vh;overflow-y:auto;font-family:'Space Grotesk',sans-serif;
-    scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.08) transparent;
-  }
-  .dev-tipo{
-    border:1px solid rgba(255,255,255,0.07);border-radius:8px;
-    padding:16px 20px;margin-bottom:12px;
-  }
-  .dev-tipo-tag{
-    font-size:10px;letter-spacing:2px;margin-bottom:6px;display:block;font-weight:500;
-  }
-  .dev-tipo-titulo{
-    font-size:15px;color:#fff;letter-spacing:0px;margin-bottom:8px;font-weight:500;
-  }
-  .dev-tipo-desc{
-    font-size:13px;color:rgba(255,255,255,0.6);line-height:1.9;
-  }
-  .dev-tipo-code{
-    font-size:11px;color:rgba(80,255,180,0.7);background:rgba(80,255,180,0.04);
-    border:1px solid rgba(80,255,180,0.1);border-radius:4px;
-    padding:8px 12px;margin-top:10px;display:block;letter-spacing:0.5px;
-  }
-  .dev-ex{
-    display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;
-  }
-  .dev-ex-tag{
-    font-size:10px;letter-spacing:1px;padding:4px 10px;border-radius:4px;
-    white-space:nowrap;flex-shrink:0;margin-top:1px;font-weight:500;
-  }
 
   /* ── Banner de modo teste no iframe ── */
   #iframe-teste-banner{
@@ -807,11 +767,6 @@ camera.<span class="nm">lookAt</span>(<span class="nm">0</span>, <span class="nm
     <span class="menu-item-icon">✦</span>
     <span class="menu-item-label">REGISTRAR</span>
   </div>
-  <!-- Testar -->
-  <div class="menu-item" onclick="fecharMenu();abrirTeste()">
-    <span class="menu-item-icon">◎</span>
-    <span class="menu-item-label">TESTAR</span>
-  </div>
   <!-- Inserir conteúdo -->
   <div class="menu-item" onclick="fecharMenu();abrirInserir()">
     <span class="menu-item-icon">+</span>
@@ -999,7 +954,7 @@ camera.<span class="nm">lookAt</span>(<span class="nm">0</span>, <span class="nm
         </div>
 
         <button id="ins-btn-testar" onclick="testarInserir()" style="margin-top:10px;">
-          TESTAR NA ZONA COSM://0:777777:0 →
+          ADICIONAR AO MEU ESPAÇO →
         </button>
       </div>
     </div>
@@ -1130,7 +1085,7 @@ camera.<span class="nm">lookAt</span>(<span class="nm">0</span>, <span class="nm
 <div id="modal-reg" onclick="if(event.target===this)fecharRegistro()">
   <div id="painel-reg" onclick="event.stopPropagation()">
 
-    <!-- Step 0: tipo + nome -->
+    <!-- Step 0: tipo + vaga -->
     <div id="reg-s0">
       <div class="reg-label">REGISTRAR SEU ESPAÇO</div>
       <div style="font-size:10px;letter-spacing:3px;color:rgba(100,255,180,0.7);margin-bottom:20px;text-align:center;">FASE BETA — GRATUITO</div>
@@ -1147,16 +1102,38 @@ camera.<span class="nm">lookAt</span>(<span class="nm">0</span>, <span class="nm
 
       <div id="reg-tipo-info" class="reg-tipo-info" style="margin-top:12px;margin-bottom:16px;"></div>
 
-      <input id="reg-nome-gratis" class="reg-input" type="text" placeholder="Nome público (opcional)" spellcheck="false"/>
-      <p class="reg-hint">Aparece no universo quando alguém voar até sua coordenada.</p>
-
       <div id="reg-aviso-ja-registrado" style="display:none;font-size:11px;color:rgba(255,180,80,0.8);text-align:center;margin-bottom:12px;padding:10px;background:rgba(255,180,80,0.06);border:1px solid rgba(255,180,80,0.2);border-radius:8px;">
         Este dispositivo já possui uma coordenada registrada.
       </div>
 
+      <!-- EMPRESA — bloqueado nesta fase -->
+      <div id="reg-empresa-bloqueado" style="display:none;text-align:center;padding:24px 16px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:10px;margin-bottom:16px;">
+        <div style="font-size:20px;margin-bottom:10px;">🚧</div>
+        <div style="font-size:12px;letter-spacing:1px;color:rgba(255,255,255,0.5);line-height:1.8;">
+          Registro de empresas em desenvolvimento.<br>Em breve.
+        </div>
+      </div>
+
+      <!-- PESSOA — escolher uma das 10 vagas beta -->
+      <div id="reg-pessoa-area">
+        <p style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:10px;letter-spacing:1px;">Escolha uma vaga gratuita e permanente:</p>
+        <div id="reg-beta-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;">
+          <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.2);padding:20px 0;grid-column:1/-1;">Carregando vagas...</div>
+        </div>
+
+        <div id="reg-beta-form" style="display:none;background:rgba(100,255,180,0.03);border:1px solid rgba(100,255,180,0.15);border-radius:10px;padding:18px;margin-bottom:16px;">
+          <div style="font-size:11px;letter-spacing:1px;color:rgba(100,255,180,0.7);margin-bottom:12px;">
+            VAGA <span id="reg-beta-slot-label"></span>
+          </div>
+          <input id="reg-beta-nome" class="reg-input" type="text" placeholder="@seunome (opcional)" spellcheck="false"/>
+          <p class="reg-hint">Aparece no universo quando alguém voar até sua coordenada. Formato @nome — só letras, números e underscore.</p>
+          <div id="reg-beta-erro" style="display:none;font-size:11px;color:rgba(255,100,80,0.85);margin-top:8px;"></div>
+        </div>
+      </div>
+
       <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
         <button class="reg-btn" onclick="fecharRegistro()">CANCELAR</button>
-        <button id="btn-registrar-gratis" class="reg-btn reg-btn-destaque" onclick="registrarGratis()">REGISTRAR →</button>
+        <button id="btn-registrar-gratis" class="reg-btn reg-btn-destaque" onclick="confirmarBetaRegistro()" disabled style="opacity:0.35;cursor:not-allowed;">REGISTRAR →</button>
       </div>
     </div>
 
@@ -1201,186 +1178,6 @@ camera.<span class="nm">lookAt</span>(<span class="nm">0</span>, <span class="nm
         <button class="reg-btn" onclick="fecharRegistro()">FECHAR</button>
         <button id="btn-ir-para-la" class="reg-btn reg-btn-destaque" onclick="irParaMeuEspaco()" disabled style="opacity:0.35;cursor:not-allowed;">IR PARA LÁ →</button>
       </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ── Modal teste / zona do desenvolvedor ── -->
-<div id="modal-teste" onclick="if(event.target===this)fecharTeste()">
-  <div id="painel-teste" onclick="event.stopPropagation()">
-
-    <!-- Cabeçalho -->
-    <div style="margin-bottom:32px;">
-      <div style="font-size:11px;letter-spacing:1px;color:rgba(80,255,180,0.6);margin-bottom:14px;">ZONA DO DESENVOLVEDOR</div>
-      <div style="font-size:22px;letter-spacing:3px;color:#fff;margin-bottom:12px;">O QUE CABE NA SUA COORDENADA</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.35);line-height:2;">
-        Uma coordenada COSM é um <em style="color:rgba(255,255,255,0.7)">ponto permanente no universo 3D</em> que você controla completamente.
-        O que você coloca lá fica visível para qualquer pessoa que voar até aquela coordenada —
-        sem servidor próprio obrigatório, sem domínio, sem intermediário.
-      </div>
-    </div>
-
-    <div style="height:1px;background:rgba(255,255,255,0.06);margin-bottom:24px;"></div>
-
-    <!-- Tipo 1: Web -->
-    <div style="font-size:11px;letter-spacing:1px;color:rgba(255,255,255,0.4);margin-bottom:14px;">TIPOS DE CONTEÚDO</div>
-
-    <div class="dev-tipo">
-      <span class="dev-tipo-tag" style="color:rgba(100,200,255,0.6);">TIPO 01 — PÁGINA WEB</span>
-      <div class="dev-tipo-titulo">Qualquer URL HTTPS renderizada em tela cheia</div>
-      <div class="dev-tipo-desc">
-        Portfólio, loja (Shopify, WooCommerce), app React/Vue/Svelte hospedado no Vercel ou Netlify,
-        dashboard interno, Notion público, Google Sites, vídeo embed, mapa interativo.
-        Funciona via iframe com sandbox — seus eventos de scroll, clique e teclado funcionam normalmente dentro do espaço.
-      </div>
-      <code class="dev-tipo-code">url_conteudo: "https://meusite.vercel.app"</code>
-    </div>
-
-    <!-- Tipo 2: 3D nativo -->
-    <div class="dev-tipo">
-      <span class="dev-tipo-tag" style="color:rgba(80,255,180,0.6);">TIPO 02 — OBJETO 3D NATIVO (.glb / .gltf)</span>
-      <div class="dev-tipo-titulo">Modelo 3D solto no universo — sem moldura, sem bordas</div>
-      <div class="dev-tipo-desc">
-        O arquivo é carregado diretamente na cena Three.js do COSM. O objeto flutua no espaço como se fosse
-        parte do universo — igual o wormhole existe no centro. Animações do arquivo tocam automaticamente.
-        Exporte do Blender, Unity, Unreal, Spline ou qualquer ferramenta que gere .glb.
-      </div>
-      <code class="dev-tipo-code">url_3d: "https://meucdn.com/cidade.glb" &nbsp;·&nbsp; escala, posição e rotação configuráveis</code>
-    </div>
-
-    <!-- Tipo 3: Código ao vivo -->
-    <div class="dev-tipo" style="border-color:rgba(180,140,255,0.15);">
-      <span class="dev-tipo-tag" style="color:rgba(180,140,255,0.6);">TIPO 03 — CÓDIGO AO VIVO (EM BREVE)</span>
-      <div class="dev-tipo-titulo">Escreva Three.js diretamente — o objeto aparece no universo</div>
-      <div class="dev-tipo-desc">
-        Um editor de código dentro do COSM. Você escreve, dá enter, o objeto aparece na sua coordenada em tempo real.
-        Sem hospedar arquivo. Sem deploy. O código roda na engine do COSM com acesso a THREE, geometrias,
-        materiais, luzes, física e animações procedurais.
-      </div>
-      <code class="dev-tipo-code" style="color:rgba(180,140,255,0.6);border-color:rgba(180,140,255,0.1);background:rgba(180,140,255,0.04);">
-        const geo = new THREE.TorusKnotGeometry(100, 30)<br>
-        const mat = new THREE.MeshStandardMaterial({ color: 0xff6600 })<br>
-        return new THREE.Mesh(geo, mat) &nbsp;→&nbsp; aparece no espaço
-      </code>
-    </div>
-
-    <div style="height:1px;background:rgba(255,255,255,0.06);margin:24px 0;"></div>
-
-    <!-- Exemplos concretos -->
-    <div style="font-size:11px;letter-spacing:1px;color:rgba(255,255,255,0.4);margin-bottom:16px;">EXEMPLOS DO QUE VOCÊ PODE CONSTRUIR</div>
-
-    <div class="dev-ex">
-      <span class="dev-ex-tag" style="background:rgba(100,200,255,0.08);color:rgba(100,200,255,0.7);border:1px solid rgba(100,200,255,0.15);">WEB</span>
-      <div style="font-size:10px;color:rgba(255,255,255,0.45);line-height:1.8;">
-        <strong style="color:rgba(255,255,255,0.7)">Showroom de produto</strong> — loja 3D completa com catálogo, carrinho e checkout dentro da coordenada da empresa
-      </div>
-    </div>
-    <div class="dev-ex">
-      <span class="dev-ex-tag" style="background:rgba(80,255,180,0.08);color:rgba(80,255,180,0.7);border:1px solid rgba(80,255,180,0.15);">3D</span>
-      <div style="font-size:10px;color:rgba(255,255,255,0.45);line-height:1.8;">
-        <strong style="color:rgba(255,255,255,0.7)">Cidade corporativa</strong> — a PlayStation registra COSM://1000000:0:0 e coloca uma cidade inteira em .glb. Quem voa até lá vê os prédios aparecerem no espaço ao redor
-      </div>
-    </div>
-    <div class="dev-ex">
-      <span class="dev-ex-tag" style="background:rgba(100,200,255,0.08);color:rgba(100,200,255,0.7);border:1px solid rgba(100,200,255,0.15);">WEB</span>
-      <div style="font-size:10px;color:rgba(255,255,255,0.45);line-height:1.8;">
-        <strong style="color:rgba(255,255,255,0.7)">Portal para jogo</strong> — a coordenada abre um jogo Unity WebGL completo. O visitante entra no jogo sem sair do universo COSM
-      </div>
-    </div>
-    <div class="dev-ex">
-      <span class="dev-ex-tag" style="background:rgba(80,255,180,0.08);color:rgba(80,255,180,0.7);border:1px solid rgba(80,255,180,0.15);">3D</span>
-      <div style="font-size:10px;color:rgba(255,255,255,0.45);line-height:1.8;">
-        <strong style="color:rgba(255,255,255,0.7)">Campo de futebol sem gravidade</strong> — um .glb com campo, bola e física customizada. O dono da coordenada define as regras: gravidade zero, paredes invisíveis, colisão ativa. O universo dentro do seu espaço obedece você
-      </div>
-    </div>
-    <div class="dev-ex">
-      <span class="dev-ex-tag" style="background:rgba(180,140,255,0.08);color:rgba(180,140,255,0.7);border:1px solid rgba(180,140,255,0.15);">CÓDIGO</span>
-      <div style="font-size:10px;color:rgba(255,255,255,0.45);line-height:1.8;">
-        <strong style="color:rgba(255,255,255,0.7)">Pista de corrida procedural</strong> — código Three.js gera a pista dinamicamente, coloca carros em movimento com lerp, ajusta velocidade por parâmetro. Zero arquivo externo
-      </div>
-    </div>
-    <div class="dev-ex">
-      <span class="dev-ex-tag" style="background:rgba(100,200,255,0.08);color:rgba(100,200,255,0.7);border:1px solid rgba(100,200,255,0.15);">WEB</span>
-      <div style="font-size:10px;color:rgba(255,255,255,0.45);line-height:1.8;">
-        <strong style="color:rgba(255,255,255,0.7)">Projeto hospedado para o futuro</strong> — registre a coordenada hoje, coloque seu projeto em desenvolvimento lá. O endereço nunca muda. Quando o projeto estiver pronto, o universo já tem o ponto fixo esperando
-      </div>
-    </div>
-
-    <div style="height:1px;background:rgba(255,255,255,0.06);margin:24px 0;"></div>
-
-    <!-- Try it -->
-    <div style="font-size:11px;letter-spacing:1px;color:rgba(255,255,255,0.45);margin-bottom:10px;">TESTAR AGORA — ZONA COSM://0:777777:0</div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px;line-height:1.8;">
-      A zona de teste já tem um personagem 3D animado flutuando no espaço.<br>
-      Cole uma URL para ver seu conteúdo lá também. Tudo some ao fechar — permanente só com registro.
-    </div>
-    <input id="teste-url-input" class="reg-input" type="text"
-      placeholder="URL do site ou arquivo .glb (opcional)"
-      spellcheck="false"
-      onkeydown="if(event.key==='Enter')renderizarTeste()"/>
-
-    <div style="display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:20px;">
-      <button class="reg-btn" onclick="fecharTeste()">FECHAR</button>
-      <button class="reg-btn" onclick="renderizarTeste()"
-        style="border-color:rgba(80,255,180,0.4);color:rgba(80,255,180,0.85);">
-        VOAR PARA A ZONA DE TESTE →
-      </button>
-    </div>
-
-    <div style="height:1px;background:rgba(255,255,255,0.06);margin:28px 0;"></div>
-
-    <!-- Beta Developers -->
-    <div style="margin-bottom:16px;">
-      <div style="font-size:11px;letter-spacing:1px;color:rgba(255,200,80,0.65);margin-bottom:10px;">BETA DEVELOPERS</div>
-      <div style="font-size:16px;letter-spacing:1px;color:#fff;margin-bottom:10px;">10 VAGAS · GRÁTIS · PERMANENTES</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.35);line-height:2;">
-        Registre sua coordenada agora, sem pagar nada.<br>
-        O que você colocar lá fica para sempre — sua coordenada, seu projeto, seu endereço no universo.<br>
-        <span style="color:rgba(255,200,80,0.6)">Use para divulgar seu projeto e o COSM juntos.</span>
-      </div>
-    </div>
-
-    <!-- Grid dos 10 slots -->
-    <div id="beta-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px;">
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.2);padding:20px 0;grid-column:1/-1;">
-        Carregando vagas...
-      </div>
-    </div>
-
-    <!-- Formulário de claim (oculto até clicar numa vaga) -->
-    <div id="beta-form" style="display:none;background:rgba(255,200,80,0.03);border:1px solid rgba(255,200,80,0.12);border-radius:10px;padding:20px;">
-      <div style="font-size:11px;letter-spacing:1px;color:rgba(255,200,80,0.7);margin-bottom:14px;">
-        REIVINDICAR VAGA <span id="beta-slot-label"></span>
-      </div>
-      <input id="beta-nome" class="reg-input" type="text"
-        placeholder="Nome do seu projeto (opcional)"
-        spellcheck="false" style="margin-bottom:10px;"/>
-      <input id="beta-url" class="reg-input" type="text"
-        placeholder="URL do seu site ou arquivo .glb (pode preencher depois)"
-        spellcheck="false" style="margin-bottom:14px;"/>
-      <div id="beta-erro" style="font-size:10px;color:rgba(255,100,80,0.8);margin-bottom:10px;display:none;"></div>
-      <div style="display:flex;gap:10px;">
-        <button class="reg-btn" onclick="document.getElementById('beta-form').style.display='none'">CANCELAR</button>
-        <button class="reg-btn" onclick="claimarBeta()"
-          style="border-color:rgba(255,200,80,0.4);color:rgba(255,200,80,0.85);">
-          CONFIRMAR VAGA →
-        </button>
-      </div>
-    </div>
-
-    <!-- Confirmação após claim -->
-    <div id="beta-ok" style="display:none;text-align:center;padding:20px;">
-      <div style="font-size:12px;letter-spacing:1px;color:rgba(80,255,180,0.9);margin-bottom:10px;">✓ VAGA CONFIRMADA</div>
-      <div id="beta-ok-coord" style="font-size:14px;color:#fff;letter-spacing:2px;margin-bottom:16px;"></div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:16px;line-height:1.8;">
-        Esta coordenada é sua para sempre.<br>
-        Coloque seu conteúdo lá e compartilhe o endereço COSM:// com o mundo.
-      </div>
-      <button class="reg-btn" onclick="irParaBetaCoord()"
-        style="border-color:rgba(80,255,180,0.4);color:rgba(80,255,180,0.85);">
-        IR PARA MINHA COORDENADA →
-      </button>
     </div>
 
   </div>
@@ -1755,7 +1552,6 @@ function atualizarHUD() {
 // ═══════════════════════════════════════════════════════
 //  OBJETOS 3D NATIVOS — declarações antecipadas
 // ═══════════════════════════════════════════════════════
-const COORD_TESTE  = { x: 0, y: 777777, z: 0 };
 const objetos3d    = [];  // { mesh, cx, cy, cz, mixer }
 const gltfLoader   = new GLTFLoader();
 
@@ -2352,140 +2148,10 @@ function atualizarInfoTipo() {
 function modalAberto() {
   return document.getElementById('modal-info').classList.contains('ativo') ||
          document.getElementById('modal-reg').classList.contains('ativo') ||
-         document.getElementById('modal-teste').classList.contains('ativo') ||
          document.getElementById('modal-inserir').classList.contains('ativo') ||
          document.getElementById('modal-controles').classList.contains('ativo') ||
          document.getElementById('landing-overlay').style.display !== 'none';
 }
-
-// ─── Zona de Teste + Beta Developers ─────────────────────
-let betaSlotSelecionado = null;
-let betaCoordConfirmada = null;
-
-window.abrirTeste = function() {
-  document.getElementById('modal-teste').classList.add('ativo');
-  bloquearCanvas(true);
-  carregarBeta();
-};
-
-async function carregarBeta() {
-  const grid = document.getElementById('beta-grid');
-  try {
-    const resp  = await fetch('/api/beta');
-    const slots = await resp.json();
-    const livres = slots.filter(s => !s.ocupado).length;
-
-    grid.innerHTML = slots.map(s => {
-      if (s.ocupado) {
-        return `<div style="
-          background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
-          border-radius:8px;padding:12px 8px;text-align:center;cursor:default;">
-          <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-bottom:4px;">VAGA ${s.slot}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-            ${s.nome ? s.nome.toUpperCase() : 'EM CONSTRUÇÃO'}
-          </div>
-          <div style="font-size:10px;color:rgba(80,255,180,0.5);margin-top:4px;">● OCUPADA</div>
-        </div>`;
-      }
-      return `<div onclick="selecionarBetaSlot(${s.slot},${s.x},${s.y},${s.z})" style="
-        background:rgba(255,200,80,0.04);border:1px solid rgba(255,200,80,0.2);
-        border-radius:8px;padding:12px 8px;text-align:center;cursor:pointer;
-        transition:all 0.2s;"
-        onmouseover="this.style.borderColor='rgba(255,200,80,0.5)';this.style.background='rgba(255,200,80,0.08)'"
-        onmouseout="this.style.borderColor='rgba(255,200,80,0.2)';this.style.background='rgba(255,200,80,0.04)'">
-        <div style="font-size:10px;letter-spacing:1px;color:rgba(255,200,80,0.55);margin-bottom:4px;">VAGA ${s.slot}</div>
-        <div style="font-size:12px;color:rgba(255,200,80,0.8);">LIVRE</div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">CLIQUE</div>
-      </div>`;
-    }).join('');
-
-    // Contador de vagas
-    const counter = document.createElement('div');
-    counter.style.cssText = 'grid-column:1/-1;text-align:center;font-size:11px;letter-spacing:1px;color:rgba(255,255,255,0.4);margin-top:8px;';
-    counter.textContent = `${livres} DE 10 VAGAS DISPONÍVEIS`;
-    grid.appendChild(counter);
-
-  } catch (_) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;font-size:10px;color:rgba(255,100,80,0.5);padding:20px 0;">Erro ao carregar vagas</div>';
-  }
-}
-
-window.selecionarBetaSlot = function(slot, x, y, z) {
-  betaSlotSelecionado = { slot, x, y, z };
-  document.getElementById('beta-slot-label').textContent = `#${slot} — COSM://${x}:${y}:${z}`;
-  document.getElementById('beta-form').style.display = 'block';
-  document.getElementById('beta-ok').style.display = 'none';
-  document.getElementById('beta-erro').style.display = 'none';
-  document.getElementById('beta-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-};
-
-window.claimarBeta = async function() {
-  const nome   = document.getElementById('beta-nome').value.trim();
-  const url    = document.getElementById('beta-url').value.trim();
-  const erroEl = document.getElementById('beta-erro');
-
-  if (!betaSlotSelecionado) return;
-  erroEl.style.display = 'none';
-
-  let carteira = localStorage.getItem('cosm_id');
-  if (!carteira) {
-    carteira = crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2);
-    localStorage.setItem('cosm_id', carteira);
-  }
-
-  try {
-    const resp = await fetch('/api/beta/claim', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ carteira, slot: betaSlotSelecionado.slot, nome: nome||null, url: url||null })
-    });
-    const data = await resp.json();
-
-    if (!resp.ok) {
-      erroEl.textContent = data.erro === 'slot ja ocupado' ? 'Esta vaga acabou de ser ocupada. Escolha outra.' :
-                           data.erro === 'carteira ja registrada' ? 'Este dispositivo já tem uma vaga beta registrada.' :
-                           data.erro;
-      erroEl.style.display = 'block';
-      if (data.erro === 'slot ja ocupado') carregarBeta();
-      return;
-    }
-
-    betaCoordConfirmada = betaSlotSelecionado;
-    document.getElementById('beta-form').style.display = 'none';
-    document.getElementById('beta-ok-coord').textContent =
-      `COSM://${betaSlotSelecionado.x} : ${betaSlotSelecionado.y} : ${betaSlotSelecionado.z}`;
-    document.getElementById('beta-ok').style.display = 'block';
-    document.getElementById('beta-ok').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    carregarBeta();
-
-    // Carrega o objeto 3D se URL .glb foi informada
-    if (url && (url.endsWith('.glb') || url.endsWith('.gltf'))) {
-      carregarObjeto3D(betaSlotSelecionado.x, betaSlotSelecionado.y, betaSlotSelecionado.z, url);
-    }
-
-  } catch (_) {
-    erroEl.textContent = 'Erro de conexão. Tente novamente.';
-    erroEl.style.display = 'block';
-  }
-};
-
-window.irParaBetaCoord = function() {
-  if (!betaCoordConfirmada) return;
-  fecharTeste();
-  const {x, y, z} = betaCoordConfirmada;
-  document.getElementById('coord-input').value = `${x} : ${y} : ${z}`;
-  irParaCoordenada();
-  setTimeout(() => mostrarAvisoCoord(
-    'Esta coordenada beta é sua para sempre — sem custo. Mas só você sabe o endereço. Anote agora.',
-    `COSM://${x}:${y}:${z}`,
-    'sua'
-  ), 2000);
-};
-
-window.fecharTeste = function() {
-  document.getElementById('modal-teste').classList.remove('ativo');
-  if (!modalAberto()) bloquearCanvas(false);
-};
 
 // ─── Prepara URL antes de renderizar ────────────────────
 // Converte links normais (YouTube, Vimeo, Drive, imagem)
@@ -2530,21 +2196,6 @@ align-items:center;justify-content:center;min-height:100vh">
   return { src: url, eh3d: false };
 }
 
-function abrirIframeTeste(src, titulo) {
-  document.getElementById('iframe-titulo').textContent = titulo || 'ZONA DE TESTE';
-  document.getElementById('iframe-coord').textContent = 'COSM://0:777777:0 — DEMONSTRAÇÃO';
-  document.getElementById('iframe-content').src = src;
-  const banner = document.getElementById('iframe-teste-banner');
-  banner.textContent = '⚠ DEMONSTRAÇÃO — este conteúdo some ao fechar · Registre sua coordenada para salvar permanente';
-  banner.style.display = 'block';
-  document.getElementById('iframe-overlay').classList.add('ativo');
-  bloquearCanvas(true);
-  mostrarAvisoCoord(
-    'Você está na zona de demonstração. Quando registrar seu próprio espaço, anote as coordenadas — elas são o único mapa num universo infinito.',
-    'COSM://0:777777:0', 'teste'
-  );
-}
-
 function abrirIframeNoEspaco(src, urlOriginal, coord) {
   const coordStr = `COSM://${coord.x}:${coord.y}:${coord.z}`;
   document.getElementById('iframe-titulo').textContent = urlOriginal.replace(/^https?:\/\//, '').split('/')[0];
@@ -2560,11 +2211,10 @@ function abrirIframeNoEspaco(src, urlOriginal, coord) {
   bloquearCanvas(true);
 }
 
-function abrirIframeLocal(src, nome, temCoord) {
+function abrirIframeLocal(src, nome) {
   document.getElementById('iframe-titulo').textContent = nome;
-  document.getElementById('iframe-coord').textContent = temCoord
-    ? (() => { const c = minhaCoordSalva(); return c ? `COSM://${c.x}:${c.y}:${c.z} — MEU ESPAÇO` : ''; })()
-    : 'COSM://0:777777:0 — DEMONSTRAÇÃO';
+  const c = minhaCoordSalva();
+  document.getElementById('iframe-coord').textContent = c ? `COSM://${c.x}:${c.y}:${c.z} — MEU ESPAÇO` : '';
   document.getElementById('iframe-content').src = src;
   const banner = document.getElementById('iframe-teste-banner');
   banner.style.background = '';
@@ -2588,21 +2238,6 @@ function salvarUrlNoEspaco(url, eh3d) {
   }).catch(() => {});
 }
 
-window.renderizarTeste = function() {
-  let url = document.getElementById('teste-url-input').value.trim();
-  if (!url) return;
-  if (!url.startsWith('http')) url = 'https://' + url;
-  fecharTeste();
-  document.getElementById('coord-input').value =
-    `${COORD_TESTE.x} : ${COORD_TESTE.y} : ${COORD_TESTE.z}`;
-  irParaCoordenada();
-  const { src, eh3d } = prepararUrl(url, url.endsWith('.glb') ? 'glb' : 'site');
-  setTimeout(() => {
-    if (eh3d) carregarObjeto3D(COORD_TESTE.x, COORD_TESTE.y, COORD_TESTE.z, url, 300);
-    else abrirIframeTeste(src, 'ZONA DE TESTE');
-  }, 1600);
-};
-
 function bloquearCanvas(sim) {
   canvas.style.pointerEvents = sim ? 'none' : 'auto';
 }
@@ -2620,7 +2255,7 @@ const INS_TIPOS = {
       </div>
       <div class="ins-passo">
         <div class="ins-passo-num">2</div>
-        <div class="ins-passo-txt">Cole o endereço do site no campo abaixo e clique em TESTAR para ver como fica no universo.</div>
+        <div class="ins-passo-txt">Cole o endereço do site no campo abaixo e clique em ADICIONAR para ver como fica no universo.</div>
       </div>
       <div class="ins-passo">
         <div class="ins-passo-num">!</div>
@@ -2864,6 +2499,12 @@ function processarGamepad() {
 let insTipoAtual = null;
 
 window.abrirInserir = function() {
+  if (!minhaCoordSalva()) {
+    fecharMenu();
+    notif('Registre sua coordenada antes de inserir conteúdo');
+    abrirRegistro();
+    return;
+  }
   insTipoAtual = null;
   document.querySelectorAll('.ins-card').forEach(c => c.classList.remove('selecionado'));
   document.getElementById('ins-detalhe').classList.remove('visivel');
@@ -2907,7 +2548,7 @@ window.selecionarTipoInserir = function(tipo) {
     codeArea.style.display = 'none';
     urlInput.placeholder = cfg.placeholder;
     urlInput.value = '';
-    btnTestar.textContent = 'TESTAR NA ZONA COSM://0:777777:0 →';
+    btnTestar.textContent = 'ADICIONAR AO MEU ESPAÇO →';
     document.getElementById('ins-arquivo-sep').style.display = 'block';
     const labelArq = document.getElementById('ins-label-arquivo');
     labelArq.style.display = 'block';
@@ -2927,8 +2568,7 @@ window.testarInserir = function() {
   if (!url) return;
   if (!url.startsWith('http')) url = 'https://' + url;
   const { src, eh3d } = prepararUrl(url, insTipoAtual);
-  const minhaCoord = minhaCoordSalva();
-  const destino = minhaCoord || COORD_TESTE;
+  const destino = minhaCoordSalva();
   fecharInserir();
   document.getElementById('coord-input').value =
     `${destino.x} : ${destino.y} : ${destino.z}`;
@@ -2936,13 +2576,9 @@ window.testarInserir = function() {
   setTimeout(() => {
     if (eh3d) {
       carregarObjeto3D(destino.x, destino.y, destino.z, url, 300);
-      if (minhaCoord) salvarUrlNoEspaco(url, true);
+      salvarUrlNoEspaco(url, true);
     } else {
-      if (minhaCoord) {
-        abrirIframeNoEspaco(src, url, minhaCoord);
-      } else {
-        abrirIframeTeste(src, 'DEMONSTRAÇÃO');
-      }
+      abrirIframeNoEspaco(src, url, destino);
     }
   }, 1600);
 };
@@ -2999,8 +2635,7 @@ window.carregarArquivoLocal = function(input) {
     return;
   }
 
-  const minhaCoord = minhaCoordSalva();
-  const destino = minhaCoord || COORD_TESTE;
+  const destino = minhaCoordSalva();
 
   const lancar = (src, eh3d) => {
     fecharInserir();
@@ -3009,7 +2644,7 @@ window.carregarArquivoLocal = function(input) {
     irParaCoordenada();
     setTimeout(() => {
       if (eh3d) carregarObjeto3D(destino.x, destino.y, destino.z, src, 300);
-      else abrirIframeLocal(src, nome, !!minhaCoord);
+      else abrirIframeLocal(src, nome);
     }, 1600);
   };
 
@@ -3097,13 +2732,27 @@ window.abrirRegistro = function() {
   document.getElementById('reg-s2').style.display = 'none';
   document.getElementById('reg-s3').style.display = 'none';
   document.getElementById('reg-aviso-ja-registrado').style.display = 'none';
-  document.getElementById('reg-nome-gratis').value = '';
+  regBetaSlotSelecionado = null;
+  document.getElementById('reg-beta-form').style.display = 'none';
+  document.getElementById('reg-beta-erro').style.display = 'none';
+  document.getElementById('reg-beta-nome').value = '';
   const btn = document.getElementById('btn-registrar-gratis');
-  btn.disabled = false; btn.textContent = 'REGISTRAR →';
+  btn.disabled = true; btn.style.opacity = '0.35'; btn.style.cursor = 'not-allowed'; btn.textContent = 'REGISTRAR →';
   regTipo = 'pessoa';
   document.getElementById('btn-tipo-pessoa').classList.add('ativo');
   document.getElementById('btn-tipo-empresa').classList.remove('ativo');
   atualizarInfoTipo();
+
+  if (minhaCoordSalva()) {
+    document.getElementById('reg-aviso-ja-registrado').style.display = 'block';
+    document.getElementById('reg-pessoa-area').style.display = 'none';
+    document.getElementById('reg-empresa-bloqueado').style.display = 'none';
+    btn.style.display = 'none';
+  } else {
+    btn.style.display = 'inline-block';
+    aplicarTipoRegistro();
+  }
+
   document.getElementById('modal-reg').classList.add('ativo');
   bloquearCanvas(true);
 };
@@ -3118,16 +2767,105 @@ window.selecionarTipo = function(tipo) {
   document.getElementById('btn-tipo-pessoa').classList.toggle('ativo', tipo === 'pessoa');
   document.getElementById('btn-tipo-empresa').classList.toggle('ativo', tipo === 'empresa');
   atualizarInfoTipo();
+  if (!minhaCoordSalva()) aplicarTipoRegistro();
 };
 
-window.registrarGratis = async function() {
-  // Verificar se já tem coord registrada neste dispositivo
-  if (minhaCoordSalva()) {
-    document.getElementById('reg-aviso-ja-registrado').style.display = 'block';
+function aplicarTipoRegistro() {
+  const empresaDiv = document.getElementById('reg-empresa-bloqueado');
+  const pessoaDiv  = document.getElementById('reg-pessoa-area');
+  const btn        = document.getElementById('btn-registrar-gratis');
+  if (regTipo === 'empresa') {
+    empresaDiv.style.display = 'block';
+    pessoaDiv.style.display  = 'none';
+    btn.style.display = 'none';
+  } else {
+    empresaDiv.style.display = 'none';
+    pessoaDiv.style.display  = 'block';
+    btn.style.display = 'inline-block';
+    carregarBetaGridRegistro();
+  }
+}
+
+// ─── Escolha de vaga beta (10 coordenadas fixas) ─────────────
+let regBetaSlotSelecionado = null;
+
+async function carregarBetaGridRegistro() {
+  const grid = document.getElementById('reg-beta-grid');
+  grid.innerHTML = '<div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.2);padding:20px 0;grid-column:1/-1;">Carregando vagas...</div>';
+  try {
+    const resp  = await fetch('/api/beta');
+    const slots = await resp.json();
+    const livres = slots.filter(s => !s.ocupado).length;
+
+    grid.innerHTML = slots.map(s => {
+      if (s.ocupado) {
+        return `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px 8px;text-align:center;cursor:default;">
+          <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-bottom:4px;">VAGA ${s.slot}</div>
+          <div style="font-size:10px;color:rgba(255,120,120,0.6);">● OCUPADA</div>
+        </div>`;
+      }
+      return `<div onclick="selecionarBetaSlotRegistro(${s.slot},${s.x},${s.y},${s.z})" style="
+        background:rgba(100,255,180,0.04);border:1px solid rgba(100,255,180,0.2);
+        border-radius:8px;padding:12px 8px;text-align:center;cursor:pointer;transition:all 0.2s;"
+        onmouseover="this.style.borderColor='rgba(100,255,180,0.5)'" onmouseout="this.style.borderColor='rgba(100,255,180,0.2)'">
+        <div style="font-size:10px;letter-spacing:1px;color:rgba(100,255,180,0.55);margin-bottom:4px;">VAGA ${s.slot}</div>
+        <div style="font-size:11px;color:rgba(100,255,180,0.85);">LIVRE</div>
+      </div>`;
+    }).join('');
+
+    const counter = document.createElement('div');
+    counter.style.cssText = 'grid-column:1/-1;text-align:center;font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-top:6px;';
+    counter.textContent = livres > 0 ? `${livres} DE 10 VAGAS DISPONÍVEIS` : 'TODAS AS VAGAS FORAM PREENCHIDAS';
+    grid.appendChild(counter);
+  } catch (_) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;font-size:10px;color:rgba(255,100,80,0.5);padding:20px 0;">Erro ao carregar vagas</div>';
+  }
+}
+
+window.selecionarBetaSlotRegistro = function(slot, x, y, z) {
+  regBetaSlotSelecionado = { slot, x, y, z };
+  document.getElementById('reg-beta-slot-label').textContent = `#${slot} — COSM://${x}:${y}:${z}`;
+  document.getElementById('reg-beta-form').style.display = 'block';
+  document.getElementById('reg-beta-erro').style.display = 'none';
+  const btn = document.getElementById('btn-registrar-gratis');
+  btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+  document.getElementById('reg-beta-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+};
+
+// ─── Validação do nome público (@handle) ─────────────────────
+// Bloqueio básico contra impersonação de marcas conhecidas — não é proteção legal completa.
+const NOMES_BLOQUEADOS = [
+  'nike', 'adidas', 'apple', 'google', 'microsoft', 'amazon', 'meta', 'facebook',
+  'instagram', 'tesla', 'sony', 'playstation', 'xbox', 'nintendo', 'netflix',
+  'disney', 'samsung', 'cocacola', 'pepsi', 'mcdonalds', 'starbucks', 'walmart',
+  'uber', 'airbnb', 'spotify', 'twitter', 'openai', 'anthropic', 'claude'
+];
+
+function validarNomeHandle(v) {
+  if (!v) return { ok: true, valor: null };
+  let h = v.trim();
+  if (!h.startsWith('@')) h = '@' + h;
+  if (!/^@[a-zA-Z0-9_]{2,20}$/.test(h)) {
+    return { ok: false, erro: 'Formato inválido — use @nome (letras, números e _, 2 a 20 caracteres)' };
+  }
+  const slug = h.slice(1).toLowerCase();
+  if (NOMES_BLOQUEADOS.some(b => slug.includes(b))) {
+    return { ok: false, erro: 'Este nome não pode ser usado' };
+  }
+  return { ok: true, valor: h };
+}
+
+window.confirmarBetaRegistro = async function() {
+  if (!regBetaSlotSelecionado) return;
+  const erroEl = document.getElementById('reg-beta-erro');
+  erroEl.style.display = 'none';
+
+  const val = validarNomeHandle(document.getElementById('reg-beta-nome').value);
+  if (!val.ok) {
+    erroEl.textContent = val.erro;
+    erroEl.style.display = 'block';
     return;
   }
-
-  const nome = document.getElementById('reg-nome-gratis').value.trim() || null;
 
   // ID único do dispositivo (substitui carteira Solana por enquanto)
   let carteira = localStorage.getItem('cosm_id');
@@ -3141,24 +2879,29 @@ window.registrarGratis = async function() {
   btn.textContent = 'REGISTRANDO...';
 
   try {
-    const resp = await fetch('/api/registrar', {
+    const resp = await fetch('/api/beta/claim', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ carteira, tipo: regTipo, plano: 'beta', nome })
+      body: JSON.stringify({ carteira, slot: regBetaSlotSelecionado.slot, nome: val.valor })
     });
     const data = await resp.json();
 
-    if (data.erro) {
+    if (!resp.ok) {
+      erroEl.textContent = data.erro === 'slot ja ocupado' ? 'Esta vaga acabou de ser ocupada. Escolha outra.' :
+                           data.erro === 'carteira ja registrada' ? 'Este dispositivo já tem uma coordenada registrada.' :
+                           data.erro;
+      erroEl.style.display = 'block';
       btn.disabled = false; btn.textContent = 'REGISTRAR →';
-      notif('Erro ao registrar — tente novamente');
+      if (data.erro === 'slot ja ocupado') carregarBetaGridRegistro();
       return;
     }
 
     minhaCoordReg = data.coordenada;
     mostrarConfirmado(data.coordenada);
   } catch (_) {
+    erroEl.textContent = 'Erro de conexão. Tente novamente.';
+    erroEl.style.display = 'block';
     btn.disabled = false; btn.textContent = 'REGISTRAR →';
-    notif('Erro de conexão — tente novamente');
   }
 };
 
@@ -3354,13 +3097,6 @@ async function carregarCoordenadas() {
   } catch (_) {}
 }
 carregarCoordenadas();
-
-// Demonstração: robot animado na zona de teste
-carregarObjeto3D(
-  COORD_TESTE.x, COORD_TESTE.y, COORD_TESTE.z,
-  'https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb',
-  500
-);
 
 // Campo de futebol em 14100:999900:1800
 criarCampoDeFutebol(14100, 999900, 1800);
