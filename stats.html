@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COSM — Números</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:#080810;color:#fff;
+    font-family:'Space Grotesk',sans-serif;
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    padding:40px 20px;
+  }
+  .wrap{width:100%;max-width:640px;}
+  h1{
+    font-size:12px;letter-spacing:4px;color:rgba(255,255,255,0.35);
+    text-align:center;margin-bottom:32px;font-weight:500;
+  }
+  .grid{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:12px;
+  }
+  .card{
+    border:1px solid rgba(255,255,255,0.08);border-radius:12px;
+    padding:20px 22px;background:rgba(255,255,255,0.02);
+  }
+  .card-num{
+    font-family:'Space Mono',monospace;font-size:32px;color:#fff;
+    line-height:1;margin-bottom:8px;
+  }
+  .card-label{
+    font-size:11px;letter-spacing:1px;color:rgba(255,255,255,0.4);
+  }
+  .sub{
+    font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;
+    font-family:'Space Mono',monospace;
+  }
+  .sec-titulo{
+    font-size:10px;letter-spacing:2px;color:rgba(100,255,180,0.6);
+    margin:28px 0 10px;
+  }
+  .linha{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 14px;border:1px solid rgba(255,255,255,0.06);
+    border-radius:8px;margin-bottom:6px;font-size:12px;
+  }
+  .linha-label{color:rgba(255,255,255,0.5);text-transform:capitalize;}
+  .linha-valor{font-family:'Space Mono',monospace;color:#fff;}
+  #erro{
+    text-align:center;color:rgba(255,100,80,0.8);font-size:12px;
+    margin-top:20px;display:none;
+  }
+  #carregando{text-align:center;color:rgba(255,255,255,0.35);font-size:12px;}
+  .atualizar{
+    display:block;margin:28px auto 0;background:transparent;
+    border:1px solid rgba(255,255,255,0.15);border-radius:6px;
+    color:rgba(255,255,255,0.5);padding:8px 18px;font-size:11px;
+    letter-spacing:1px;cursor:pointer;font-family:'Space Grotesk',sans-serif;
+  }
+  .atualizar:hover{border-color:rgba(255,255,255,0.4);color:#fff;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>COSM :// NÚMEROS</h1>
+  <div id="carregando">Carregando...</div>
+  <div id="conteudo" style="display:none;">
+    <div class="grid">
+      <div class="card">
+        <div class="card-num" id="n-total">0</div>
+        <div class="card-label">TOTAL DE COORDENADAS REGISTRADAS</div>
+      </div>
+      <div class="card">
+        <div class="card-num" id="n-beta">0/10</div>
+        <div class="card-label">VAGAS BETA OCUPADAS</div>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="card-num" id="n-totp">0</div>
+        <div class="card-label">COM CHAVE DE SEGURANÇA ATIVA</div>
+      </div>
+      <div class="card">
+        <div class="card-num" id="n-pagos">0</div>
+        <div class="card-label">PAGAMENTOS CONFIRMADOS</div>
+      </div>
+    </div>
+
+    <div class="sec-titulo">POR TIPO</div>
+    <div id="lista-tipo"></div>
+
+    <div class="sec-titulo">POR PLANO</div>
+    <div id="lista-plano"></div>
+
+    <div class="sec-titulo">PAGAMENTOS POR STATUS</div>
+    <div id="lista-pagto"></div>
+  </div>
+  <div id="erro">Erro ao carregar os números. Tente de novo.</div>
+  <button class="atualizar" onclick="carregar()">ATUALIZAR →</button>
+</div>
+
+<script>
+function linha(label, valor) {
+  return `<div class="linha"><span class="linha-label">${label}</span><span class="linha-valor">${valor}</span></div>`;
+}
+
+async function carregar() {
+  document.getElementById('carregando').style.display = 'block';
+  document.getElementById('conteudo').style.display = 'none';
+  document.getElementById('erro').style.display = 'none';
+  try {
+    const resp = await fetch('/api/stats');
+    const d = await resp.json();
+    if (!resp.ok) throw new Error(d.erro || 'erro');
+
+    document.getElementById('n-total').textContent = d.total_registros;
+    document.getElementById('n-beta').textContent = `${d.beta_ocupadas}/${d.beta_total}`;
+    document.getElementById('n-totp').textContent = d.totp_confirmados;
+    const pagos = (d.pagamentos_por_status.find(p => p.status === 'confirmado') || {}).total || 0;
+    document.getElementById('n-pagos').textContent = pagos;
+
+    document.getElementById('lista-tipo').innerHTML =
+      d.por_tipo.map(r => linha(r.tipo, r.total)).join('') || linha('nenhum registro ainda', '');
+    document.getElementById('lista-plano').innerHTML =
+      d.por_plano.map(r => linha(r.plano, r.total)).join('') || linha('nenhum registro ainda', '');
+    document.getElementById('lista-pagto').innerHTML =
+      d.pagamentos_por_status.map(r => linha(r.status, r.total)).join('') || linha('nenhum pagamento ainda', '');
+
+    document.getElementById('carregando').style.display = 'none';
+    document.getElementById('conteudo').style.display = 'block';
+  } catch (e) {
+    document.getElementById('carregando').style.display = 'none';
+    document.getElementById('erro').style.display = 'block';
+  }
+}
+carregar();
+</script>
+</body>
+</html>

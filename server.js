@@ -436,6 +436,29 @@ app.get('/api/beta', async (req, res) => {
   } catch (e) { res.status(500).json({ erro: e.message }); }
 });
 
+// Contagens gerais — sem nenhum dado pessoal, só números.
+app.get('/api/stats', async (req, res) => {
+  try {
+    const { rows: totalRow }   = await pool.query('SELECT COUNT(*)::int AS total FROM registros');
+    const { rows: porTipo }    = await pool.query('SELECT tipo, COUNT(*)::int AS total FROM registros GROUP BY tipo');
+    const { rows: porPlano }   = await pool.query('SELECT plano, COUNT(*)::int AS total FROM registros GROUP BY plano');
+    const { rows: porPagto }   = await pool.query('SELECT status, COUNT(*)::int AS total FROM pagamentos GROUP BY status');
+    const { rows: totpRow }    = await pool.query('SELECT COUNT(*)::int AS total FROM registros WHERE totp_confirmado = true');
+
+    const betaOcupadas = (porPlano.find(p => p.plano === 'beta') || {}).total || 0;
+
+    res.json({
+      total_registros: totalRow[0].total,
+      por_tipo: porTipo,
+      por_plano: porPlano,
+      pagamentos_por_status: porPagto,
+      beta_ocupadas: betaOcupadas,
+      beta_total: BETA_COORDS.length,
+      totp_confirmados: totpRow[0].total
+    });
+  } catch (e) { res.status(500).json({ erro: e.message }); }
+});
+
 // Reivindicar um slot beta
 // Body: { carteira, slot (1-10), nome, url, url_3d }
 app.post('/api/beta/claim', async (req, res) => {

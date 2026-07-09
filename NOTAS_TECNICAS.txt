@@ -1,6 +1,6 @@
 ===============================================================
   COSM — NOTAS TÉCNICAS (para Claude ler no futuro)
-  Última atualização: 2026-07-09 (v16 — autenticação TOTP obrigatória em toda coordenada)
+  Última atualização: 2026-07-09 (v17 — página /stats.html com contagens gerais)
   Pasta: C:\Users\renne\Projetos\COSM\
   Deploy: cosm-production.up.railway.app
   GitHub: https://github.com/rennercbp-glith/COSM.git
@@ -212,19 +212,24 @@ O QUE FOI FEITO NA SESSÃO 2026-07-09:
       gate de TOTP — sem isso, o gate nem faria diferença nesse
       caminho (mais comum que o de .glb).
 
-      DEPENDÊNCIAS NOVAS (package.json): otplib, jsonwebtoken —
-      NUNCA TESTADAS EM PRODUÇÃO (sem Node local nesta sessão pra
-      testar antes do push — revisão foi só leitura de código +
-      checagem de chaves/parênteses balanceados). Testar o fluxo
-      completo assim que o deploy subir: registrar coordenada nova,
-      escanear QR, confirmar código, inserir conteúdo.
+      DEPENDÊNCIAS NOVAS (package.json): otplib, jsonwebtoken.
 
-      VARIÁVEL DE AMBIENTE NOVA NO RAILWAY (falta configurar):
-        TOTP_SESSION_SECRET — assina as sessões JWT. Tem um valor
-        padrão só pra não quebrar localmente, mas ISSO PRECISA SER
-        DEFINIDO NO RAILWAY antes de confiar na segurança da sessão
-        em produção — sem isso, o segredo de assinatura é público
-        (está no código-fonte).
+      ATUALIZAÇÃO — TESTADO EM PRODUÇÃO COM SUCESSO (2026-07-09, mesmo
+      dia): depois do push, Node.js foi instalado no PC do Renner
+      (antes não existia — PC recém formatado). Rodei o fluxo completo
+      direto na API de produção via curl: registrar vaga beta → gerar
+      QR/segredo TOTP → confirmar código → PATCH sem sessão bloqueado
+      (401) → PATCH com sessão válida funcionando e persistindo de
+      verdade → /api/coordenadas continua sem vazar carteira → login
+      TOTP (retorno) funcionando → código errado rejeitado. Tudo OK.
+      Único obstáculo no caminho: o relógio do PC do Renner estava
+      desregulado (~90s-4min, serviço w32time parado) e atrapalhou
+      gerar os códigos de teste corretamente — não afeta usuários
+      reais (celular sincroniza hora sozinho via rede).
+
+      TOTP_SESSION_SECRET já foi configurado no Railway pelo Renner
+      (2026-07-09) — confirmado ativo, não está mais usando o valor
+      padrão de fallback.
 
       PENDENTE (fora do escopo desta sessão):
         → Painel "MEU ESPAÇO" ainda não chama /api/nome nem
@@ -234,6 +239,28 @@ O QUE FOI FEITO NA SESSÃO 2026-07-09:
           usuário ainda tenha o carteira mas perdeu o app — por
           design (ver filosofia acima), mas vale confirmar que é
           isso mesmo quando o painel administrativo for discutido
+
+  11. /stats.html — página de contagens (substitui o "painel de
+      administrador" completo por enquanto — Renner disse que não
+      precisa de senha porque não tem dado pessoal de usuário exposto,
+      só números agregados)
+
+      NOVO ENDPOINT: GET /api/stats — SEM autenticação (proposital,
+      só devolve contagens, nenhum carteira/dado individual):
+        total_registros, por_tipo ([{tipo,total}]), por_plano
+        ([{plano,total}]), pagamentos_por_status ([{status,total}]),
+        beta_ocupadas, beta_total, totp_confirmados
+
+      stats.html: página HTML solta (não linkada em lugar nenhum do
+      site — acesso só por quem sabe a URL), busca /api/stats e mostra
+      os números formatados. Botão ATUALIZAR pra recarregar na hora.
+
+      Acesso: https://cosm-production.up.railway.app/stats.html
+
+      PENDENTE: automação (Renner mencionou querer automatizar no
+      futuro mas não especificou o quê — perguntei e ele não respondeu
+      ainda. Não construí nenhuma notificação/alerta automático nesta
+      sessão, só visualização sob demanda).
 
 PENDÊNCIAS ANTERIORES (sessão 2026-07-08):
 
@@ -365,6 +392,9 @@ NOTAS_TECNICAS.txt  ← este arquivo
 CONTRATO-RASCUNHO.txt ← rascunho de termos de uso/contrato do criador
                          (NÃO é documento legal — precisa de advogado
                          antes de valer. Ver arquivo para detalhes.)
+stats.html          ← página de números (contagens) para o Renner conferir
+                         quantas coordenadas foram registradas — sem senha,
+                         sem dado pessoal (ver seção abaixo)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   INFRAESTRUTURA
