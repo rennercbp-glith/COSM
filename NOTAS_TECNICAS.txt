@@ -1,10 +1,10 @@
 ===============================================================
   COSM — NOTAS TÉCNICAS (para Claude ler no futuro)
-  Última atualização: 2026-07-09 (v14 — fix scroll da landing, registro via 10 vagas beta, TESTAR removido)
+  Última atualização: 2026-07-09 (v15 — plano de cobrança/CNPJ, rascunho de contrato, email trocado)
   Pasta: C:\Users\renne\Projetos\COSM\
   Deploy: cosm-production.up.railway.app
   GitHub: https://github.com/rennercbp-glith/COSM.git
-  Email de contato: rennercbp@gmail.com
+  Email de contato: cosmbetaxyz@gmail.com (trocado de rennercbp@gmail.com em 2026-07-09)
 ===============================================================
 
 INSTRUÇÃO PARA CLAUDE AO ABRIR ESTA SESSÃO:
@@ -70,6 +70,48 @@ O QUE FOI FEITO NA SESSÃO 2026-07-09:
      então não há perda funcional — mas o widget ficou como código morto.
      NÃO REMOVIDO AINDA — perguntar ao Renner se apaga ou mantém pra
      reusar depois (ex: lembrete ao entrar em coordenada de terceiro).
+
+  6. EMAIL DE CONTATO TROCADO — rennercbp@gmail.com → cosmbetaxyz@gmail.com
+     Atualizado no rodapé do modal "O QUE É O COSM" (index.html) e em
+     todas as referências deste arquivo de notas.
+
+  7. MODELO DE COBRANÇA E CONTRATO — decisões e rascunho (ainda sem código)
+     Discussão completa e rascunho de termos em CONTRATO-RASCUNHO.txt.
+     Resumo das decisões do Renner nesta sessão:
+       → Toda monetização do criador dentro da coordenada PRECISA passar
+         pela carteira do COSM ("tudo pelo COSM") — sem isso, o COSM não
+         tem como enxergar nem cobrar % de receita de sistema externo.
+         AINDA NÃO EXISTE endpoint pra isso — é pré-requisito técnico
+         antes da cláusula de % de receita valer na prática.
+       → % retida pelo COSM é FIXA por plano (mensal 2-5%, anual 5-10%,
+         permanente paga % mesmo sem mensalidade) — decidido NÃO escalonar
+         a % conforme o faturamento do criador cresce, pra não desincentivar
+         crescimento (Renner já tinha essa preocupação, confirmei que é
+         o padrão certo — ver Patreon/Substack/App Store).
+       → Apuração de receita é mensal em todos os planos.
+       → Depois que as 10 vagas beta esgotarem: próximas coordenadas de
+         PESSOA voltam a ser alocadas por Fibonacci (aleatório) e PAGAS —
+         mensal, anual ou permanente. Fluxo de pagamento pago AINDA NÃO
+         está conectado na UI (backend Solana Pay existe mas nunca foi
+         testado com SOL real — ver seção SISTEMA DE PAGAMENTO abaixo).
+       → Renner vai operar só em Solana/cripto sem CNPJ até ter escala,
+         depois formaliza CNPJ com contador especializado em cripto e
+         revisita os termos com advogado. Ressalva registrada no rascunho:
+         cripto acima de R$35mil/mês já tem obrigação de declaração à
+         Receita Federal independente de CNPJ — não é "sem obrigação",
+         é "sem CNPJ ainda".
+       → Carteiras disponíveis além da Solana em uso: Trust Wallet e
+         MetaMask (não integradas — seriam para redes EVM no futuro,
+         arquitetura diferente da atual).
+
+  8. PAINEL DE ADMINISTRADOR — pedido, NÃO especificado nem construído
+     Renner quer um painel (dev/admin) para ver pagamentos recebidos e
+     quais coordenadas estão pagando, com objetivo de organizar e, no
+     futuro, automatizar. Ainda não discutimos: quem acessa (autenticação
+     — hoje não existe nenhum sistema de login/admin no COSM), quais
+     dados exatos mostrar, nem onde vive (rota separada? painel dentro
+     do próprio index.html?). Precisa de uma conversa de escopo antes
+     de começar a construir.
 
 PENDÊNCIAS ANTERIORES (sessão 2026-07-08):
 
@@ -198,6 +240,9 @@ package.json        ← dependências: express, pg, @solana/web3.js, qrcode
 boas-vindas.html    ← manual público para usuários
 manual-tecnico.html ← documentação técnica para devs e empresas
 NOTAS_TECNICAS.txt  ← este arquivo
+CONTRATO-RASCUNHO.txt ← rascunho de termos de uso/contrato do criador
+                         (NÃO é documento legal — precisa de advogado
+                         antes de valer. Ver arquivo para detalhes.)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   INFRAESTRUTURA
@@ -318,18 +363,20 @@ Plano 'beta' = gratuito, sem pagamento, via /api/beta/claim.
 
 Botão COSM:// (esquerda) → modal de informações do produto
   Seções: O que é, Para quem, Escala, Visão futura
-  Rodapé: rennercbp@gmail.com
+  Rodapé: cosmbetaxyz@gmail.com
 
-Botão TESTAR (centro-direita) → Zona do Desenvolvedor
-  Seção 1: Documentação técnica dos 3 tipos de conteúdo
-  Seção 2: 6 exemplos concretos (campo de futebol, cidade 3D, etc.)
-  Seção 3: Input de URL para testar + botão VOAR PARA ZONA DE TESTE
-  Seção 4: Grid beta 10 vagas — claim gratuito, permanente
+Botão TESTAR — REMOVIDO em 2026-07-09 (ver seção do dia na ESTADO ATUAL acima).
+  Não existe mais no menu. Zona de demonstração COSM://0:777777:0 também foi apagada.
+
+Botão INSERIR (menu) → exige coordenada registrada no dispositivo desde 2026-07-09.
+  Sem coord salva, abre REGISTRAR em vez do modal de inserir conteúdo.
 
 Botão REGISTRAR (direita) → Modal de cadastro (fase beta gratuita)
-  Step 0: Seleção PESSOA/EMPRESA + nome opcional → botão REGISTRAR
-          (pagamento removido da UI — plano='beta', sem QR code)
-          Sistema de pagamento ainda existe no server.js para reativar depois.
+  Step 0: Seleção PESSOA/EMPRESA
+          EMPRESA → aviso "em desenvolvimento", bloqueado
+          PESSOA → grid das 10 coordenadas fixas (BETA_COORDS) → escolhe vaga livre →
+                   nome público opcional (@handle) → REGISTRAR chama POST /api/beta/claim
+          (Fibonacci aberto NÃO é mais usado para registro de pessoa nesta fase)
   Step 3: ANOTE AGORA (fundo vermelho) + coord grande + COPIAR + checkbox → IR PARA LÁ
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -361,7 +408,7 @@ Space Mono (Google Fonts)    → coordenadas, código, botões, HUD
 ✓ Royalty 10% em revendas (tabela marketplace criada)
 ✓ Backend Express + PostgreSQL no Railway
 ✓ Fontes: Space Grotesk + Space Mono
-✓ Email: rennercbp@gmail.com
+✓ Email: cosmbetaxyz@gmail.com
 ✓ Cruise control: scroll define velocidade estável (sem atrito)
 ✓ Clique no vazio: para a nave instantaneamente
 ✓ Voo em linha reta: direção travada no scroll (foguete)

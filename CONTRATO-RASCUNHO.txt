@@ -1,0 +1,181 @@
+===============================================================
+  COSM — RASCUNHO DE TERMOS DE USO / CONTRATO DO CRIADOR
+  Versão: rascunho v1 — 2026-07-09
+  Status: RASCUNHO. NÃO É DOCUMENTO LEGAL VÁLIDO.
+  Precisa ser revisado por um advogado antes de valer como contrato,
+  mesmo durante a fase beta — envolve dinheiro e conteúdo de terceiros.
+===============================================================
+
+Este arquivo existe para o Renner levar a um advogado quando for
+formalizar. É a intenção do produto em linguagem simples, não é
+texto jurídico pronto para publicar.
+
+───────────────────────────────────────────────────────────────
+1. O QUE É O COSM (para efeito de contrato)
+───────────────────────────────────────────────────────────────
+
+O COSM é uma infraestrutura de endereçamento 3D — não uma plataforma
+de hospedagem. Uma coordenada COSM://X:Y:Z é um endereço permanente
+no universo, comparável a uma URL na web.
+
+O COSM NÃO hospeda o conteúdo do criador. O criador aponta a
+coordenada para algo que ele mesmo hospeda em outro lugar:
+  → uma URL (site, app) — via url_conteudo
+  → um arquivo .glb/.gltf — via url_3d, hospedado em CDN próprio
+  → código Three.js ao vivo, executado na engine do COSM
+
+───────────────────────────────────────────────────────────────
+2. LIBERDADE DE CRIAÇÃO DO USUÁRIO/EMPRESA
+───────────────────────────────────────────────────────────────
+
+Quem registra uma coordenada tem controle total sobre o que
+acontece dentro da área dela, incluindo:
+  → Navegação: o criador pode sobrescrever os controles padrão do
+    COSM (voo livre) por movimento com gravidade, andar em 1ª ou
+    3ª pessoa, dirigir, ou qualquer outra mecânica — via
+    window._cosmControls = false + código próprio de câmera/física
+    (já demonstrado no campo de futebol e na pista de corrida)
+  → Visão de câmera: primeira pessoa, terceira pessoa, ou qualquer
+    ângulo customizado — sem restrição imposta pelo COSM
+  → Física, objetos, regras do espaço: o que o criador programar
+    via window._cosmLoop(dt), chamado a cada frame na área dele
+  → Esses controles são ativados só dentro da área da coordenada
+    do criador e desativados automaticamente ao sair dela
+
+O COSM não aprova conteúdo previamente. O criador é responsável
+pelo que constrói (ressalva: conteúdo ilegal pode ser removido —
+ver seção 7).
+
+───────────────────────────────────────────────────────────────
+3. OBRIGAÇÃO DE HOSPEDAGEM PRÓPRIA
+───────────────────────────────────────────────────────────────
+
+O criador é o único responsável por hospedar e manter no ar o que
+ele projeta (arquivo .glb, site, servidor de jogo, etc.) em uma
+plataforma de terceiros de sua escolha (CDN, Vercel, servidor
+próprio, etc.). A coordenada COSM é o endereço — não o servidor.
+
+O COSM não garante uptime, performance ou disponibilidade de
+conteúdo hospedado externamente pelo criador. Se o link cair, a
+coordenada existe mas fica vazia até o criador corrigir.
+
+───────────────────────────────────────────────────────────────
+4. MODELO DE COBRANÇA — RASCUNHO (decisão 2026-07-09)
+───────────────────────────────────────────────────────────────
+
+FASE BETA (atual):
+  → As primeiras 10 coordenadas de PESSOA são gratuitas e
+    permanentes (BETA_COORDS fixas no server.js)
+  → Registro de EMPRESA bloqueado nesta fase ("em desenvolvimento")
+  → Sem cobrança de registro nem de receita nesta fase
+
+FASE PAGA (depois que as 10 vagas beta esgotarem):
+  → Novas coordenadas de PESSOA alocadas por Fibonacci (aleatório
+    dentro do algoritmo, não escolhido pelo usuário) e PAGAS
+  → Três planos: MENSAL, ANUAL, PERMANENTE (pagamento único)
+  → TUDO EM SOLANA — nenhum pagamento em dinheiro comum (fiat)
+    é processado pelo COSM nesta fase (ver seção 6 sobre o motivo)
+
+MONETIZAÇÃO DO CRIADOR DENTRO DA SUA COORDENADA:
+  → Se o criador cobra de visitantes dentro do seu espaço (ingresso,
+    item, acesso pago a conteúdo), essa cobrança PRECISA passar
+    pela infraestrutura de pagamento do próprio COSM (carteira
+    Solana do COSM) — decisão do Renner: "tudo pelo COSM"
+  → Motivo técnico: o COSM não tem visibilidade sobre receita que
+    passa por sistema de pagamento externo do criador (Stripe
+    próprio, etc.) — só consegue cobrar sua porcentagem de forma
+    confiável se o dinheiro passar pela carteira do COSM primeiro
+  → AINDA NÃO IMPLEMENTADO: não existe hoje nenhum endpoint de
+    "cobrar visitante e repassar ao criador descontando %". É
+    pré-requisito técnico antes dessa cláusula valer na prática.
+
+PERCENTUAL RETIDO PELO COSM (proposto, fixo por plano — NÃO
+escalona com o faturamento do criador, para não desincentivar
+crescimento):
+  → Plano MENSAL:      2% a 5% da receita do criador
+  → Plano ANUAL:        5% a 10% da receita do criador
+  → Plano PERMANENTE:   pode não pagar mensalidade pela coordenada,
+                         mas paga percentual sobre a receita também
+  → Apuração da receita é MENSAL em todos os planos, independente
+    da periodicidade do plano de registro
+
+  Números exatos (2%, 5%, 10%) ainda não fechados — faixa proposta
+  pelo Renner em 2026-07-09, sujeita a ajuste.
+
+───────────────────────────────────────────────────────────────
+5. FASE EXPERIMENTAL — SEM GARANTIAS
+───────────────────────────────────────────────────────────────
+
+O COSM está em fase beta. Preços, percentuais, regras de alocação
+de coordenada e funcionalidades podem mudar sem aviso prévio
+extenso, mas mudanças que afetem coordenadas já registradas devem
+ser comunicadas ao criador com antecedência razoável.
+
+───────────────────────────────────────────────────────────────
+6. ESTRUTURA JURÍDICA — ROADMAP (não é cláusula, é contexto)
+───────────────────────────────────────────────────────────────
+
+Decisão do Renner em 2026-07-09: operar sem CNPJ enquanto a escala
+for pequena, recebendo só em cripto (Solana). Ao atingir escala
+relevante, formalizar CNPJ com apoio de contador especializado em
+cripto, e então os termos deste contrato serão revisados por
+advogado e possivelmente passarão a aceitar também pagamento fiat
+(dinheiro comum) além de cripto.
+
+IMPORTANTE — ressalva técnica, não jurídica: operações em cripto
+acima de R$35.000/mês já têm obrigação de declaração à Receita
+Federal independente de CNPJ. "Sem CNPJ" não significa "sem
+obrigação fiscal". Confirmar com contador antes de escalar.
+
+Carteiras disponíveis do Renner, caso precise de mais de uma rede
+no futuro (hoje o COSM só processa Solana):
+  → Solana — carteira principal em uso (WALLET_RENNER no Railway)
+  → Trust Wallet — disponível, não integrada
+  → MetaMask — disponível, não integrada (seria para redes EVM,
+    ex: Ethereum/Polygon — arquitetura diferente da atual)
+
+───────────────────────────────────────────────────────────────
+7. CONTEÚDO ILEGAL / MODERAÇÃO
+───────────────────────────────────────────────────────────────
+
+[EM ABERTO — não discutido ainda em detalhe. Precisa definir:
+o que conta como conteúdo proibido, processo de denúncia, quem
+decide remoção, o que acontece com a coordenada de quem violar.
+Ponto crítico para revisão de advogado antes de lançar publicamente.]
+
+───────────────────────────────────────────────────────────────
+8. PROPRIEDADE INTELECTUAL
+───────────────────────────────────────────────────────────────
+
+O criador mantém todos os direitos sobre o que constrói. O COSM
+não reivindica propriedade sobre conteúdo de terceiros — apenas
+endereça (aponta a coordenada para o que o criador hospedou).
+
+───────────────────────────────────────────────────────────────
+9. PRIVACIDADE / IDENTIDADE
+───────────────────────────────────────────────────────────────
+
+Hoje a identidade de quem registra é um UUID gerado no dispositivo
+(localStorage), sem vínculo com nome, e-mail ou documento real.
+Isso é parte da proposta de valor do COSM (ver NOTAS_TECNICAS.txt,
+seção "PILARES"). Contrato deve deixar claro que o COSM não coleta
+nem armazena dados de identificação pessoal nesta fase.
+
+───────────────────────────────────────────────────────────────
+10. EXPIRAÇÃO DE COORDENADA
+───────────────────────────────────────────────────────────────
+
+Coordenadas de planos não permanentes são liberadas após 30 dias
+de inatividade (comportamento já implementado no server.js).
+Coordenadas beta e permanentes não expiram por inatividade.
+
+───────────────────────────────────────────────────────────────
+CONTATO
+───────────────────────────────────────────────────────────────
+
+cosmbetaxyz@gmail.com
+
+===============================================================
+FIM DO RASCUNHO — revisar com advogado antes de publicar como
+termos de uso reais.
+===============================================================
