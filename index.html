@@ -2354,7 +2354,8 @@ function modalAberto() {
          document.getElementById('modal-reg').classList.contains('ativo') ||
          document.getElementById('modal-teste').classList.contains('ativo') ||
          document.getElementById('modal-inserir').classList.contains('ativo') ||
-         document.getElementById('modal-controles').classList.contains('ativo');
+         document.getElementById('modal-controles').classList.contains('ativo') ||
+         document.getElementById('landing-overlay').style.display !== 'none';
 }
 
 // ─── Zona de Teste + Beta Developers ─────────────────────
@@ -3403,6 +3404,7 @@ carMesh = criarCarro();
 
   window.iniciarCOSM = function() {
     io.disconnect(); ioEnd.disconnect();
+    velCruz = 0;
     overlay.classList.add('saindo');
     setTimeout(() => { overlay.style.display = 'none'; }, 700);
   };
