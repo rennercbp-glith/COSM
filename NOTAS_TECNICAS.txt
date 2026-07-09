@@ -113,6 +113,41 @@ O QUE FOI FEITO NA SESSÃO 2026-07-09:
      do próprio index.html?). Precisa de uma conversa de escopo antes
      de começar a construir.
 
+  9. VULNERABILIDADE CORRIGIDA — /api/coordenadas vazava o carteira
+     de qualquer coordenada pública. Achado durante conversa com o
+     Renner sobre segurança por coordenada/distância no espaço 3D.
+     GRAVIDADE: crítica — carteira é o único "segredo" que os
+     endpoints de edição (PATCH /api/url, /api/url3d, /api/nome,
+     /api/privacidade) conferem, sem assinatura nem sessão. Qualquer
+     visitante conseguia listar coordenadas públicas via essa rota,
+     pegar o carteira de qualquer uma, e sequestrar/deface o conteúdo
+     dela. Fix: removido carteira do SELECT de /api/coordenadas —
+     cliente nunca usava esse campo (carregarCoordenadas só lê
+     coord_x/y/z e url_3d). Conferidos os outros SELECT * do
+     server.js — todos exigem que o próprio carteira seja fornecido
+     como entrada (não vazam o de terceiros).
+
+     PROBLEMA DE FUNDO AINDA ABERTO (não é sobre esse vazamento
+     específico, é maior): o carteira nunca teve verificação
+     criptográfica de verdade — é só uma string (UUID gerado no
+     dispositivo) que "quem souber, usa". Isso significa:
+       → Sem assinatura de carteira Solana nem sessão, qualquer
+         vazamento futuro do carteira (novo endpoint mal feito, log,
+         etc.) repete esse mesmo problema.
+       → Fluxo de "reconhecimento" (mostrarReconhecimento/
+         confirmarReconhecimento) deixa qualquer um clicar "SIM, é
+         minha" em qualquer coordenada registrada sem nenhuma
+         verificação — não dá poder de edição de verdade (o servidor
+         ainda exige o carteira certo), mas é uma UX enganosa.
+       → Se o usuário perder o dispositivo/limpar localStorage, não
+         tem como recuperar o carteira original — ele sabe a
+         coordenada (a "senha" documentada) mas não consegue mais
+         editar nada.
+     SUGESTÃO PARA O FUTURO (não implementado, não pedido ainda):
+     autenticação real via assinatura de carteira Solana resolveria
+     os três pontos de uma vez — fecha vazamento por definição e
+     dá recuperação de conta em novo aparelho.
+
 PENDÊNCIAS ANTERIORES (sessão 2026-07-08):
 
   1. BUG CRÍTICO CORRIGIDO — campo e pista invisíveis
