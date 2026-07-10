@@ -1661,8 +1661,9 @@ function atualizarHUD() {
 // ═══════════════════════════════════════════════════════
 //  OBJETOS 3D NATIVOS — declarações antecipadas
 // ═══════════════════════════════════════════════════════
-const objetos3d    = [];  // { mesh, cx, cy, cz, mixer }
-const gltfLoader   = new GLTFLoader();
+const objetos3d        = [];  // objetos já carregados na cena: { mesh, cx, cy, cz, mixer }
+const coordsConhecidas = [];  // coordenadas com url_3d ainda não baixadas: { cx, cy, cz, url, carregado }
+const gltfLoader       = new GLTFLoader();
 
 function carregarObjeto3D(cx, cy, cz, url, escala = 500) {
   gltfLoader.load(url, gltf => {
@@ -1678,7 +1679,16 @@ function carregarObjeto3D(cx, cy, cz, url, escala = 500) {
   }, undefined, err => console.warn('COSM 3D load error:', url, err));
 }
 
-const OBJ_DIST_MAX = 500; // distância máxima para renderizar objetos 3D nativos
+// Registra uma coordenada com objeto 3D pra carregar sob demanda —
+// o arquivo .glb só é baixado quando o visitante entra em OBJ_LOAD_DIST
+// (ver atualizarObjetos3D). Evita que todo visitante baixe o universo
+// inteiro de uma vez só por abrir a página.
+function registrarObjeto3DDistante(cx, cy, cz, url) {
+  coordsConhecidas.push({ cx, cy, cz, url, carregado: false });
+}
+
+const OBJ_LOAD_DIST = 3000; // raio em que o .glb começa a ser baixado
+const OBJ_DIST_MAX  = 500;  // raio em que o objeto já carregado fica visível
 
 function atualizarObjetos3D(dt) {
   objetos3d.forEach(o => {
@@ -1690,6 +1700,19 @@ function atualizarObjetos3D(dt) {
     o.mesh.visible = camera.position.distanceTo(o.mesh.position) <= OBJ_DIST_MAX;
     if (o.mesh.visible && o.mixer) o.mixer.update(dt);
   });
+
+  // Carregamento por distância — só baixa o .glb das coordenadas
+  // conhecidas quando o visitante entra no raio de carregamento.
+  for (const c of coordsConhecidas) {
+    if (c.carregado) continue;
+    const dx = c.cx - coordBase.x - camera.position.x;
+    const dy = c.cy - coordBase.y - camera.position.y;
+    const dz = c.cz - coordBase.z - camera.position.z;
+    if (dx*dx + dy*dy + dz*dz <= OBJ_LOAD_DIST * OBJ_LOAD_DIST) {
+      c.carregado = true;
+      carregarObjeto3D(c.cx, c.cy, c.cz, c.url);
+    }
+  }
 }
 
 function criarCampoDeFutebol(cx, cy, cz) {
@@ -3358,9 +3381,11 @@ async function carregarCoordenadas() {
     const resp = await fetch('/api/coordenadas');
     const lista = await resp.json();
     lista.forEach(reg => {
-      // Objeto 3D nativo — se tiver url_3d, carrega no universo
+      // Objeto 3D nativo — registra a coordenada, mas NÃO baixa o .glb
+      // ainda. O download só acontece quando o visitante chega perto
+      // (ver registrarObjeto3DDistante + verificação em atualizarObjetos3D).
       if (reg.url_3d) {
-        carregarObjeto3D(reg.coord_x, reg.coord_y, reg.coord_z, reg.url_3d);
+        registrarObjeto3DDistante(Number(reg.coord_x), Number(reg.coord_y), Number(reg.coord_z), reg.url_3d);
       }
     });
   } catch (_) {}
