@@ -1,6 +1,6 @@
 ===============================================================
   COSM — NOTAS TÉCNICAS (para Claude ler no futuro)
-  Última atualização: 2026-07-09 (v18 — fix bug vagas beta + regra de expiração TOTP 24h)
+  Última atualização: 2026-07-09 (v19 — auditoria de segurança CTO: 2 vazamentos críticos + gap funcional corrigidos)
   Pasta: C:\Users\renne\Projetos\COSM\
   Deploy: cosm-production.up.railway.app
   GitHub: https://github.com/rennercbp-glith/COSM.git
@@ -314,6 +314,87 @@ O QUE FOI FEITO NA SESSÃO 2026-07-09:
           existe endpoint de exclusão no sistema. Se quiser apagar
           no futuro: via Console do Postgres no Railway, ou construir
           um endpoint de exclusão protegido (ainda não pedido).
+
+  15. AUDITORIA DE SEGURANÇA — pedida pelo Renner antes de compartilhar
+      o projeto com comunidades de programadores ("ser um CTO checar
+      vulnerabilidades"). Reli server.js inteiro do zero, achei e
+      corrigi 3 problemas reais:
+
+      15a. CRÍTICO — código-fonte inteiro exposto publicamente
+        app.use(express.static(path.join(__dirname))) servia a pasta
+        RAIZ do projeto inteira, não só o site. Confirmado ao vivo:
+        server.js, NOTAS_TECNICAS.txt, CONTRATO-RASCUNHO.txt e
+        package.json davam download completo (status 200) pra
+        qualquer visitante, sem nenhuma barreira.
+        Fix: criada pasta public/ com só o que é realmente público
+        (index.html, boas-vindas.html, manual-tecnico.html,
+        stats.html, Conthrax-SemiBold.otf). server.js agora serve
+        express.static(path.join(__dirname, 'public')) — tudo mais
+        fica fora do alcance. Confirmado ao vivo: os 4 arquivos
+        internos agora dão 404, as páginas públicas continuam 200.
+        Também: novo .gitignore (node_modules nunca vai pro repo,
+        risco real depois que instalei Node localmente nesta sessão)
+        e package-lock.json commitado.
+
+      15b. CRÍTICO — totp_secret vazando em texto plano
+        Todo SELECT * ou RETURNING * na tabela registros devolvia
+        também a coluna totp_secret pra quem recebesse a linha —
+        em GET /api/coordenada/:carteira, POST /api/registrar (as
+        duas branches), POST /api/beta/claim, e as 3 variações
+        dentro do fluxo de pagamento Solana. Combinado com QUALQUER
+        vazamento futuro do carteira de alguém (mesma categoria do
+        vazamento em /api/coordenadas corrigido antes nesta sessão),
+        isso permitiria gerar códigos TOTP válidos pra sempre —
+        sequestro de conta permanente, apesar de toda a arquitetura
+        de sessão que construímos.
+        Fix: const REGISTRO_COLS com lista explícita de colunas
+        seguras (todas menos totp_secret), usada em toda query que
+        devolve a linha ao cliente. Os endpoints de TOTP em si
+        continuam usando SELECT totp_secret, totp_confirmado
+        explicitamente (já eram mínimos, não precisaram mudar).
+        Confirmado ao vivo: totp_secret sumiu de todas as respostas,
+        totp_confirmado (seguro, é só boolean) continua aparecendo.
+
+      15c. GAP FUNCIONAL — visitante não via conteúdo tipo "página web"
+        Achado testando exatamente o cenário que o Renner descreveu:
+        "digitar a coordenada de alguém e ver o que ele registrou,
+        como se estivesse no PC da pessoa mas no espaço."
+        carregarCoordenadas() carrega objetos 3D (.glb) de TODAS as
+        coordenadas públicas na cena ao carregar a página — mas não
+        existia nenhum código que mostrasse url_conteudo (site) pra
+        um visitante. abrirIframeNoEspaco() só era chamada pelo
+        próprio dono, no momento de inserir conteúdo. Resultado:
+        alguém visitando a coordenada de outra pessoa com conteúdo
+        tipo "página web" via espaço vazio.
+        Fix: nova abrirConteudoVisitante(), chamada dentro da
+        sequência de chegada do teletransporte (irParaCoordenada())
+        quando /api/minha-coord devolve url_conteudo — mostra o
+        conteúdo pra QUALQUER visitante. Se não tiver url_conteudo,
+        mantém o comportamento antigo (prompt de reconhecimento de
+        dispositivo). Verificado com dado real de produção (a URL
+        "https://exemplo.com" da minha coordenada de teste) — não
+        deu pra clicar visualmente (sem Chrome real disponível nesta
+        sessão), mas testei a lógica de prepararUrl() isolada com
+        Node e bate exatamente com o que o servidor devolve.
+
+      NÃO CORRIGIDO NESTA SESSÃO — recomendação pro futuro:
+        → SEM rate limiting em lugar nenhum da API. /api/totp/login
+          e /api/totp/confirmar em especial: código de 6 dígitos,
+          sem bloqueio depois de X tentativas erradas, sem atraso
+          progressivo. Não é exploração trivial (precisa de volume
+          real de tentativas), mas é o tipo de coisa que qualquer
+          programador que ler o código vai notar primeiro. Vale
+          adicionar express-rate-limit nos endpoints de autenticação
+          antes de compartilhar publicamente, se possível.
+        → Pagamento real (SOL) continua nunca testado — Renner
+          confirmou isso nesta sessão. Fluxo mensal/anual/permanente
+          pós-vagas-beta é código nunca exercitado de ponta a ponta.
+
+      CONTEXTO — por que isso importa agora: Renner está prestes a
+      compartilhar o projeto com comunidades de programadores. Uma
+      auditoria de segurança nesse momento é exatamente o tipo de
+      coisa que evita que o primeiro "programador" que olhar o
+      código encontre isso antes da gente.
 
 PENDÊNCIAS ANTERIORES (sessão 2026-07-08):
 
