@@ -73,6 +73,21 @@ function validarNome(nome) {
   return { ok: true, valor: h };
 }
 
+// Valida url_conteudo/url_3d antes de gravar. Só https:// é aceito —
+// bloqueia javascript:, data:, vbscript: e qualquer outro esquema que
+// o navegador possa executar em vez de só carregar como página/arquivo.
+// Isso vira o src de um <iframe> ou a URL de um GLTFLoader no cliente —
+// sem essa validação, qualquer coordenada aceitaria um "endereço" que
+// na real é um comando, atacando quem visitar, não só o próprio dono.
+function validarUrl(url) {
+  if (url == null || url === '') return { ok: true, valor: null };
+  const u = String(url).trim();
+  if (!/^https:\/\//i.test(u)) {
+    return { ok: false, erro: 'url invalida — precisa começar com https://' };
+  }
+  return { ok: true, valor: u };
+}
+
 // Colunas de "registros" seguras pra devolver ao cliente. totp_secret NUNCA
 // entra aqui — usar SELECT * ou RETURNING * na tabela registros vaza a chave
 // TOTP em texto plano pra qualquer requisição que devolva a linha inteira.
@@ -403,6 +418,8 @@ app.patch('/api/url', async (req, res) => {
   try {
     const { carteira, url } = req.body;
     if (!carteira) return res.status(400).json({ erro: 'carteira obrigatoria' });
+    const urlVal = validarUrl(url);
+    if (!urlVal.ok) return res.status(400).json({ erro: urlVal.erro });
 
     const { rows } = await pool.query('SELECT totp_confirmado FROM registros WHERE carteira = $1', [carteira]);
     if (!rows.length) return res.status(404).json({ erro: 'coordenada nao encontrada' });
@@ -411,7 +428,7 @@ app.patch('/api/url', async (req, res) => {
 
     await pool.query(
       'UPDATE registros SET url_conteudo = $1 WHERE carteira = $2',
-      [url || null, carteira]
+      [urlVal.valor, carteira]
     );
     res.json({ ok: true });
   } catch (e) {
@@ -482,6 +499,10 @@ app.post('/api/beta/claim', async (req, res) => {
     if (!carteira || !slot) return res.status(400).json({ erro: 'carteira e slot obrigatorios' });
     const nomeVal = validarNome(nome);
     if (!nomeVal.ok) return res.status(400).json({ erro: nomeVal.erro });
+    const urlVal = validarUrl(url);
+    if (!urlVal.ok) return res.status(400).json({ erro: urlVal.erro });
+    const url3dVal = validarUrl(url_3d);
+    if (!url3dVal.ok) return res.status(400).json({ erro: url3dVal.erro });
     const idx = parseInt(slot) - 1;
     if (idx < 0 || idx >= BETA_COORDS.length) return res.status(400).json({ erro: 'slot invalido' });
     const coord = BETA_COORDS[idx];
@@ -497,7 +518,7 @@ app.post('/api/beta/claim', async (req, res) => {
     const { rows } = await pool.query(
       `INSERT INTO registros (carteira, coord_x, coord_y, coord_z, nome, tipo, plano, url_conteudo, url_3d)
        VALUES ($1,$2,$3,$4,$5,'pessoa','beta',$6,$7) RETURNING ${REGISTRO_COLS}`,
-      [carteira, coord.x, coord.y, coord.z, nomeVal.valor, url || null, url_3d || null]
+      [carteira, coord.x, coord.y, coord.z, nomeVal.valor, urlVal.valor, url3dVal.valor]
     );
     res.json({ ok: true, coordenada: rows[0] });
   } catch (e) { res.status(500).json({ erro: e.message }); }
@@ -509,6 +530,8 @@ app.patch('/api/url3d', async (req, res) => {
   try {
     const { carteira, url } = req.body;
     if (!carteira) return res.status(400).json({ erro: 'carteira obrigatoria' });
+    const urlVal = validarUrl(url);
+    if (!urlVal.ok) return res.status(400).json({ erro: urlVal.erro });
 
     const { rows } = await pool.query('SELECT totp_confirmado FROM registros WHERE carteira = $1', [carteira]);
     if (!rows.length) return res.status(404).json({ erro: 'coordenada nao encontrada' });
@@ -517,7 +540,7 @@ app.patch('/api/url3d', async (req, res) => {
 
     await pool.query(
       'UPDATE registros SET url_3d = $1 WHERE carteira = $2',
-      [url || null, carteira]
+      [urlVal.valor, carteira]
     );
     res.json({ ok: true });
   } catch (e) {
