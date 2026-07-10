@@ -680,6 +680,29 @@ async function liberarExpirados() {
   } catch (e) {
     console.error('Erro ao liberar expirados:', e.message);
   }
+
+  // Libera vagas beta (as 10 coordenadas fixas de BETA_COORDS) reivindicadas
+  // mas nunca confirmadas com TOTP dentro do prazo — evita que alguém
+  // squate uma vaga escassa sem nunca ter acesso de verdade a ela.
+  // Restrito às 10 posições exatas — plano='beta' sozinho NÃO basta como
+  // filtro, porque também é usado por registros antigos (ex: coordenadas
+  // do Renner) que não têm nada a ver com as vagas fixas.
+  try {
+    let liberadas = 0;
+    for (const c of BETA_COORDS) {
+      const { rowCount } = await pool.query(
+        `DELETE FROM registros
+         WHERE coord_x = $1 AND coord_y = $2 AND coord_z = $3
+           AND totp_confirmado = false
+           AND criado_em < NOW() - INTERVAL '24 hours'`,
+        [c.x, c.y, c.z]
+      );
+      liberadas += rowCount;
+    }
+    if (liberadas > 0) console.log(`${liberadas} vaga(s) beta liberada(s) por TOTP nao confirmado em 24h`);
+  } catch (e) {
+    console.error('Erro ao liberar vagas beta nao confirmadas:', e.message);
+  }
 }
 
 // ─── Start ───────────────────────────────────────────────────
