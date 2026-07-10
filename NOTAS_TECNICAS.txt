@@ -1,6 +1,6 @@
 ===============================================================
   COSM — NOTAS TÉCNICAS (para Claude ler no futuro)
-  Última atualização: 2026-07-09 (v19 — auditoria de segurança CTO: 2 vazamentos críticos + gap funcional corrigidos)
+  Última atualização: 2026-07-10 (v20 — hospedagem na landing, carregamento por distância, validação de URL)
   Pasta: C:\Users\renne\Projetos\COSM\
   Deploy: cosm-production.up.railway.app
   GitHub: https://github.com/rennercbp-glith/COSM.git
@@ -396,6 +396,100 @@ O QUE FOI FEITO NA SESSÃO 2026-07-09:
       coisa que evita que o primeiro "programador" que olhar o
       código encontre isso antes da gente.
 
+  16. HOSPEDAGEM — sugestões concretas adicionadas na landing e no
+      modal info (2026-07-10). Renner perguntou onde o programador vai
+      aprender que precisa hospedar os arquivos pesados (.glb) e sites
+      em algum lugar antes de apontar pra coordenada — essa info só
+      existia depois de já ter registrado e aberto o modal INSERIR.
+      Agora aparece já na landing (SEC 2, antes de decidir se registra)
+      e no modal "O que é o COSM":
+        → Objeto 3D → Sketchfab, GitHub (raw), CDN próprio
+        → Site/app → Vercel, Netlify, servidor próprio
+      Reforça explicitamente: "o COSM não hospeda seus arquivos — só
+      endereça."
+
+  17. BUG DE ESCALA CORRIGIDO — carregamento de objetos 3D virou sob
+      demanda por distância (2026-07-10). Renner perguntou (pensando
+      no futuro, com muita gente registrando jogos pesados) se isso
+      deixaria o COSM lento. Resposta: o servidor do COSM não seria
+      afetado (ele só guarda um texto curto, o arquivo pesado fica
+      hospedado fora) — MAS o cliente tinha um bug real: toda vez que
+      QUALQUER visitante abria a página, carregarCoordenadas() baixava
+      e renderizava o .glb de TODAS as coordenadas públicas de uma vez,
+      não importa a distância. Com poucos registros isso é invisível;
+      com milhares, o navegador de CADA visitante tentaria baixar o
+      universo inteiro assim que abrisse a página.
+      Fix: nova registrarObjeto3DDistante() — só guarda a coordenada,
+      NÃO baixa nada. atualizarObjetos3D() (já rodava todo frame) agora
+      também varre essa lista e só chama carregarObjeto3D() quando o
+      visitante entra no raio OBJ_LOAD_DIST (3000u) — carregamento por
+      distância, igual jogo de mundo aberto. OBJ_DIST_MAX (500u,
+      visibilidade) continua existindo numa camada separada, só pra
+      decidir o que fica visível dos objetos JÁ carregados.
+      Chamadas diretas de carregarObjeto3D() no fluxo de INSERIR (o
+      dono adicionando conteúdo na hora, na própria coordenada) não
+      mudaram — fazem sentido carregar na hora mesmo.
+
+  18. SECURITY FIX — url_conteudo/url_3d aceitavam qualquer esquema
+      (2026-07-10). Achado pensando com o Renner sobre até onde vai a
+      responsabilidade do COSM vs. do criador de conteúdo — ele
+      perguntou se o hacker atacaria "pela renderização" em vez do
+      núcleo do COSM. Resposta: sim, e havia um vetor real pra isso —
+      PATCH /api/url, PATCH /api/url3d e POST /api/beta/claim gravavam
+      a URL exatamente como recebida, sem checar o esquema. Esse valor
+      vira o src de um <iframe> (visitante) ou a URL passada ao
+      GLTFLoader — sem validação, uma coordenada podia registrar
+      "javascript:..." no lugar de um site normal, atacando quem
+      visitasse, não o próprio dono.
+      Fix: nova validarUrl() — exige https:// no começo, rejeita
+      javascript:, data:, http:// comum e qualquer outro esquema.
+      Aplicada nos 3 endpoints que aceitam url/url_3d do cliente.
+      Testado ao vivo: javascript:alert(1) rejeitado com 400 antes
+      até de chegar na checagem de sessão TOTP; https:// normal
+      continua funcionando e persistindo certinho.
+      PRINCÍPIO GERAL que ficou definido nessa conversa (vale lembrar
+      em decisões futuras): conteúdo hospedado externamente pelo
+      criador (o site/jogo em si) é responsabilidade DELE — o COSM não
+      tem visibilidade sobre isso. Mas COMO o COSM pega esse conteúdo
+      e encaixa na tela (validação de esquema, sandboxing de iframe,
+      etc.) é responsabilidade do COSM.
+
+  19. CÓDIGO AO VIVO — persistência NÃO implementada, risco identificado
+      (2026-07-10, decisão pendente). Renner confirmou que o "código
+      ao vivo" (Tipo 3, Three.js) precisa passar a persistir de verdade
+      — hoje ele só aparece na sessão de quem escreveu e some ao
+      recarregar, nunca fica visível pra outros visitantes (diferente
+      de objeto 3D e página web, que persistem normalmente).
+      NÃO IMPLEMENTADO DE PROPÓSITO: salvar o código e reexecutá-lo
+      automaticamente pro navegador de QUALQUER visitante que chegar
+      na coordenada seria uma vulnerabilidade grave — o código rodaria
+      com os mesmos privilégios da própria página do COSM no navegador
+      do visitante, podendo ler localStorage (cosm_id, cosm_sessao) e
+      agir em nome dele. Hoje isso não é risco porque o código só roda
+      na sessão de quem escreveu (não pode prejudicar só a si mesmo).
+      O jeito certo de resolver: isolar a execução (ex: rodar dentro
+      de um iframe sandboxed próprio, não na página principal) antes
+      de persistir — trabalho real, não ajuste rápido. Aguardando
+      decisão do Renner: desenhar essa versão seguro, ou deixar
+      "código ao vivo" como está (demonstração temporária) por
+      enquanto.
+
+  RESUMO DO QUE FICOU PENDENTE NO FIM DESTA SESSÃO (2026-07-10):
+    → Rate limiting nos endpoints TOTP (login/confirmar) — sem isso,
+      força bruta de código de 6 dígitos não tem bloqueio nenhum
+    → Pagamento real em SOL nunca testado de ponta a ponta
+    → "Código ao vivo" não persiste — decisão de design pendente
+      (ver item 19 acima)
+    → Painel "MEU ESPAÇO" (editar nome/privacidade/url pelo próprio
+      usuário depois de registrado) ainda não construído
+    → Busca por nome ou coordenada — nome só existe no banco, não
+      é pesquisável nem aparece visualmente no universo 3D
+    → mostrarAvisoCoord()/#aviso-coord — código órfão, decidir se
+      apaga ou reusa
+    → Minha coordenada de teste (@espacoteste, vaga beta #10,
+      teste-claude-1783629042) continua no banco de produção —
+      Renner disse "deixa como está" quando perguntei
+
 PENDÊNCIAS ANTERIORES (sessão 2026-07-08):
 
   1. BUG CRÍTICO CORRIGIDO — campo e pista invisíveis
@@ -440,6 +534,11 @@ PRÓXIMO A FAZER:
   → Busca por nome ou coordenada (endpoint + UI) — nome hoje só existe no banco
   → Decidir destino de mostrarAvisoCoord()/#aviso-coord — apagar ou reusar
   → Decidir o que acontece quando as 10 vagas beta esgotarem (hoje só trava)
+  → Rate limiting nos endpoints TOTP (/api/totp/login e /confirmar) — sem
+    limite de tentativas erradas, código de 6 dígitos é força-bruteável
+  → "Código ao vivo" (Tipo 3) não persiste — decidir se isola execução
+    (iframe sandboxed) antes de salvar e reexecutar pra outros visitantes
+    (ver item 19, risco de segurança se feito ingenuamente)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   HOOKS DO DESENVOLVEDOR — conceito 2026-07-08
