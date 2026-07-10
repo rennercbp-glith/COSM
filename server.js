@@ -73,6 +73,13 @@ function validarNome(nome) {
   return { ok: true, valor: h };
 }
 
+// Colunas de "registros" seguras pra devolver ao cliente. totp_secret NUNCA
+// entra aqui — usar SELECT * ou RETURNING * na tabela registros vaza a chave
+// TOTP em texto plano pra qualquer requisição que devolva a linha inteira.
+const REGISTRO_COLS = `id, carteira, coord_x, coord_y, coord_z, publico, nome,
+  tipo, plano, valido_ate, criado_em, url_conteudo, url_3d, ultimo_acesso,
+  totp_confirmado`;
+
 async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS registros (
@@ -164,7 +171,11 @@ function alocarCoordenadaEmpresa(totalEmpresas) {
 
 // ─── Middleware ──────────────────────────────────────────────
 app.use(express.json());
-app.use(express.static(path.join(__dirname)));
+// Serve SÓ a pasta public/ — nunca a raiz do projeto. Servir __dirname direto
+// expõe server.js, NOTAS_TECNICAS.txt, CONTRATO-RASCUNHO.txt, package.json e
+// tudo mais pra qualquer visitante (era exatamente isso que estava acontecendo
+// antes desta correção).
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── Rotas ───────────────────────────────────────────────────
 
@@ -204,7 +215,7 @@ app.post('/api/registrar', async (req, res) => {
 
     await client.query('BEGIN');
 
-    const existente = await client.query('SELECT * FROM registros WHERE carteira = $1', [carteira]);
+    const existente = await client.query(`SELECT ${REGISTRO_COLS} FROM registros WHERE carteira = $1`, [carteira]);
     if (existente.rows.length > 0) {
       await client.query('ROLLBACK');
       return res.json({ coordenada: existente.rows[0], nova: false });
@@ -217,7 +228,7 @@ app.post('/api/registrar', async (req, res) => {
 
     const { rows } = await client.query(
       `INSERT INTO registros (carteira, coord_x, coord_y, coord_z, nome, tipo, plano, valido_ate)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING ${REGISTRO_COLS}`,
       [carteira, coord.x, coord.y, coord.z, nomeVal.valor, tipo, plano, validoAte]
     );
     await client.query('COMMIT');
@@ -234,7 +245,7 @@ app.post('/api/registrar', async (req, res) => {
 app.get('/api/coordenada/:carteira', async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT * FROM registros WHERE carteira = $1',
+      `SELECT ${REGISTRO_COLS} FROM registros WHERE carteira = $1`,
       [req.params.carteira]
     );
     if (!rows.length) return res.status(404).json({ erro: 'nao registrado' });
@@ -485,7 +496,7 @@ app.post('/api/beta/claim', async (req, res) => {
     if (exist.length > 0) return res.status(409).json({ erro: 'carteira ja registrada' });
     const { rows } = await pool.query(
       `INSERT INTO registros (carteira, coord_x, coord_y, coord_z, nome, tipo, plano, url_conteudo, url_3d)
-       VALUES ($1,$2,$3,$4,$5,'pessoa','beta',$6,$7) RETURNING *`,
+       VALUES ($1,$2,$3,$4,$5,'pessoa','beta',$6,$7) RETURNING ${REGISTRO_COLS}`,
       [carteira, coord.x, coord.y, coord.z, nomeVal.valor, url || null, url_3d || null]
     );
     res.json({ ok: true, coordenada: rows[0] });
@@ -569,7 +580,7 @@ app.post('/api/pagamento/iniciar', async (req, res) => {
     if (!carteira) return res.status(400).json({ erro: 'carteira obrigatoria' });
     if (!WALLET_RENNER) return res.status(500).json({ erro: 'WALLET_RENNER nao configurado no servidor' });
 
-    const existente = await pool.query('SELECT * FROM registros WHERE carteira = $1', [carteira]);
+    const existente = await pool.query(`SELECT ${REGISTRO_COLS} FROM registros WHERE carteira = $1`, [carteira]);
     if (existente.rows.length > 0) return res.json({ ja_registrado: true, coordenada: existente.rows[0] });
 
     const preco = PRECOS[tipo]?.[plano] ?? 0.01;
@@ -604,7 +615,7 @@ app.get('/api/pagamento/verificar/:referencia', async (req, res) => {
 
     // Já confirmado anteriormente?
     if (pag.rows[0].status === 'confirmado') {
-      const reg = await pool.query('SELECT * FROM registros WHERE carteira = $1', [pag.rows[0].carteira]);
+      const reg = await pool.query(`SELECT ${REGISTRO_COLS} FROM registros WHERE carteira = $1`, [pag.rows[0].carteira]);
       return res.json({ status: 'confirmado', coordenada: reg.rows[0] });
     }
 
@@ -616,7 +627,7 @@ app.get('/api/pagamento/verificar/:referencia', async (req, res) => {
       const { carteira, tipo = 'pessoa', plano = 'permanente', nome = null } = pag.rows[0];
 
       // Verificar se já foi registrado (polling pode chamar múltiplas vezes)
-      const jaReg = await pool.query('SELECT * FROM registros WHERE carteira = $1', [carteira]);
+      const jaReg = await pool.query(`SELECT ${REGISTRO_COLS} FROM registros WHERE carteira = $1`, [carteira]);
       if (jaReg.rows.length > 0) {
         await pool.query('UPDATE pagamentos SET status=$1 WHERE referencia=$2', ['confirmado', referencia]);
         return res.json({ status: 'confirmado', coordenada: jaReg.rows[0] });
@@ -639,13 +650,13 @@ app.get('/api/pagamento/verificar/:referencia', async (req, res) => {
           `INSERT INTO registros (carteira, coord_x, coord_y, coord_z, nome, tipo, plano, valido_ate)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
            ON CONFLICT (carteira) DO NOTHING
-           RETURNING *`,
+           RETURNING ${REGISTRO_COLS}`,
           [carteira, coord.x, coord.y, coord.z, nome, tipo, plano, validoAte]
         );
         await client.query('COMMIT');
 
         // Se ON CONFLICT suprimiu o insert, buscar o registro existente
-        const coordenada = rows[0] || (await pool.query('SELECT * FROM registros WHERE carteira=$1', [carteira])).rows[0];
+        const coordenada = rows[0] || (await pool.query(`SELECT ${REGISTRO_COLS} FROM registros WHERE carteira=$1`, [carteira])).rows[0];
         return res.json({ status: 'confirmado', coordenada });
       } catch (e) {
         await client.query('ROLLBACK');
