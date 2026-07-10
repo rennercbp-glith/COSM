@@ -1598,10 +1598,19 @@ window.irParaCoordenada = function() {
     flashEl.style.background = '#ffffff';
     setTimeout(() => {
       warping = false;
-      // Checar se é uma coord registrada (reconhecimento em novo dispositivo)
+      // Checar se é uma coord registrada — mostra o conteúdo pro visitante
+      // (se tiver url_conteudo) e/ou o prompt de reconhecimento (novo
+      // dispositivo revisitando a própria coordenada).
       fetch(`/api/minha-coord/${Math.round(cx)}/${Math.round(cy)}/${Math.round(cz)}`)
         .then(r => r.json())
-        .then(d => { if (d.existe) mostrarReconhecimento(Math.round(cx), Math.round(cy), Math.round(cz)); })
+        .then(d => {
+          if (!d.existe) return;
+          if (d.url_conteudo) {
+            abrirConteudoVisitante(d.url_conteudo, { x: Math.round(cx), y: Math.round(cy), z: Math.round(cz) }, d.nome);
+          } else {
+            mostrarReconhecimento(Math.round(cx), Math.round(cy), Math.round(cz));
+          }
+        })
         .catch(() => {});
     }, 800);
   }, 240);
@@ -2300,6 +2309,25 @@ function abrirIframeNoEspaco(src, urlOriginal, coord) {
   banner.style.background = 'rgba(0,60,20,0.9)';
   banner.style.borderColor = 'rgba(100,255,150,0.3)';
   banner.style.color = 'rgba(100,255,150,0.9)';
+  document.getElementById('iframe-overlay').classList.add('ativo');
+  bloquearCanvas(true);
+}
+
+// Mostra pra um VISITANTE o conteúdo web que o dono registrou nesta
+// coordenada — chamado automaticamente ao chegar em qualquer coordenada
+// registrada que tenha url_conteudo (ver irParaCoordenada()).
+function abrirConteudoVisitante(urlOriginal, coord, nome) {
+  const { src } = prepararUrl(urlOriginal, 'site');
+  const coordStr = `COSM://${coord.x}:${coord.y}:${coord.z}`;
+  document.getElementById('iframe-titulo').textContent = nome || urlOriginal.replace(/^https?:\/\//, '').split('/')[0];
+  document.getElementById('iframe-coord').textContent = coordStr;
+  document.getElementById('iframe-content').src = src;
+  const banner = document.getElementById('iframe-teste-banner');
+  banner.textContent = '📍 CONTEÚDO DESTA COORDENADA';
+  banner.style.display = 'block';
+  banner.style.background = '';
+  banner.style.borderColor = '';
+  banner.style.color = '';
   document.getElementById('iframe-overlay').classList.add('ativo');
   bloquearCanvas(true);
 }
