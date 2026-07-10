@@ -1,6 +1,6 @@
 ===============================================================
   COSM — NOTAS TÉCNICAS (para Claude ler no futuro)
-  Última atualização: 2026-07-09 (v17 — página /stats.html com contagens gerais)
+  Última atualização: 2026-07-09 (v18 — fix bug vagas beta + regra de expiração TOTP 24h)
   Pasta: C:\Users\renne\Projetos\COSM\
   Deploy: cosm-production.up.railway.app
   GitHub: https://github.com/rennercbp-glith/COSM.git
@@ -261,6 +261,59 @@ O QUE FOI FEITO NA SESSÃO 2026-07-09:
       futuro mas não especificou o quê — perguntei e ele não respondeu
       ainda. Não construí nenhuma notificação/alerta automático nesta
       sessão, só visualização sob demanda).
+
+  12. BUG CORRIGIDO — /api/beta sempre mostrava todas as vagas livres
+      Causa: coord_x/y/z voltam do Postgres como STRING (coluna
+      BIGINT), mas eram comparados com === contra os números literais
+      de BETA_COORDS — "0" === 0 é sempre falso em JS. Resultado:
+      ocupado nunca batia, então o grid de escolha de vaga no
+      REGISTRAR sempre mostrava as 10 como "LIVRE", mesmo quando já
+      tomadas. A checagem de "já ocupado" dentro do claim (SQL direto,
+      não JS) sempre esteve correta — só a listagem pra exibir estava
+      errada. Fix: Number(r.coord_x) === c.x nos três eixos.
+      Achado ao investigar um pedido do Renner pra identificar quais
+      vagas eram dele — testado isoladamente com dado simulado do
+      Postgres antes do push, confirmado ao vivo depois do deploy
+      (vaga 10 passou a aparecer ocupada corretamente).
+
+  13. NOVA REGRA — vaga beta expira em 24h sem TOTP confirmado
+      Pedido do Renner: coordenadas em geral não precisam expirar por
+      inatividade (espaço praticamente infinito, coordenadas muito
+      distantes umas das outras — ele mesmo notou que reivindicar esse
+      espaço de volta não resolve problema real nenhum). MAS as 10
+      vagas beta são um recurso genuinamente escasso, e alguém podia
+      clicar em REGISTRAR, escolher uma vaga, fechar a aba antes de
+      terminar o TOTP, e squatar a vaga pra sempre sem uso real.
+      Fix: liberarExpirados() (já rodava a cada 6h) agora também varre
+      as 10 posições exatas de BETA_COORDS e apaga qualquer registro
+      lá que não teve TOTP confirmado dentro de 24h.
+      CUIDADO QUE TOMEI: restrito às 10 posições EXATAS, nunca por
+      plano='beta' sozinho — esse rótulo também é usado pelas
+      coordenadas antigas do Renner (@rennercbp no campo, @cart na
+      pista), que não têm TOTP confirmado e são bem mais antigas que
+      24h. Se eu tivesse filtrado só por plano, essa limpeza teria
+      apagado as duas coordenadas reais do Renner no próximo ciclo.
+      Testado ao vivo depois do deploy: as 3 coordenadas existentes
+      (as 2 do Renner + minha de teste, que tem TOTP confirmado)
+      continuaram intactas.
+
+  14. ESTADO ATUAL DOS DADOS REAIS EM PRODUÇÃO (2026-07-09, fim da
+      sessão) — registrado aqui pra não perder o contexto depois:
+        3 registros no total, todos tipo pessoa, todos plano='beta'
+        (rótulo antigo de gratuidade, não as 10 vagas fixas — só o
+        meu registro de teste usa uma vaga fixa de verdade, slot 10)
+        → @rennercbp (14142:999900:0) — coordenada real do Renner,
+          perto do campo de futebol demo. SEM TOTP configurado ainda.
+        → @cart (-25541:1413789:23398) — coordenada real do Renner,
+          é onde a pista de corrida está. SEM TOTP configurado ainda.
+        → @espacoteste (0:2500000:500000, vaga beta #10) — MEU
+          registro de teste, criado pra validar o fluxo TOTP+edição
+          ponta a ponta. Tem url_conteudo="https://exemplo.com" e
+          TOTP confirmado. Renner disse "deixa como está" quando
+          perguntei se devia apagar — ainda não foi removido, e não
+          existe endpoint de exclusão no sistema. Se quiser apagar
+          no futuro: via Console do Postgres no Railway, ou construir
+          um endpoint de exclusão protegido (ainda não pedido).
 
 PENDÊNCIAS ANTERIORES (sessão 2026-07-08):
 
