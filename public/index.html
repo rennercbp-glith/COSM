@@ -656,6 +656,14 @@
 <span class="st">"url"</span>: <span class="st">"meuapp.vercel.app"</span></div>
         </div>
       </div>
+      <p class="ld-p" style="font-size:12px;margin-top:18px;">
+        <strong>O COSM não hospeda seus arquivos — só endereça.</strong> Modelos 3D e apps precisam
+        estar publicados em algum lugar com URL pública antes de apontar pra sua coordenada.
+      </p>
+      <div class="ld-specs-row">
+        <div class="ld-spec-chip">Objeto 3D →<span>Sketchfab, GitHub (raw), CDN próprio</span></div>
+        <div class="ld-spec-chip">Site / app →<span>Vercel, Netlify, servidor próprio</span></div>
+      </div>
     </div>
     <div class="ld-arrow">↓</div>
   </div>
@@ -1055,11 +1063,11 @@ camera.<span class="nm">lookAt</span>(<span class="nm">0</span>, <span class="nm
       <p class="info-p">Depois de registrar sua coordenada, existem três formas de colocar algo nela — você escolhe qual usar, ou combina mais de uma:</p>
       <div class="info-box" style="margin-bottom:10px;">
         <strong>OBJETO 3D (.glb / .gltf)</strong>
-        Um arquivo exportado do Blender, Unity ou Spline aparece solto no universo — sem moldura, sem tela, como se fizesse parte do espaço. Você hospeda o arquivo em qualquer serviço com CORS aberto e aponta a URL.
+        Um arquivo exportado do Blender, Unity ou Spline aparece solto no universo — sem moldura, sem tela, como se fizesse parte do espaço. Você hospeda o arquivo em qualquer serviço com CORS aberto (Sketchfab, GitHub via raw, CDN próprio) e aponta a URL.
       </div>
       <div class="info-box" style="margin-bottom:10px;">
         <strong>PÁGINA WEB</strong>
-        Qualquer site com HTTPS — portfólio, loja, aplicativo — abre em tela cheia quando alguém chega na coordenada. Funciona como uma janela pro que você já tem, sem precisar reconstruir nada em 3D.
+        Qualquer site com HTTPS — portfólio, loja, aplicativo — abre em tela cheia quando alguém chega na coordenada. Hospede em Vercel, Netlify ou servidor próprio, e aponta a URL. Funciona como uma janela pro que você já tem, sem precisar reconstruir nada em 3D.
       </div>
       <div class="info-box">
         <strong>CÓDIGO AO VIVO (para desenvolvedores)</strong>
