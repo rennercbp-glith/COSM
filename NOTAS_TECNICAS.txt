@@ -1,6 +1,6 @@
 ===============================================================
   COSM — NOTAS TÉCNICAS (para Claude ler no futuro)
-  Última atualização: 2026-07-10 (v20 — hospedagem na landing, carregamento por distância, validação de URL)
+  Última atualização: 2026-07-10 (v21 — rate limit TOTP, busca por nome, painel MEU ESPAÇO, nomes 3D, limpeza de bugs da landing)
   Pasta: C:\Users\renne\Projetos\COSM\
   Deploy: cosm-production.up.railway.app
   GitHub: https://github.com/rennercbp-glith/COSM.git
@@ -474,18 +474,90 @@ O QUE FOI FEITO NA SESSÃO 2026-07-09:
       "código ao vivo" como está (demonstração temporária) por
       enquanto.
 
+  20. RODADA DE PENDÊNCIAS RESOLVIDAS SEM PRECISAR DO RENNER (2026-07-10)
+      Renner pediu pra fazer tudo que dava pra fazer sozinho da lista de
+      pendências, deixando só o que precisa de decisão dele ou de testar
+      dinheiro real. Ficou de fora de propósito: "código ao vivo" (item 19,
+      mesma raiz de risco do _cosmLoop abaixo) e teste de pagamento real
+      em SOL (precisa da carteira do Renner).
+
+      a) RATE LIMITING NO TOTP — server.js
+         npm install express-rate-limit. Novo middleware limiteTotp:
+         8 tentativas / 15min, chave = IP + carteira (não só IP — assim
+         uma rede compartilhada não bloqueia todo mundo por causa de um
+         atacante, mas cada carteira individual continua protegida).
+         Aplicado em POST /api/totp/login e POST /api/totp/confirmar.
+         Sem isso, código de 6 dígitos (1 em 1.000.000) era força-bruteável
+         em minutos.
+
+      b) BUSCA POR NOME — server.js + index.html
+         Novo endpoint GET /api/buscar/:nome — só acha quem está
+         publico=true. Campo de busca "COORDENADAS" no menu agora aceita
+         @nome além de X:Y:Z (irParaCoordenada() detecta o @ e resolve
+         via fetch antes de dar warp). Lógica de warp foi extraída pra
+         warpParaCoord(cx,cy,cz) reutilizável.
+
+      c) PAINEL "MEU ESPAÇO" — index.html
+         Novo modal #modal-meuespaco (menu → "EDITAR ESPAÇO", só aparece
+         com coordenada salva). Edita nome (@handle) e público/privado
+         via os PATCH /api/nome e /api/privacidade que já existiam no
+         servidor mas nunca tinham UI nenhuma chamando eles. Usa o mesmo
+         garantirSessao()/Bearer token do resto do fluxo autenticado.
+
+      d) NOMES PÚBLICOS VISÍVEIS NO UNIVERSO 3D — index.html
+         Nome só existia no banco antes. Agora cada coordenada pública
+         com nome ganha um billboard (sprite com texto em canvas,
+         estilo igual ao dos objetos 3D — mesmo padrão de origem
+         flutuante: posição = coord - coordBase). Visível a até 4000
+         unidades (NOME_DIST_MAX), maior que o raio de carregamento de
+         objeto 3D porque texto é leve. registrarNome3D() chamado em
+         carregarCoordenadas() pra cada reg.nome vindo de /api/coordenadas.
+
+      e) BUG CORRIGIDO — landing iniciava sozinha ao rolar até o fim
+         Causa: IntersectionObserver (ioEnd) num trigger de 1px depois da
+         última seção, que chamava iniciarCOSM() sozinho assim que ficava
+         visível — bastava o momentum do scroll carregar o visitante até
+         lá, sem ele ter clicado em nada. Removido: os botões INICIAR e
+         PULAR, mais a navegação por scroll/teclado (navPara(), que já
+         chama iniciarCOSM() quando não há próxima seção), cobrem o
+         mesmo caso sem o disparo acidental.
+
+      f) UX — atalho "MEU ESPAÇO" na landing pra quem já tem coordenada
+         Botão #ld-pular troca de "PULAR →" pra "MEU ESPAÇO →" quando
+         minhaCoordSalva() existe — deixa claro que a câmera já foi
+         posicionada no espaço do usuário (por autoNavegaMeuEspaco())
+         antes mesmo de sair da landing.
+
+      g) CÓDIGO MORTO REMOVIDO — mostrarAvisoCoord()/#aviso-coord
+         Confirmado zero chamadas em todo o arquivo antes de apagar
+         (só a própria definição). Removidos: a função, fecharAvisoCoord(),
+         a variável avisoCoordTimeout, o <div id="aviso-coord"> e todo o
+         CSS #aviso-coord*. Seguindo a regra de sempre apagar código não
+         usado em vez de deixar acumulando.
+
+      VERIFICAÇÃO FEITA: node --check no server.js inteiro e no <script
+      type="module"> extraído do index.html (sintaxe válida nos dois).
+      Servidor estático local (public/) rodando e servindo o HTML
+      atualizado — confirmado via curl que aviso-coord e ld-end-trigger
+      sumiram e modal-meuespaco está presente. Contagem cruzada de todo
+      ID/função novo (definição + pelo menos uma chamada, sem órfãos).
+      NÃO FOI POSSÍVEL testar clique-a-clique num browser real nesta
+      sessão — tanto o preview local quanto a extensão Claude in Chrome
+      ficaram indisponíveis no ambiente. Vale um teste manual do Renner
+      no primeiro acesso: landing sem auto-disparo, "EDITAR ESPAÇO" no
+      menu, busca por @nome, nomes flutuando nas coordenadas públicas.
+
   RESUMO DO QUE FICOU PENDENTE NO FIM DESTA SESSÃO (2026-07-10):
-    → Rate limiting nos endpoints TOTP (login/confirmar) — sem isso,
-      força bruta de código de 6 dígitos não tem bloqueio nenhum
-    → Pagamento real em SOL nunca testado de ponta a ponta
     → "Código ao vivo" não persiste — decisão de design pendente
       (ver item 19 acima)
-    → Painel "MEU ESPAÇO" (editar nome/privacidade/url pelo próprio
-      usuário depois de registrado) ainda não construído
-    → Busca por nome ou coordenada — nome só existe no banco, não
-      é pesquisável nem aparece visualmente no universo 3D
-    → mostrarAvisoCoord()/#aviso-coord — código órfão, decidir se
-      apaga ou reusa
+    → _cosmLoop/_cosmControls (hooks pra devs, documentados na landing)
+      têm a MESMA raiz de risco do item 19 — são código arbitrário rodando
+      na sessão de cada visitante. Não implementar sem resolver o
+      isolamento de execução primeiro (mesma decisão pendente).
+    → Pagamento real em SOL nunca testado de ponta a ponta — precisa da
+      carteira do Renner
+    → Testar manualmente num browser real as mudanças desta rodada (ver
+      item 20 acima — não foi possível verificar por preview automatizado)
     → Minha coordenada de teste (@espacoteste, vaga beta #10,
       teste-claude-1783629042) continua no banco de produção —
       Renner disse "deixa como está" quando perguntei
@@ -522,23 +594,23 @@ PENDÊNCIAS ANTERIORES (sessão 2026-07-08):
      Commits desta sessão: OBJ_DIST_MAX fix, landing v1→v2→v3→v4
 
 PRÓXIMO A FAZER:
-  → Corrigir landing: INICIAR ainda dispara sozinho ao rolar além da última seção
-     (ioEnd IntersectionObserver em ld-end-trigger) — só o vazamento de velCruz
-     foi corrigido em 2026-07-09, o auto-disparo em si continua
-  → Corrigir: usuário com coordenada salva no browser entra direto sem ver a landing
-     → deveria mostrar landing mas com botão "MEU ESPAÇO" ao clicar
-  → Implementar _cosmLoop e _cosmControls na engine (index.html JS)
-  → Painel "MEU ESPAÇO": setar url_conteudo, url_3d, nome, privacidade
-  → Testar pagamento real com SOL (primeira compra)
-  → Nome público visível no universo 3D (billboard/sprite na coordenada)
-  → Busca por nome ou coordenada (endpoint + UI) — nome hoje só existe no banco
-  → Decidir destino de mostrarAvisoCoord()/#aviso-coord — apagar ou reusar
+  → Testar pagamento real com SOL (primeira compra) — precisa da carteira do Renner
   → Decidir o que acontece quando as 10 vagas beta esgotarem (hoje só trava)
-  → Rate limiting nos endpoints TOTP (/api/totp/login e /confirmar) — sem
-    limite de tentativas erradas, código de 6 dígitos é força-bruteável
   → "Código ao vivo" (Tipo 3) não persiste — decidir se isola execução
     (iframe sandboxed) antes de salvar e reexecutar pra outros visitantes
     (ver item 19, risco de segurança se feito ingenuamente)
+  → _cosmLoop/_cosmControls (hooks de dev) — mesma raiz de risco do código
+    ao vivo (arbitrary code rodando na sessão de cada visitante). NÃO
+    implementar até resolver o isolamento de execução — ver item 20 (2026-07-10)
+  → Testar manualmente num browser real a rodada de mudanças do item 20
+    (2026-07-10): rate limiting TOTP, busca por nome, painel MEU ESPAÇO,
+    nomes 3D, fix do auto-disparo da landing — verificado só por sintaxe
+    e leitura de código, sem clique-a-clique real
+
+RESOLVIDO EM 2026-07-10 (item 20 — não repetir):
+  landing auto-disparando sozinha, usuário com coord salva sem atalho na
+  landing, painel MEU ESPAÇO, nome público visível em 3D, busca por nome,
+  mostrarAvisoCoord()/#aviso-coord apagado, rate limiting TOTP
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   HOOKS DO DESENVOLVEDOR — conceito 2026-07-08

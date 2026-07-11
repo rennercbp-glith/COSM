@@ -5,6 +5,7 @@ const { Connection, PublicKey, Keypair } = require('@solana/web3.js');
 const QRCode         = require('qrcode');
 const { authenticator } = require('otplib');
 const jwt            = require('jsonwebtoken');
+const rateLimit       = require('express-rate-limit');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -50,6 +51,20 @@ function sessaoValida(req, carteira) {
     return false;
   }
 }
+
+// Limita tentativas de código TOTP — sem isso, um código de 6 dígitos
+// (1 em 1.000.000 de chance) é força-bruteável em minutos com scripts
+// automatizados. Chave = IP + carteira, não só IP: assim um NAT/rede
+// compartilhada não bloqueia todo mundo por causa de um único atacante,
+// mas cada carteira individual ainda fica protegida contra força bruta.
+const limiteTotp = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 8,                    // 8 tentativas por carteira por janela
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => `${req.ip}:${req.body?.carteira || ''}`,
+  message: { erro: 'muitas tentativas — aguarde alguns minutos e tente de novo' }
+});
 
 // ─── Validação de nome público (@handle) ──────────────────────
 // Bloqueio básico contra impersonação de marcas conhecidas — não é proteção legal completa.
@@ -286,6 +301,23 @@ app.get('/api/coordenadas', async (req, res) => {
   }
 });
 
+// Buscar coordenada pelo nome público (@handle) — só encontra quem está
+// público. Usado pela busca por nome no cliente (COORDENADAS → @nome).
+app.get('/api/buscar/:nome', async (req, res) => {
+  try {
+    let nome = req.params.nome.trim();
+    if (!nome.startsWith('@')) nome = '@' + nome;
+    const { rows } = await pool.query(
+      `SELECT coord_x, coord_y, coord_z FROM registros WHERE LOWER(nome) = LOWER($1) AND publico = true`,
+      [nome]
+    );
+    if (!rows.length) return res.status(404).json({ erro: 'nome nao encontrado' });
+    res.json({ x: Number(rows[0].coord_x), y: Number(rows[0].coord_y), z: Number(rows[0].coord_z) });
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 // Registrar acesso a uma coordenada (renova os 30 dias)
 // Body: { x, y, z }
 app.post('/api/acesso', async (req, res) => {
@@ -359,7 +391,7 @@ app.post('/api/totp/iniciar', async (req, res) => {
 
 // Confirma o primeiro código digitado e ativa o TOTP na coordenada.
 // Body: { carteira, codigo }
-app.post('/api/totp/confirmar', async (req, res) => {
+app.post('/api/totp/confirmar', limiteTotp, async (req, res) => {
   try {
     const { carteira, codigo } = req.body;
     if (!carteira || !codigo) return res.status(400).json({ erro: 'carteira e codigo obrigatorios' });
@@ -381,7 +413,7 @@ app.post('/api/totp/confirmar', async (req, res) => {
 
 // Login com TOTP já configurado — verifica o código e devolve uma sessão.
 // Body: { carteira, codigo }
-app.post('/api/totp/login', async (req, res) => {
+app.post('/api/totp/login', limiteTotp, async (req, res) => {
   try {
     const { carteira, codigo } = req.body;
     if (!carteira || !codigo) return res.status(400).json({ erro: 'carteira e codigo obrigatorios' });

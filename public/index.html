@@ -219,6 +219,42 @@
     font-family:'Space Grotesk',sans-serif;
   }
 
+  /* ── Modal MEU ESPAÇO ── */
+  #modal-meuespaco{
+    position:fixed;inset:0;z-index:210;display:flex;
+    align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.9);backdrop-filter:blur(12px);
+    opacity:0;pointer-events:none;transition:opacity 0.3s;
+  }
+  #modal-meuespaco.ativo{opacity:1;pointer-events:all;}
+  #painel-meuespaco{
+    background:#08080f;border:1px solid rgba(140,180,255,0.15);
+    border-radius:14px;padding:32px 36px;width:400px;max-width:92vw;
+    font-family:'Space Grotesk',sans-serif;
+  }
+  .me-campo{ margin-bottom:18px; }
+  .me-campo-label{
+    font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.35);
+    margin-bottom:8px;
+  }
+  .me-toggle{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 14px;background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.08);border-radius:8px;
+  }
+  .me-toggle-texto{ font-size:12px;color:rgba(255,255,255,0.7); }
+  .me-switch{
+    width:40px;height:22px;border-radius:20px;position:relative;cursor:pointer;
+    background:rgba(255,255,255,0.12);transition:background 0.2s;flex-shrink:0;
+  }
+  .me-switch.ativo{ background:rgba(100,255,180,0.5); }
+  .me-switch-bola{
+    position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;
+    background:#fff;transition:left 0.2s;
+  }
+  .me-switch.ativo .me-switch-bola{ left:20px; }
+  #me-msg{ font-size:11px;color:rgba(255,100,80,0.85);text-align:center;margin-top:4px;display:none; }
+
   /* ── Modal CONTROLES ── */
   #modal-controles{
     position:fixed;inset:0;z-index:200;display:flex;
@@ -387,52 +423,6 @@
     padding:10px 12px;background:rgba(255,255,255,0.02);
     border-radius:6px;border:1px solid rgba(255,255,255,0.06);min-height:48px;
   }
-
-  /* ── Aviso: anote suas coordenadas ── */
-  #aviso-coord{
-    position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(120px);
-    width:min(480px,90vw);
-    background:rgba(10,10,18,0.97);
-    border:1px solid rgba(255,200,60,0.45);
-    border-radius:12px;padding:20px 24px;z-index:9999;
-    pointer-events:all;
-    box-shadow:0 8px 40px rgba(0,0,0,0.7),0 0 0 1px rgba(255,200,60,0.12);
-    transition:transform 0.45s cubic-bezier(.22,1,.36,1),opacity 0.35s;
-    opacity:0;
-  }
-  #aviso-coord.visivel{
-    transform:translateX(-50%) translateY(0);
-    opacity:1;
-  }
-  #aviso-coord-icone{
-    font-size:22px;margin-bottom:10px;
-  }
-  #aviso-coord-titulo{
-    font-size:12px;letter-spacing:2px;color:rgba(255,200,60,0.8);
-    margin-bottom:8px;font-weight:600;
-  }
-  #aviso-coord-msg{
-    font-size:13px;color:rgba(255,255,255,0.75);line-height:1.8;margin-bottom:14px;
-  }
-  #aviso-coord-box{
-    font-family:'Space Mono',monospace;
-    font-size:14px;color:#fff;letter-spacing:1px;
-    background:rgba(255,200,60,0.07);
-    border:1px solid rgba(255,200,60,0.25);
-    border-radius:8px;padding:12px 16px;
-    text-align:center;margin-bottom:16px;
-    user-select:all;cursor:text;
-  }
-  #aviso-coord-sub{
-    font-size:11px;color:rgba(255,255,255,0.35);line-height:1.7;margin-bottom:16px;
-  }
-  #aviso-coord-fechar{
-    background:transparent;border:1px solid rgba(255,200,60,0.3);border-radius:6px;
-    color:rgba(255,200,60,0.7);cursor:pointer;
-    font-family:'Space Grotesk',sans-serif;font-size:12px;letter-spacing:1px;
-    padding:7px 16px;transition:all 0.2s;width:100%;
-  }
-  #aviso-coord-fechar:hover{border-color:rgba(255,200,60,0.7);color:rgba(255,200,60,1);}
 
   /* ── Landing Page Developer — Scroll-snap ── */
   #landing-overlay{
@@ -769,9 +759,6 @@ camera.<span class="nm">lookAt</span>(<span class="nm">0</span>, <span class="nm
     </div>
   </div>
 
-  <!-- Trigger oculto — arrastar além do fim = iniciar -->
-  <div id="ld-end-trigger" style="height:1px;scroll-snap-align:start;flex-shrink:0;"></div>
-
 </div>
 
 <!-- ── Menu principal COSM:// ── -->
@@ -786,7 +773,7 @@ camera.<span class="nm">lookAt</span>(<span class="nm">0</span>, <span class="nm
   </div>
   <div id="menu-coord-expand">
     <div id="menu-coord-wrap">
-      <input id="coord-input" type="text" placeholder="X : Y : Z" spellcheck="false"
+      <input id="coord-input" type="text" placeholder="X : Y : Z  ou  @nome" spellcheck="false"
         onkeydown="if(event.key==='Enter'){irParaCoordenada();fecharMenu();}"/>
       <button id="btn-ir" onclick="irParaCoordenada();fecharMenu()">IR</button>
     </div>
@@ -796,6 +783,10 @@ camera.<span class="nm">lookAt</span>(<span class="nm">0</span>, <span class="nm
   <div id="menu-meu-espaco" class="menu-item" onclick="fecharMenu();irParaMeuEspacoSalvo()" style="display:none;">
     <span class="menu-item-icon">◈</span>
     <span class="menu-item-label">MEU ESPAÇO</span>
+  </div>
+  <div id="menu-editar-espaco" class="menu-item" onclick="fecharMenu();abrirMeuEspacoPanel()" style="display:none;">
+    <span class="menu-item-icon">✎</span>
+    <span class="menu-item-label">EDITAR ESPAÇO</span>
   </div>
   <div class="menu-item" onclick="fecharMenu();abrirRegistro()">
     <span class="menu-item-icon">✦</span>
@@ -832,16 +823,6 @@ camera.<span class="nm">lookAt</span>(<span class="nm">0</span>, <span class="nm
 <div id="notif"></div>
 <div id="prox-overlay"></div>
 <div id="flash"></div>
-
-<!-- ── Aviso: anote suas coordenadas ── -->
-<div id="aviso-coord">
-  <div id="aviso-coord-icone">📌</div>
-  <div id="aviso-coord-titulo">ANOTE ESTE ENDEREÇO</div>
-  <div id="aviso-coord-msg"></div>
-  <div id="aviso-coord-box"></div>
-  <div id="aviso-coord-sub"></div>
-  <button id="aviso-coord-fechar" onclick="fecharAvisoCoord()">ENTENDI — JÁ ANOTEI</button>
-</div>
 
 <!-- Iframe overlay para conteúdo de coordenadas -->
 <div id="iframe-overlay">
@@ -953,6 +934,33 @@ camera.<span class="nm">lookAt</span>(<span class="nm">0</span>, <span class="nm
     <div style="display:flex;gap:10px;margin-top:18px;justify-content:center;">
       <button class="reg-btn" onclick="fecharTotp()">CANCELAR</button>
       <button id="totp-btn-confirmar" class="reg-btn reg-btn-destaque" onclick="confirmarTotp()">CONFIRMAR →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal MEU ESPAÇO — editar nome público e visibilidade ── -->
+<div id="modal-meuespaco" onclick="if(event.target===this)fecharMeuEspacoPanel()">
+  <div id="painel-meuespaco" onclick="event.stopPropagation()">
+    <div class="reg-label" style="text-align:center;margin-bottom:18px;">EDITAR MEU ESPAÇO</div>
+
+    <div class="me-campo">
+      <div class="me-campo-label">NOME PÚBLICO</div>
+      <input id="me-nome" class="reg-input" type="text" placeholder="@seunome" spellcheck="false" maxlength="21"/>
+    </div>
+
+    <div class="me-campo">
+      <div class="me-campo-label">VISIBILIDADE</div>
+      <div class="me-toggle">
+        <span class="me-toggle-texto" id="me-publico-texto">Público — aparece no universo</span>
+        <div id="me-switch" class="me-switch" onclick="alternarPublicoUI()"><div class="me-switch-bola"></div></div>
+      </div>
+    </div>
+
+    <div id="me-msg"></div>
+
+    <div style="display:flex;gap:10px;margin-top:18px;justify-content:center;">
+      <button class="reg-btn" onclick="fecharMeuEspacoPanel()">FECHAR</button>
+      <button id="me-btn-salvar" class="reg-btn reg-btn-destaque" onclick="salvarMeuEspacoPanel()">SALVAR →</button>
     </div>
   </div>
 </div>
@@ -1562,19 +1570,42 @@ document.addEventListener('keyup', e => delete teclas[e.code]);
 // ═══════════════════════════════════════════════════════
 let warping = false;
 
-window.irParaCoordenada = function() {
-  const val    = document.getElementById('coord-input').value.trim();
+window.irParaCoordenada = async function() {
+  const inp = document.getElementById('coord-input');
+  const val = inp.value.trim();
+
+  // Busca por nome (@handle) — resolve pra coordenada antes de saltar.
+  if (val.startsWith('@')) {
+    if (warping || ejetando) return;
+    try {
+      const resp = await fetch(`/api/buscar/${encodeURIComponent(val.slice(1))}`);
+      if (!resp.ok) {
+        inp.style.color = 'rgba(255,80,80,0.9)';
+        setTimeout(() => inp.style.color = '', 800);
+        notif('Nome não encontrado');
+        return;
+      }
+      const d = await resp.json();
+      warpParaCoord(d.x, d.y, d.z);
+    } catch (_) {
+      notif('Erro de conexão na busca');
+    }
+    return;
+  }
+
   const parseCoord = s => { const n = parseFloat(s); return s.toLowerCase().includes('k') ? n * 1000 : n; };
   const partes = val.split(':').map(v => parseCoord(v.trim()));
   if (partes.length !== 3 || partes.some(isNaN)) {
-    const inp = document.getElementById('coord-input');
     inp.style.color = 'rgba(255,80,80,0.9)';
     setTimeout(() => inp.style.color = '', 800);
     return;
   }
   if (warping || ejetando) return;
   const [cx, cy, cz] = partes;
+  warpParaCoord(cx, cy, cz);
+};
 
+function warpParaCoord(cx, cy, cz) {
   velCruz = 0; voando = false; alvoVoo = null; alvoVooRotacao = null;
   warping = true;
 
@@ -1713,6 +1744,48 @@ function atualizarObjetos3D(dt) {
       carregarObjeto3D(c.cx, c.cy, c.cz, c.url);
     }
   }
+}
+
+// ═══════════════════════════════════════════════════════
+//  NOMES PÚBLICOS — billboard flutuando acima da coordenada
+//  O nome só existia no banco até agora; nunca aparecia no
+//  universo 3D nem era pesquisável.
+// ═══════════════════════════════════════════════════════
+const nomes3d = []; // { sprite, cx, cy, cz }
+const NOME_DIST_MAX = 4000; // raio em que o nome fica visível — maior que
+                             // OBJ_LOAD_DIST porque texto é leve e ajuda
+                             // a achar o espaço de longe.
+
+function criarSpriteNome(nome) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512; canvas.height = 96;
+  const ctx = canvas.getContext('2d');
+  ctx.font = '600 44px "Space Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0,0,0,0.85)';
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = 'rgba(200,225,255,0.95)';
+  ctx.fillText(nome, canvas.width / 2, canvas.height / 2);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.minFilter = THREE.LinearFilter;
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
+  const spr = new THREE.Sprite(mat);
+  spr.scale.set(340, 64, 1);
+  return spr;
+}
+
+function registrarNome3D(cx, cy, cz, nome) {
+  const sprite = criarSpriteNome(nome);
+  scene.add(sprite);
+  nomes3d.push({ sprite, cx, cy, cz });
+}
+
+function atualizarNomes3D() {
+  nomes3d.forEach(n => {
+    n.sprite.position.set(n.cx - coordBase.x, n.cy - coordBase.y + 180, n.cz - coordBase.z);
+    n.sprite.visible = camera.position.distanceTo(n.sprite.position) <= NOME_DIST_MAX;
+  });
 }
 
 function criarCampoDeFutebol(cx, cy, cz) {
@@ -2254,6 +2327,7 @@ function loop() {
 
   atualizarHUD();
   atualizarObjetos3D(dt);
+  atualizarNomes3D();
   renderer.render(scene, camera);
 }
 
@@ -2283,6 +2357,7 @@ function modalAberto() {
          document.getElementById('modal-inserir').classList.contains('ativo') ||
          document.getElementById('modal-controles').classList.contains('ativo') ||
          document.getElementById('modal-totp').classList.contains('ativo') ||
+         document.getElementById('modal-meuespaco').classList.contains('ativo') ||
          document.getElementById('landing-overlay').style.display !== 'none';
 }
 
@@ -2524,6 +2599,87 @@ function salvarUrlNoEspaco(url, eh3d) {
     }).catch(() => {});
   });
 }
+
+// ═══════════════════════════════════════════════════════
+//  PAINEL MEU ESPAÇO — editar nome público e visibilidade
+//  (usa os mesmos PATCH /api/nome e /api/privacidade que já
+//  existiam no servidor, mas nunca tinham UI pra chamá-los)
+// ═══════════════════════════════════════════════════════
+let mePublicoAtual = true;
+
+window.abrirMeuEspacoPanel = async function() {
+  const carteira = localStorage.getItem('cosm_id');
+  if (!carteira) return;
+  document.getElementById('me-msg').style.display = 'none';
+  document.getElementById('me-nome').value = '';
+  try {
+    const resp = await fetch(`/api/coordenada/${carteira}`);
+    const d = await resp.json();
+    document.getElementById('me-nome').value = d.nome || '';
+    mePublicoAtual = d.publico !== false;
+  } catch (_) {
+    mePublicoAtual = true;
+  }
+  atualizarSwitchPublico();
+  document.getElementById('modal-meuespaco').classList.add('ativo');
+  bloquearCanvas(true);
+};
+
+window.fecharMeuEspacoPanel = function() {
+  document.getElementById('modal-meuespaco').classList.remove('ativo');
+  if (!modalAberto()) bloquearCanvas(false);
+};
+
+function atualizarSwitchPublico() {
+  document.getElementById('me-switch').classList.toggle('ativo', mePublicoAtual);
+  document.getElementById('me-publico-texto').textContent =
+    mePublicoAtual ? 'Público — aparece no universo' : 'Privado — só quem tem a coordenada';
+}
+
+window.alternarPublicoUI = function() {
+  mePublicoAtual = !mePublicoAtual;
+  atualizarSwitchPublico();
+};
+
+window.salvarMeuEspacoPanel = function() {
+  const carteira = localStorage.getItem('cosm_id');
+  if (!carteira) return;
+  const msgEl = document.getElementById('me-msg');
+  msgEl.style.display = 'none';
+
+  const nomeVal = validarNomeHandle(document.getElementById('me-nome').value);
+  if (!nomeVal.ok) {
+    msgEl.textContent = nomeVal.erro;
+    msgEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('me-btn-salvar');
+  btn.disabled = true; btn.textContent = 'SALVANDO...';
+
+  garantirSessao(async () => {
+    try {
+      const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sessaoAtual() };
+      const [rNome, rPriv] = await Promise.all([
+        fetch('/api/nome', { method: 'PATCH', headers, body: JSON.stringify({ carteira, nome: nomeVal.valor }) }),
+        fetch('/api/privacidade', { method: 'PATCH', headers, body: JSON.stringify({ carteira, publico: mePublicoAtual }) })
+      ]);
+      if (!rNome.ok || !rPriv.ok) {
+        const dataErro = !rNome.ok ? await rNome.json() : await rPriv.json();
+        msgEl.textContent = dataErro.erro || 'Erro ao salvar.';
+        msgEl.style.display = 'block';
+      } else {
+        fecharMeuEspacoPanel();
+        notif('Espaço atualizado');
+      }
+    } catch (_) {
+      msgEl.textContent = 'Erro de conexão. Tente novamente.';
+      msgEl.style.display = 'block';
+    } finally {
+      btn.disabled = false; btn.textContent = 'SALVAR →';
+    }
+  });
+};
 
 function bloquearCanvas(sim) {
   canvas.style.pointerEvents = sim ? 'none' : 'auto';
@@ -3254,36 +3410,19 @@ window.irParaMeuEspaco = function() {
 };
 
 // ═══════════════════════════════════════════════════════
-//  AVISO: ANOTE SUAS COORDENADAS
-// ═══════════════════════════════════════════════════════
-let avisoCoordTimeout = null;
-
-function mostrarAvisoCoord(msg, coordStr, tipo) {
-  const el = document.getElementById('aviso-coord');
-  document.getElementById('aviso-coord-msg').textContent = msg;
-  document.getElementById('aviso-coord-box').textContent = coordStr;
-  document.getElementById('aviso-coord-sub').textContent =
-    tipo === 'sua'
-      ? 'Copie, fotografe, anote no papel. O universo COSM é infinito — coordenadas são o único mapa.'
-      : 'Esta é a zona de demonstração. Quando registrar seu espaço, anote as coordenadas do mesmo jeito.';
-  el.classList.add('visivel');
-  clearTimeout(avisoCoordTimeout);
-}
-
-window.fecharAvisoCoord = function() {
-  const el = document.getElementById('aviso-coord');
-  el.classList.remove('visivel');
-};
-
-// ═══════════════════════════════════════════════════════
 //  MEU ESPAÇO — localStorage + reconhecimento
 // ═══════════════════════════════════════════════════════
 const COORD_KEY = 'cosm_minha_coord'; // formato "X:Y:Z"
 let _coordPendente = null; // coord aguardando confirmação de reconhecimento
 
+function atualizarMenuEspaco(visivel) {
+  document.getElementById('menu-meu-espaco').style.display = visivel ? 'flex' : 'none';
+  document.getElementById('menu-editar-espaco').style.display = visivel ? 'flex' : 'none';
+}
+
 function salvarMinhaCoord(x, y, z) {
   localStorage.setItem(COORD_KEY, `${x}:${y}:${z}`);
-  document.getElementById('menu-meu-espaco').style.display = 'flex';
+  atualizarMenuEspaco(true);
   fetch('/api/acesso', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -3303,13 +3442,13 @@ function minhaCoordSalva() {
 async function autoNavegaMeuEspaco() {
   const c = minhaCoordSalva();
   if (!c) return;
-  document.getElementById('menu-meu-espaco').style.display = 'flex';
+  atualizarMenuEspaco(true);
   try {
     const r = await fetch(`/api/minha-coord/${c.x}/${c.y}/${c.z}`);
     const d = await r.json();
     if (!d.existe) {
       localStorage.removeItem(COORD_KEY);
-      document.getElementById('menu-meu-espaco').style.display = 'none';
+      atualizarMenuEspaco(false);
       notif('Sua coordenada expirou por inatividade — espaço liberado');
       return;
     }
@@ -3387,6 +3526,11 @@ async function carregarCoordenadas() {
       if (reg.url_3d) {
         registrarObjeto3DDistante(Number(reg.coord_x), Number(reg.coord_y), Number(reg.coord_z), reg.url_3d);
       }
+      // Nome público visível como billboard acima da coordenada —
+      // /api/coordenadas já só devolve quem está publico=true.
+      if (reg.nome) {
+        registrarNome3D(Number(reg.coord_x), Number(reg.coord_y), Number(reg.coord_z), reg.nome);
+      }
     });
   } catch (_) {}
 }
@@ -3405,6 +3549,13 @@ carMesh = criarCarro();
   const secs = Array.from(document.querySelectorAll('.ld-sec'));
   const prog = document.getElementById('ld-progress');
   const TOTAL = secs.length;
+
+  // Quem já tem coordenada salva no dispositivo não precisa "pular" —
+  // a câmera já foi posicionada no espaço dele por autoNavegaMeuEspaco(),
+  // então INICIAR/PULAR só revela o que já está pronto.
+  if (minhaCoordSalva()) {
+    document.getElementById('ld-pular').textContent = 'MEU ESPAÇO →';
+  }
 
   // Dots
   secs.forEach((_, i) => {
@@ -3425,15 +3576,12 @@ carMesh = criarCarro();
   }, { root: overlay, threshold: 0.5 });
   secs.forEach(s => io.observe(s));
 
-  // Trigger oculto no fim = iniciar
-  const trigger = document.getElementById('ld-end-trigger');
-  const ioEnd = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting) iniciarCOSM();
-  }, { root: overlay, threshold: 1.0 });
-  ioEnd.observe(trigger);
-
+  // iniciarCOSM só roda por clique explícito (INICIAR/PULAR) ou navegação
+  // por teclado/scroll que já chegou na última seção (ver navPara) — nunca
+  // por scroll passivo alcançando o fim, que disparava sozinho sem o
+  // visitante ter clicado em nada.
   window.iniciarCOSM = function() {
-    io.disconnect(); ioEnd.disconnect();
+    io.disconnect();
     velCruz = 0;
     overlay.classList.add('saindo');
     setTimeout(() => { overlay.style.display = 'none'; }, 700);
